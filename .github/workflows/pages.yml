@@ -1,8 +1,8 @@
 name: Publicar no GitHub Pages
 
+# Manual de propósito: publicar o site é uma decisão. Para publicar a cada push na main,
+# adicione "push: { branches: [main] }" abaixo de "on:".
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

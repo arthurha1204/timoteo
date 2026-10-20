@@ -4,10 +4,10 @@ Como o site é estático, qualquer hospedagem de arquivos serve: GitHub Pages, N
 
 ## GitHub Pages (já configurado)
 
-O repositório tem o fluxo `.github/workflows/pages.yml`, que publica `index.html`, `css/`, `js/` e `data/` a cada push na branch `main`.
+O repositório tem o fluxo `.github/workflows/pages.yml`, que publica `index.html`, `css/`, `js/` e `data/`. Ele roda **só quando você pedir**, porque publicar o site é uma decisão (veja "Antes de divulgar" abaixo).
 
 1. No repositório: **Settings > Pages > Build and deployment > Source: GitHub Actions**.
-2. Faça um push na `main` (ou rode o fluxo em **Actions > Publicar no GitHub Pages**).
+2. Rode o fluxo em **Actions > Publicar no GitHub Pages > Run workflow**. Para publicar a cada push na `main`, adicione `push: { branches: [main] }` em `on:` no arquivo do fluxo.
 3. O site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPO/`.
 
 Os caminhos do site são relativos e a navegação é por hash, então funciona em subpasta sem ajuste.

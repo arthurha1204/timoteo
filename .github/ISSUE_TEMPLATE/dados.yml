@@ -1,0 +1,21 @@
+name: Dado ou fonte
+description: Um número errado, desatualizado ou uma nova fonte
+labels: ["dados"]
+body:
+  - type: textarea
+    id: dado
+    attributes:
+      label: Qual dado e onde aparece
+    validations:
+      required: true
+  - type: input
+    id: fonte
+    attributes:
+      label: Link da fonte
+      placeholder: https://...
+    validations:
+      required: true
+  - type: textarea
+    id: detalhe
+    attributes:
+      label: O que está diferente

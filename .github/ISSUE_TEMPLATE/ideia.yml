@@ -1,0 +1,22 @@
+name: Ideia ou melhoria
+description: Uma sugestão para o Timóteo
+labels: ["melhoria"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Que problema isso resolve
+      description: Quem é afetado e em que situação.
+    validations:
+      required: true
+  - type: textarea
+    id: ideia
+    attributes:
+      label: Sua ideia
+    validations:
+      required: true
+  - type: textarea
+    id: seguranca
+    attributes:
+      label: Cuidados de segurança e privacidade
+      description: Isso envolve dados de pessoas, encontros presenciais ou lugares de risco? O que pode dar errado?

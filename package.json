@@ -1,0 +1,18 @@
+{
+  "name": "timoteo",
+  "version": "0.1.0",
+  "description": "Mapa colaborativo e de código aberto para evangelizar em conjunto.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/timoteo.test.js",
+    "start": "python -m http.server 5173",
+    "check": "node --check js/app.js && node --check js/eventos.js && node --check js/ficha.js && node --check js/orar.js && node --check js/ibge.js && node --check js/bairros.js && node --check js/content.js && node --check js/dados.js && node --check js/data.js"
+  },
+  "engines": { "node": ">=20" },
+  "repository": { "type": "git", "url": "git+https://github.com/arthurha1204/timoteo.git" },
+  "homepage": "https://github.com/arthurha1204/timoteo#readme",
+  "bugs": { "url": "https://github.com/arthurha1204/timoteo/issues" },
+  "keywords": ["evangelismo", "missoes", "mapa", "ibge", "brasil", "open-source"]
+}

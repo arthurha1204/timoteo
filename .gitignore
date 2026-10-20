@@ -1,0 +1,12 @@
+# Ferramentas locais
+.claude/
+.vscode/
+.idea/
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Downloads brutos do IBGE usados só para gerar data/bairros (veja docs/DADOS.md)
+*.gpkg
+*.zip
+downloads/

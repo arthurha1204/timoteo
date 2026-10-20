@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timóteo · evangelismo em conjunto</title>
+  <meta name="description" content="Timóteo: mapa colaborativo para evangelizar em conjunto. Veja lugares, marque encontros, imprima lambes e aprenda a conversar com cada povo.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='12' fill='%232b55c7'/%3E%3Cpath d='M10.5 4h3v5.5H19v3h-5.5V20h-3v-7.5H5v-3h5.5z' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="cabecalho">
+    <a class="marca" href="#/perto" aria-label="Timóteo, início">
+      <span class="marca-cruz"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3h3v6.5H20v3h-6.5V21h-3v-8.5H4v-3h6.5z" fill="currentColor"/></svg></span>
+      <span class="marca-nome"><span>Evangelismo</span><span>Timóteo</span></span>
+    </a>
+    <nav class="navegacao" id="nav" aria-label="Principal">
+      <a href="#/perto" data-r="perto">Por perto</a>
+      <a href="#/cadastrar" data-r="cadastrar">Cadastrar lugar</a>
+      <a href="#/eventos" data-r="eventos">Eventos</a>
+      <a href="#/povos" data-r="povos">Povos</a>
+      <a href="#/orar" data-r="orar">Orar</a>
+      <a href="#/o-que-fazer" data-r="o-que-fazer">O que fazer</a>
+      <a href="#/conversas" data-r="conversas">Conversas</a>
+      <a href="#/mensagem" data-r="mensagem">A mensagem</a>
+      <a href="#/dados" data-r="dados">Dados</a>
+      <a href="#/sobre" data-r="sobre">Sobre</a>
+    </nav>
+  </header>
+  <div id="faixa"></div>
+  <main id="view"></main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+name: Revisão de conteúdo
+description: Corrigir ou melhorar um guia por povo, uma conversa ou um pedido de oração
+labels: ["conteudo"]
+body:
+  - type: input
+    id: onde
+    attributes:
+      label: Qual conteúdo
+      placeholder: Guia de Surdos, conversa "Quem é espírita", oração do Sudão...
+    validations:
+      required: true
+  - type: textarea
+    id: trecho
+    attributes:
+      label: Trecho e problema
+      description: Cole o trecho e diga o que está impreciso, ofensivo ou faltando.
+    validations:
+      required: true
+  - type: textarea
+    id: sugestao
+    attributes:
+      label: Sugestão de texto
+  - type: textarea
+    id: experiencia
+    attributes:
+      label: Fonte ou experiência
+      description: Você convive com esse povo ou grupo? Há uma fonte que sustenta a mudança?

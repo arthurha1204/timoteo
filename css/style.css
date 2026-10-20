@@ -357,3 +357,4 @@ select.campo{appearance:auto}
 
 .bairro-est{border-left:4px solid var(--cor);background:var(--cor-clara);border-radius:0 var(--raio) var(--raio) 0;margin:16px 0;padding:14px 16px}
 .bairro-est p+p{margin-top:8px}
+.lista-pagina a.evento-item{grid-template-columns:64px 1fr auto}

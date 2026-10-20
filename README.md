@@ -23,6 +23,85 @@ Timóteo foi um jovem que seguiu e serviu ao lado do apóstolo Paulo (Atos 16:1-
 - **Orar hoje.** Cada dia, uma nação da Lista Mundial da Perseguição (Portas Abertas) ou um povo ainda não alcançado no Brasil (Joshua Project), com três pedidos de oração.
 - **Dados e fontes.** Página com todos os números, os links e as ressalvas.
 
+## Como ele é
+
+Capturas do site rodando em **modo de teste**, com lugares e eventos de exemplo (a faixa preta no topo avisa isso). Os números de população e religião são os reais do Censo 2022 (IBGE).
+
+### No computador
+
+**Tela inicial.** O painel à esquerda traz a busca, o pedido de oração do dia e os números do projeto. O mapa à direita mostra a área escolhida (o círculo). Toque no mapa ou busque uma cidade.
+
+![Tela inicial com painel e mapa de Salvador](docs/img/pc-01-mapa.jpg)
+
+**Ficha do lugar.** Melhores dias e períodos e, logo abaixo, a estimativa para a região: quantas pessoas ainda não se declaram cristãs num raio de 1 km, sempre como **mínimo e máximo**, com o bairro, a população e o aviso de que é estimativa.
+
+![Ficha do Largo do Pelourinho com estimativa por bairro](docs/img/pc-02-ficha-lugar.jpg)
+
+**Ficha padrão.** Todo lugar tem os mesmos 14 campos, na mesma ordem: tipo, ponto de referência, quem passa, público, idiomas, movimento, melhores dias, o que evitar, como abordar, autorização, segurança, estrutura e parceiro local. A ficha gera o checklist "Antes de ir".
+
+![Ficha padrão de 14 campos](docs/img/pc-03-ficha-padrao.jpg)
+
+**Lambe.** Escolha a frase e a cor, veja a prévia com o QR do lugar e imprima em A4 ou salve em PDF.
+
+![Painel do lambe com prévia e QR](docs/img/pc-04-lambe.jpg)
+
+**Eventos.** Culto ao ar livre, evangelização boca a boca, ação social e oração na rua, com filtro por tipo e a explicação de como a segurança funciona.
+
+![Lista de eventos](docs/img/pc-05-lista-eventos.jpg)
+
+**Evento.** Tipo, título, data e horário, ponto de encontro, objetivo e roteiro. Dá para marcar presença, baixar para o calendário e falar com o responsável.
+
+![Detalhe de um evento com objetivo e roteiro](docs/img/pc-06-evento.jpg)
+
+**Trajeto no mapa.** O trajeto do evento aparece com paradas numeradas, distância e tempo a pé, e abre a pé no Google Maps. Logo abaixo ficam a ficha do lugar, o responsável e os selos de segurança declarados.
+
+![Mapa do evento com o trajeto e as paradas](docs/img/pc-07-evento-trajeto.jpg)
+
+**Criar um evento.** Tipo, objetivo, roteiro opcional, dia e horário, ponto de encontro e o trajeto, desenhado tocando no mapa. No fim, o responsável e os compromissos de segurança obrigatórios.
+
+![Formulário de novo evento com trajeto desenhado](docs/img/pc-08-novo-evento.jpg)
+
+**Cadastrar um lugar.** O cadastro segue a ficha padrão, em blocos: onde fica, quem passa, quando ir, como abordar, cuidados e estrutura.
+
+![Formulário de cadastro de lugar](docs/img/pc-09-cadastro.jpg)
+
+**Guia por povo.** Quem são, o que importa, como chegar, como abrir a conversa, onde tocar, onde não tocar e onde confrontar. Os guias são rascunhos e pedem revisão de quem convive com cada povo.
+
+![Guia do povo Surdos](docs/img/pc-10-guia-povo.jpg)
+
+**Conversas.** Roteiro passo a passo para situações difíceis, sempre com o cuidado a tomar. A de sofrimento emocional orienta a ligar para o CVV (188) e para o SAMU (192) se houver risco.
+
+![Conversa sobre sofrimento emocional](docs/img/pc-11-conversas.jpg)
+
+**Orar hoje.** Cada dia, uma nação da Lista Mundial da Perseguição ou um povo ainda não alcançado no Brasil, com três pedidos e a fonte.
+
+![Página de oração do dia](docs/img/pc-12-orar.jpg)
+
+**Dados.** Números do Censo 2022 por estado, com mínimo e máximo de pessoas que não se declaram cristãs e o aviso dos limites. Calculados na hora a partir da API do IBGE.
+
+![Página de dados do Censo 2022](docs/img/pc-13-dados.jpg)
+
+### No celular
+
+O site é feito primeiro para o celular: no mapa, a tela se divide em mapa em cima e painel embaixo, e a ficha do lugar ocupa a tela inteira.
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/img/cel-01-mapa.jpg" alt="Mapa no celular"><br><sub><b>Mapa</b><br>área escolhida e painel</sub></td>
+    <td align="center" width="25%"><img src="docs/img/cel-02-area.jpg" alt="Estimativa da área no celular"><br><sub><b>Área</b><br>lugares perto e estimativa por raio</sub></td>
+    <td align="center" width="25%"><img src="docs/img/cel-03-ficha.jpg" alt="Ficha do lugar no celular"><br><sub><b>Ficha do lugar</b><br>com o botão "Vou evangelizar por aqui"</sub></td>
+    <td align="center" width="25%"><img src="docs/img/cel-04-ficha-padrao.jpg" alt="Ficha padrão no celular"><br><sub><b>Ficha padrão</b><br>os mesmos 14 campos</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/img/cel-05-lista-eventos.jpg" alt="Lista de eventos no celular"><br><sub><b>Eventos</b><br>com filtro por tipo</sub></td>
+    <td align="center"><img src="docs/img/cel-06-evento-trajeto.jpg" alt="Trajeto do evento no celular"><br><sub><b>Trajeto</b><br>paradas e link para o Google Maps</sub></td>
+    <td align="center"><img src="docs/img/cel-07-orar.jpg" alt="Oração do dia no celular"><br><sub><b>Orar hoje</b><br>nação ou povo do dia</sub></td>
+    <td align="center"><img src="docs/img/cel-08-povos.jpg" alt="Lista de povos no celular"><br><sub><b>Povos</b><br>guias de como conversar</sub></td>
+  </tr>
+</table>
+
+> As imagens foram geradas por `scripts/capturar_telas.mjs` e convertidas para JPEG. Para regerar, veja o começo do script.
+
 ## Princípios
 
 - Ouvir antes de falar.

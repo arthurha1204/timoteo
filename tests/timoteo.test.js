@@ -229,3 +229,11 @@ test("as rotas do roteador apontam para telas que existem", () => {
     assert.ok(html.includes(`data-r="${r}"`), `link de menu ausente: ${r}`);
   }
 });
+
+test("vercel.json é válido, sem build, e mantém a demo fora dos buscadores", () => {
+  const v = JSON.parse(readFileSync(path.join(raiz, "vercel.json"), "utf8"));
+  assert.equal(v.buildCommand, null);
+  assert.equal(v.outputDirectory, ".");
+  const robots = v.headers.flatMap(h => h.headers).find(h => h.key === "X-Robots-Tag");
+  assert.match(robots.value, /noindex/);
+});

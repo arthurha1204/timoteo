@@ -137,7 +137,9 @@ Para que várias pessoas vejam os mesmos lugares e eventos, ligue um banco Supab
 
 ## Publicar
 
-O repositório já traz um fluxo do GitHub Pages. Veja [docs/PUBLICAR.md](docs/PUBLICAR.md), inclusive os cuidados com os serviços gratuitos de mapa e busca.
+O repositório traz um `vercel.json` pronto e um fluxo opcional do GitHub Pages. Para ver o site no ar em poucos cliques: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farthurha1204%2Ftimoteo)
+
+Veja [docs/PUBLICAR.md](docs/PUBLICAR.md), inclusive os cuidados com os serviços gratuitos de mapa e busca.
 
 ## Estrutura
 

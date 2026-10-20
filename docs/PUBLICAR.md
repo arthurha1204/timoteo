@@ -1,6 +1,20 @@
 # Publicar o site
 
-Como o site é estático, qualquer hospedagem de arquivos serve: GitHub Pages, Netlify, Cloudflare Pages, Vercel.
+Como o site é estático, qualquer hospedagem de arquivos serve: Vercel, GitHub Pages, Netlify, Cloudflare Pages.
+
+## Vercel
+
+O projeto traz um `vercel.json` pronto: site estático, sem etapa de build. Pelo painel da Vercel:
+
+1. Entre em https://vercel.com/new e escolha **Import Git Repository**.
+2. Autorize a Vercel a ler o repositório e escolha `timoteo`.
+3. Deixe **Framework Preset: Other**, **Root Directory** como `./` e **não** preencha comandos de build. Clique em **Deploy**.
+
+Ou, com um clique: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farthurha1204%2Ftimoteo)
+
+A cada push na `main`, a Vercel publica de novo. O `vercel.json` manda o cabeçalho `X-Robots-Tag: noindex, nofollow`, para o site ficar como **demonstração** e não aparecer em buscadores. Quando for publicar de verdade, apague esse cabeçalho. Para usar o banco compartilhado, preencha `js/config.js` (veja [SUPABASE.md](SUPABASE.md)).
+
+A demonstração roda em modo local: cada pessoa vê só o que cadastrar no próprio navegador.
 
 ## GitHub Pages (já configurado)
 

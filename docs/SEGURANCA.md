@@ -25,7 +25,8 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 
 **Em geral**
 - Sem contas, sem rastreamento próprio e sem anúncios.
-- **Serviços de terceiros veem dados do visitante.** O site carrega a fonte do Google Fonts e as bibliotecas do cdnjs (o IP do visitante chega a esses serviços). Ao escolher um ponto no mapa ou usar "Usar onde eu estou", as coordenadas vão ao Nominatim (OpenStreetMap) para achar a cidade, e depois à API do IBGE (apenas o código da cidade). Para evitar, hospede fonte e bibliotecas no próprio site e use um geocodificador próprio.
+- **Sem CDN nem Google Fonts:** bibliotecas e fonte são servidas pelo próprio site (`vendor/`), e o Content-Security-Policy só deixa o site falar com ele mesmo, o IBGE, o Nominatim, os mapas da OSM France e o Supabase.
+- **Serviços que ainda veem dados do visitante.** Os mapas (OSM France) recebem o IP e a região vista. Ao escolher um ponto no mapa ou usar "Usar onde eu estou", as coordenadas vão ao Nominatim (OpenStreetMap) para achar a cidade, e depois à API do IBGE (apenas o código da cidade). Para evitar, use mapas e geocodificador próprios.
 - O texto vindo de usuários é escapado antes de ser mostrado (proteção contra injeção de HTML).
 - Links de grupo só aceitam `https://`.
 
@@ -46,7 +47,7 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 | Denúncias não são lidas | **Resolvido:** aparecem no painel de moderação | Definir prazo de resposta |
 | Evento em lugar perigoso | Depende do que o responsável declara e da moderação. O painel destaca lugares de segurança média ou alta, escolas e hospitais | Revisão humana obrigatória nesses casos |
 | Serviços gratuitos de mapa e busca têm limites | Podem bloquear com tráfego real | Provedores próprios ou contratados (veja [PUBLICAR.md](PUBLICAR.md)) |
-| Dependências carregadas de terceiros (fonte e bibliotecas) | Expõem o IP do visitante | Hospedar no próprio site e adicionar CSP |
+| Dependências carregadas de terceiros (fonte e bibliotecas) | **Resolvido:** hospedadas no próprio site, com CSP | Nada |
 | Texto livre pode trazer telefone, e-mail ou link | O painel sinaliza, mas só a leitura humana resolve | Moderadores atentos |
 
 ## Para quem modera

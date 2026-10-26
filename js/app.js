@@ -708,3 +708,8 @@ async function route() {
 $("#faixa").innerHTML = store.mode === "local" ? '<div class="faixa-exemplo">Modo de teste: os lugares marcados como exemplo são fictícios e o que você cadastrar fica só neste aparelho.</div>' : "";
 addEventListener("hashchange", route);
 route();
+
+// Deixa o site instalável e abre a ficha e o roteiro sem sinal (veja sw.js). Só em HTTPS ou localhost.
+if ("serviceWorker" in navigator && (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}

@@ -238,3 +238,58 @@ test("vercel.json é válido, sem build, e mantém a demo fora dos buscadores", 
   const robots = v.headers.flatMap(h => h.headers).find(h => h.key === "X-Robots-Tag");
   assert.match(robots.value, /noindex/);
 });
+
+/* ---------- sem dependência externa, PWA e CSP ---------- */
+const ler = rel => readFileSync(path.join(raiz, rel), "utf8");
+const existe = rel => { try { readFileSync(path.join(raiz, rel)); return true; } catch { return false; } };
+const tamanhoPng = rel => { const b = readFileSync(path.join(raiz, rel)); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
+
+test("o site não carrega nada de fora: nem CDN, nem fonte, nem biblioteca", () => {
+  const html = ler("index.html");
+  const externos = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(externos, [], "index.html chama recursos externos");
+  for (const css of ["css/style.css", "css/fontes.css", "vendor/leaflet/leaflet.css"]) {
+    assert.ok(!/@import\s+url\(\s*['"]?https?:/.test(ler(css)), `${css} importa CSS externo`);
+    assert.ok(!/url\(\s*['"]?https?:\/\/(?!tile)/.test(ler(css)), `${css} usa recurso externo`);
+  }
+});
+
+test("o service worker guarda todos os arquivos que o site precisa, e todos existem", () => {
+  const sw = ler("sw.js");
+  const nucleo = [...sw.slice(sw.indexOf("const NUCLEO"), sw.indexOf("];", sw.indexOf("const NUCLEO"))).matchAll(/"([^"]+)"/g)].map(m => m[1]).filter(x => x !== "./");
+  for (const f of nucleo) assert.ok(existe(f), `sw.js lista um arquivo que não existe: ${f}`);
+  const html = ler("index.html");
+  const usados = new Set([...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(x => !x.startsWith("data:")));
+  for (const f of readdirSync(path.join(raiz, "js"))) usados.add("js/" + f);
+  for (const f of readdirSync(path.join(raiz, "vendor", "fonts")).filter(x => x.endsWith(".woff2"))) usados.add("vendor/fonts/" + f);
+  for (const f of readdirSync(path.join(raiz, "vendor", "leaflet", "images"))) usados.add("vendor/leaflet/images/" + f);
+  for (const f of readdirSync(path.join(raiz, "icons")).filter(x => /\.(png|svg)$/.test(x))) usados.add("icons/" + f);
+  for (const f of usados) assert.ok(nucleo.includes(f), `falta no cache do sw.js: ${f}`);
+});
+
+test("o manifesto é válido e os ícones existem com o tamanho declarado", () => {
+  const m = JSON.parse(ler("manifest.webmanifest"));
+  assert.equal(m.name, "Timóteo");
+  assert.equal(m.display, "standalone");
+  assert.match(m.theme_color, /^#[0-9a-f]{6}$/i);
+  assert.ok(m.icons.some(i => i.purpose === "maskable"));
+  for (const i of m.icons.filter(x => x.type === "image/png")) {
+    assert.ok(existe(i.src), `ícone ausente: ${i.src}`);
+    const [l, a] = tamanhoPng(i.src);
+    assert.equal(`${l}x${a}`, i.sizes, `tamanho do ícone ${i.src}`);
+  }
+  for (const s of m.shortcuts) assert.match(s.url, /^\.\/#\//);
+});
+
+test("o CSP bloqueia o que não deve e libera só o que o site usa", () => {
+  const csp = JSON.parse(ler("vercel.json")).headers[0].headers.find(h => h.key === "Content-Security-Policy").value;
+  const dir = n => csp.split(";").map(x => x.trim()).find(x => x.startsWith(n + " ")) || "";
+  assert.equal(dir("default-src"), "default-src 'self'");
+  assert.equal(dir("script-src"), "script-src 'self'");          // sem inline nem eval
+  assert.equal(dir("object-src"), "object-src 'none'");
+  assert.equal(dir("frame-ancestors"), "frame-ancestors 'none'");
+  assert.match(dir("connect-src"), /servicodados\.ibge\.gov\.br/);
+  assert.match(dir("connect-src"), /nominatim\.openstreetmap\.org/);
+  assert.match(dir("img-src"), /tile\.openstreetmap\.fr/);
+  assert.ok(!/unsafe-eval/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp));
+});

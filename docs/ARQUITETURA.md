@@ -44,6 +44,8 @@ Navegação por hash, sem recarregar a página:
 | `js/data.js` | Camada de dados com duas implementações: **local** (localStorage) e **Supabase** (REST). Inclui link secreto (hash SHA-256) e a API de moderação |
 | `js/moderar.js` | Painel de moderação (`#/moderar`): fila de pendentes, sinais de atenção, denúncias |
 | `js/config.js` | URL e chave anon do Supabase. Vazio por padrão |
+| `sw.js`, `manifest.webmanifest`, `icons/` | PWA: instalável e offline. O service worker nunca guarda mapa, busca de endereço, escrita nem requisição com login |
+| `vendor/` | Leaflet, qrcode.js e a fonte Archivo, copiados sem alteração (licenças em `vendor/LICENSES.md`) |
 
 ## Camada de dados
 

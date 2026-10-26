@@ -22,6 +22,8 @@ Timóteo foi um jovem que seguiu e serviu ao lado do apóstolo Paulo (Atos 16:1-
 - **Conversas.** Roteiros para situações difíceis: quem se feriu na igreja, luto e doença, sofrimento emocional (com CVV 188), espíritas, religiões de matriz africana e outras.
 - **Orar hoje.** Cada dia, uma nação da Lista Mundial da Perseguição (Portas Abertas) ou um povo ainda não alcançado no Brasil (Joshua Project), com três pedidos de oração.
 - **Dados e fontes.** Página com todos os números, os links e as ressalvas.
+- **Instalável e offline.** Funciona como aplicativo (PWA): dá para instalar na tela inicial e abrir a ficha, os guias e o roteiro sem sinal.
+- **Sem terceiros no navegador.** Mapa à parte, o site não carrega fonte, biblioteca nem script de ninguém: tudo vem do próprio site, com Content-Security-Policy.
 
 ## Como ele é
 
@@ -132,6 +134,7 @@ npm test             # unitários e checagens de código (rápido, sem Docker)
 npm run banco:subir  # sobe uma réplica local do banco (precisa de Docker)
 npm run test:banco   # regras de acesso do banco, direto na API
 npm run test:e2e     # o site no Chrome falando com a réplica (precisa do Chrome)
+npm run test:pwa     # instala o PWA, tira a internet e confere que o site abre
 ```
 
 ## Dados compartilhados
@@ -147,23 +150,29 @@ Veja [docs/PUBLICAR.md](docs/PUBLICAR.md), inclusive os cuidados com os serviço
 ## Estrutura
 
 ```
-index.html          página única, com rotas por hash (#/perto, #/eventos...)
-css/style.css       visual
-js/app.js           mapa, ficha do lugar, cadastro, páginas
-js/eventos.js       eventos, trajeto, participação, denúncia
-js/ficha.js         ficha padrão, checklist e pedidos de oração do ponto
-js/orar.js          oração do dia
-js/ibge.js          Censo 2022 por cidade (API do IBGE)
-js/bairros.js       bairros e raio a partir de data/bairros
-js/content.js       guias por povo, conversas, mensagem
-js/dados.js         números e fontes (Joshua Project, Lausanne, Portas Abertas)
-js/data.js          camada de dados (modo local ou Supabase)
-js/config.js        chaves do Supabase (vazio por padrão)
-data/bairros/       população e contornos por bairro (gerado)
-scripts/            geração dos dados de bairros
-supabase/schema.sql        esquema do banco, com regras de acesso
-docs/               documentação
-tests/              testes sem dependências
+index.html                página única, com rotas por hash (#/perto, #/eventos...)
+manifest.webmanifest      manifesto do PWA (instalar na tela inicial)
+sw.js                     service worker (offline)
+css/                      visual (style.css) e fonte (fontes.css)
+js/app.js                 mapa, ficha do lugar, cadastro, páginas
+js/eventos.js             eventos, trajeto, participação, link secreto, denúncia
+js/moderar.js             painel de moderação (#/moderar)
+js/ficha.js               ficha padrão, checklist e pedidos de oração do ponto
+js/orar.js                oração do dia
+js/ibge.js                Censo 2022 por cidade (API do IBGE)
+js/bairros.js             bairros e raio a partir de data/bairros
+js/content.js             guias por povo, conversas, mensagem
+js/dados.js               números e fontes (Joshua Project, Lausanne, Portas Abertas)
+js/data.js                camada de dados (modo local ou Supabase)
+js/config.js              chaves do Supabase (vazio por padrão)
+vendor/                   Leaflet, qrcode.js e a fonte Archivo, sem CDN (licenças em vendor/LICENSES.md)
+icons/                    ícones do aplicativo
+data/bairros/             população e contornos por bairro (gerado)
+scripts/                  dados de bairros, capturas de tela e ajudante do Chrome
+supabase/schema.sql       esquema do banco com regras de acesso
+supabase/teste-local/     réplica local do banco (Docker) e seus testes
+docs/                     documentação
+tests/                    testes unitários e do PWA
 ```
 
 Mais detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).

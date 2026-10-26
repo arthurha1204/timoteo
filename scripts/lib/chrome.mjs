@@ -37,10 +37,18 @@ export async function abrirChrome({ porta = 9333 } = {}) {
   const ws = new WebSocket(alvoWs);
   await new Promise((ok, erro) => { ws.onopen = ok; ws.onerror = erro; });
   let seq = 0; const pend = new Map();
-  ws.onmessage = ev => { const m = JSON.parse(ev.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m); pend.delete(m.id); } };
+  const problemas = [];   // erros de console, exceções e bloqueios de segurança (CSP) vistos na página
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.id && pend.has(m.id)) { pend.get(m.id)(m); pend.delete(m.id); return; }
+    if (m.method === "Log.entryAdded" && ["error", "warning"].includes(m.params.entry.level)) problemas.push({ tipo: m.params.entry.source, texto: m.params.entry.text, url: m.params.entry.url || "" });
+    else if (m.method === "Runtime.exceptionThrown") problemas.push({ tipo: "exceção", texto: m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text, url: m.params.exceptionDetails.url || "" });
+  };
   const cmd = (method, params = {}) => new Promise((ok, erro) => { const id = ++seq; pend.set(id, m => m.error ? erro(new Error(method + ": " + m.error.message)) : ok(m.result)); ws.send(JSON.stringify({ id, method, params })); });
   await cmd("Page.enable");
   await cmd("Runtime.enable");
+  await cmd("Log.enable");
+  await cmd("Network.enable");
 
   const js = async expr => {
     const r = await cmd("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true });
@@ -56,5 +64,6 @@ export async function abrirChrome({ porta = 9333 } = {}) {
   const tela = (largura, altura, escala = 1, mobile = false) => cmd("Emulation.setDeviceMetricsOverride", { width: largura, height: altura, deviceScaleFactor: escala, mobile });
   const antesDeCarregar = fonte => cmd("Page.addScriptToEvaluateOnNewDocument", { source: fonte });
   const foto = async () => Buffer.from((await cmd("Page.captureScreenshot", { format: "png", fromSurface: true })).data, "base64");
-  return { cmd, js, ate, ir, tela, antesDeCarregar, foto, fechar: () => { try { ws.close(); } catch {} fechar(); } };
+  const offline = ligado => cmd("Network.emulateNetworkConditions", { offline: ligado, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+  return { cmd, js, ate, ir, tela, antesDeCarregar, foto, problemas, offline, fechar: () => { try { ws.close(); } catch {} fechar(); } };
 }

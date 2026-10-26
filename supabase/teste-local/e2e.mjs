@@ -49,12 +49,14 @@ function copiar(origem, destino) {
 
 /* ---------- servidor: arquivos do site (config trocada) + proxy para o PostgREST ---------- */
 let servidor, tmp, chrome;
-const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg" };
+// O mesmo Content-Security-Policy que a Vercel envia (vercel.json): o teste falha se o site precisar de algo que ele bloqueia.
+const CSP = JSON.parse(readFileSync(path.join(raiz, "vercel.json"), "utf8")).headers[0].headers.find(h => h.key === "Content-Security-Policy").value;
+const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json", ".png": "image/png", ".jpg": "image/jpeg" };
 
 before(async () => {
 try {
   tmp = mkdtempSync(path.join(os.tmpdir(), "timoteo-e2e-"));
-  for (const x of ["index.html", "css", "js", "data"]) copiar(path.join(raiz, x), path.join(tmp, x));
+  for (const x of ["index.html", "manifest.webmanifest", "sw.js", "css", "js", "data", "vendor", "icons"]) copiar(path.join(raiz, x), path.join(tmp, x));
   writeFileSync(path.join(tmp, "js", "config.js"), `export const SUPABASE_URL = ${JSON.stringify(SITE)};\nexport const SUPABASE_ANON_KEY = ${JSON.stringify(ANON)};\n`);
 
   servidor = http.createServer(async (req, res) => {
@@ -69,7 +71,7 @@ try {
       }
       let arq = path.join(tmp, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));
       if (!arq.startsWith(tmp) || !existsSync(arq) || statSync(arq).isDirectory()) { res.writeHead(404); res.end("não achei"); return; }
-      res.writeHead(200, { "content-type": TIPOS[path.extname(arq)] || "application/octet-stream", "cache-control": "no-store" });
+      res.writeHead(200, { "content-type": TIPOS[path.extname(arq)] || "application/octet-stream", "cache-control": "no-store", "content-security-policy": CSP });
       res.end(readFileSync(arq));
     } catch (e) { res.writeHead(500); res.end(String(e)); }
   });
@@ -286,4 +288,21 @@ test("marcar 'vou evangelizar por aqui' num lugar aprovado funciona", async () =
   await chrome.js("document.querySelector('#pf').requestSubmit(); true");
   await chrome.ate("document.querySelector('#pe .feito')", 10000, "presença marcada");
   assert.equal(sql(`select who from plans where point_id='${PONTO}'`), "Bia");
+});
+
+test("nenhuma tela do modo compartilhado é bloqueada pelo CSP nem lança exceção", async () => {
+  const e = await criarEventoPelaTela(); aprovarEvento(e.id);
+  chrome.problemas.length = 0;
+  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "mensagem", "o-que-fazer", "orar", "dados", "sobre"]) {
+    await entrar(rota);
+    await espera(1500);
+  }
+  await entrar(`perto/ponto/${PONTO}`);
+  await chrome.ate("document.querySelector('#lambe-pt')", 10000);
+  await clicar("#lambe-pt");                       // gera o QR code do lambe
+  await espera(500);
+  const csp = chrome.problemas.filter(p => /Content Security Policy|Refused to|violates/i.test(p.texto));
+  assert.deepEqual(csp, [], "o CSP bloqueou algo: " + JSON.stringify(csp.slice(0, 3)));
+  const excecoes = chrome.problemas.filter(p => p.tipo === "exceção");
+  assert.deepEqual(excecoes, [], "exceções na página: " + JSON.stringify(excecoes.slice(0, 3)));
 });

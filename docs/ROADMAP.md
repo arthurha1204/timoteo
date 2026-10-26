@@ -49,7 +49,8 @@ Um site que marca encontros reais na rua precisa disso antes de abrir ao públic
 - [ ] **Selo "organização verificada"**: o moderador confere igreja ou grupo antes de aprovar eventos.
 - [ ] **Bloquear usuário** e fila de denúncias com prazo de resposta.
 - [ ] Revisão humana obrigatória de eventos em lugares de **segurança média ou alta** e com **menores**.
-- [ ] **Sem dependência de terceiros no navegador**: hospedar Leaflet, qrcode.js e a fonte; adicionar **CSP**.
+- [x] **Sem dependência de terceiros no navegador**: Leaflet, qrcode.js e a fonte hospedados em `vendor/`, com **CSP** testado.
+- [ ] Trocar o `unsafe-inline` do CSP de estilos (hoje necessário por causa de estilos escritos nos modelos de HTML).
 - [ ] **Mapas e busca de endereço próprios ou contratados** (tiles e geocodificador com chave), para suportar tráfego real.
 - [ ] Plano de resposta a incidentes (quem avisa quem, em quanto tempo).
 
@@ -73,7 +74,8 @@ Um site que marca encontros reais na rua precisa disso antes de abrir ao públic
 
 ## Bloco 5: experiência e qualidade
 
-- [ ] **PWA**: manifesto e service worker, instalar na tela inicial, ficha e roteiro **offline**.
+- [x] **PWA**: manifesto, service worker, instalar na tela inicial, ficha e roteiro **offline** (testado no Chrome sem internet).
+- [ ] Testar a instalação em celulares reais (Android e iPhone).
 - [ ] **Lembretes de evento** (notificação web e mensagem pronta de WhatsApp).
 - [ ] Teste em **celulares reais** e navegadores diferentes; teste de **impressão do lambe** em PDF e papel.
 - [ ] **Acessibilidade** (leitor de tela, contraste, teclado) com checagem automática e manual.
@@ -100,7 +102,7 @@ Uma cidade, um grupo pequeno, quatro semanas.
 
 Só depois do piloto. Não é uma versão diferente: é o mesmo sistema, com o mesmo banco e as mesmas regras.
 
-- [ ] **Passo 1 (já no Bloco 5): PWA.** Mesmo código, instalável, com dados compartilhados.
+- [x] **Passo 1: PWA.** Mesmo código, instalável, com dados compartilhados (a parte de dados depende do Bloco 1 num Supabase real).
 - [ ] **Passo 2: empacotar com Capacitor** (Android e iOS), reaproveitando o site, com push nativo, geolocalização nativa e compartilhamento.
 - [ ] Cumprir as regras das lojas para conteúdo gerado por usuários: denúncia, bloqueio, moderação, termos e contato.
 - [ ] Contas de desenvolvedor (Google Play e Apple) e publicação.

@@ -13,7 +13,8 @@
     "banco:parar": "docker compose -f supabase/teste-local/docker-compose.yml down",
     "test:banco": "node --test supabase/teste-local/testar.mjs",
     "test:e2e": "node --test supabase/teste-local/e2e.mjs",
-    "test:tudo": "npm test && npm run test:banco && npm run test:e2e"
+    "test:tudo": "npm test && npm run test:pwa && npm run test:banco && npm run test:e2e",
+    "test:pwa": "node --test tests/pwa.e2e.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -18,6 +18,10 @@ jobs:
         run: npm run check
       - name: Testes
         run: npm test
+      - name: PWA no Chrome, sem internet
+        run: npm run test:pwa
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
       - name: Sintaxe do script de dados (Python)
         run: python3 -m py_compile scripts/gerar_bairros.py
 

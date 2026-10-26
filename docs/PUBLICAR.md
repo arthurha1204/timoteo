@@ -34,6 +34,14 @@ Os caminhos do site são relativos e a navegação é por hash, então funciona 
 - **Privacidade e termos.** Publique uma política de privacidade e termos de uso e diga quem mantém o site.
 - **Revisão de conteúdo.** Os guias por povo são rascunhos. Marque como tal ou revise antes de divulgar.
 
+## PWA e cabeçalhos de segurança
+
+O site é um **PWA**: `manifest.webmanifest`, ícones em `icons/` e o service worker `sw.js`. Ele só registra em HTTPS ou `localhost`. O `vercel.json` envia o **Content-Security-Policy**, que libera apenas o próprio site, o IBGE, o Nominatim, os mapas da OSM France e o Supabase (`*.supabase.co`). **Se você usar um domínio próprio para o Supabase, ou outro serviço de mapas ou de busca, edite o `connect-src` e o `img-src`** em `vercel.json`, senão o navegador bloqueia. Em outra hospedagem, repita esses cabeçalhos.
+
+Bibliotecas e fonte ficam em `vendor/` (licenças em `vendor/LICENSES.md`), então nada é carregado de CDN.
+
+Quando mudar arquivos do site, o service worker atualiza sozinho na visita seguinte. Se criar um arquivo novo que o site precise, ponha-o na lista `NUCLEO` de `sw.js` (o teste `npm test` avisa se esquecer).
+
 ## Serviços gratuitos e seus limites
 
 O site usa serviços públicos gratuitos que têm política de uso:
@@ -43,8 +51,6 @@ O site usa serviços públicos gratuitos que têm política de uso:
 | Tiles OSM France (Humanitarian) | Mapa de fundo | Uso moderado. Com muito tráfego, use um provedor de tiles próprio ou contratado |
 | Nominatim (OpenStreetMap) | Busca de endereço e cidade de um ponto | Limite de cerca de 1 requisição por segundo e uso razoável. Com tráfego real, use um geocodificador próprio ou contratado |
 | API do IBGE | Religião e população por cidade | Sem chave. Faça cache se o tráfego crescer |
-| Google Fonts | Fonte Archivo | Pode ser trocada por hospedagem própria da fonte |
-| cdnjs | Leaflet e qrcode.js | Podem ser copiados para o repositório |
 
 Leia as políticas atuais de cada serviço antes de divulgar para muita gente.
 

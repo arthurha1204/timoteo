@@ -3,7 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,6 +24,8 @@ function copiar(origem, destino) {
 before(async () => {
   tmp = mkdtempSync(path.join(os.tmpdir(), "timoteo-pwa-"));
   for (const x of ["index.html", "manifest.webmanifest", "sw.js", "css", "js", "data", "vendor", "icons"]) copiar(path.join(raiz, x), path.join(tmp, x));
+  // modo local, mesmo que o js/config.js do repositório já aponte para um banco
+  writeFileSync(path.join(tmp, "js", "config.js"), ["SUPABASE_URL", "SUPABASE_ANON_KEY", "TURNSTILE_SITE_KEY", "ENVIAR_URL"].map(n => `export const ${n} = "";`).join(" "));
   servidor = http.createServer((req, res) => {
     const url = new URL(req.url, SITE);
     const arq = path.join(tmp, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));

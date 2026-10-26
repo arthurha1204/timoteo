@@ -70,7 +70,7 @@ export async function sha256Hex(texto) {
 }
 
 /* ---------- modo local (teste): tudo no navegador ---------- */
-const local = {
+export const local = {
   mode: "local",
   async listPoints() {
     let pts = read(KEY_POINTS, null);

@@ -21,7 +21,9 @@ export function copiar(origem, destino) {
 export async function servirSite({ porta, config } = {}) {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "timoteo-site-"));
   for (const x of ["index.html", "manifest.webmanifest", "sw.js", "css", "js", "data", "vendor", "icons"]) copiar(path.join(raiz, x), path.join(tmp, x));
-  if (config) { const { writeFileSync } = await import("node:fs"); writeFileSync(path.join(tmp, "js", "config.js"), config); }
+  // Sem `config`, os testes rodam em modo local, mesmo que o js/config.js do repositório já aponte para um banco.
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(path.join(tmp, "js", "config.js"), config || ["SUPABASE_URL", "SUPABASE_ANON_KEY", "TURNSTILE_SITE_KEY", "ENVIAR_URL"].map(n => `export const ${n} = "";`).join("\n"));
   const servidor = http.createServer((req, res) => {
     const url = new URL(req.url, "http://x");
     const arq = path.join(tmp, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));

@@ -12,7 +12,7 @@ import { oracaoDe, proximosDias, NACOES, GRUPOS_BR } from "../js/orar.js";
 import { resumo } from "../js/ibge.js";
 import { aprox, unidadeDoPonto, populacaoNoRaio } from "../js/bairros.js";
 import * as D from "../js/dados.js";
-import { store } from "../js/data.js";
+import { local as store } from "../js/data.js";
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2B55}\u{1F000}-\u{1F2FF}]/u;

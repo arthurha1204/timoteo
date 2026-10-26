@@ -321,3 +321,10 @@ test("aplicar a migração 2 sobre um banco com dados da migração 1 não perde
   assert.equal((await api("/events_public?select=titulo")).json[0].titulo, "Evento antigo");
   assert.equal(sql("select count(*) from points where manage_token_hash is null"), "1");   // o lugar antigo segue sem link: só a moderação edita
 });
+
+test("moderação corrige o texto de um lugar e de um evento; visitante não consegue", async () => {
+  ok(await api("/points?id=eq.22222222-2222-2222-2222-222222222222", { metodo: "PATCH", corpo: { name: "Ponto pendente corrigido", description: "Sem telefone" }, token: MOD }));
+  assert.equal(sql("select name from points where id='22222222-2222-2222-2222-222222222222'"), "Ponto pendente corrigido");
+  ruim(await api("/points?id=eq.22222222-2222-2222-2222-222222222222", { metodo: "PATCH", corpo: { name: "Invasor" } }));
+  assert.equal(sql("select name from points where id='22222222-2222-2222-2222-222222222222'"), "Ponto pendente corrigido");
+});

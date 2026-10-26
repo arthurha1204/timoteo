@@ -3,6 +3,7 @@
 import { store } from "./data.js";
 import { TIPOS, GUIAS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
+import { blocosFicha, ligarFicha, coletarPonto } from "./cadastrar.js";
 import { $, view, esc } from "./util.js";
 
 
@@ -69,7 +70,7 @@ export async function viewModerar() {
   const todosPontos = [...aprovados, ...dados.points];
   const nomeDe = id => todosPontos.find(p => String(p.id) === String(id))?.name || "(lugar desconhecido)";
   const cartao = (tipo, item, corpo, extra = "") => `<li class="mod-item" data-tipo="${tipo}" data-id="${esc(item.id)}">${corpo}
-    <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno principal" data-acao="aprovar">Aprovar</button><button class="botao pequeno" data-acao="apagar">Apagar</button>${extra}</p></li>`;
+    <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno principal" data-acao="aprovar">Aprovar</button><button class="botao pequeno" data-acao="editar">Corrigir texto</button><button class="botao pequeno" data-acao="apagar">Apagar</button>${extra}</p></li>`;
 
   const lugares = dados.points.map(p => cartao("points", p, `<h3 class="titulo-forte" style="font-size:1.25rem">${esc(p.name)}</h3>
       <p class="miudo">${esc((TIPOS[p.type] || TIPOS.outro).nome)} · ${new Date(p.created_at).toLocaleString("pt-BR")} · <a href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=17/${p.lat}/${p.lng}" target="_blank" rel="noopener">ver no mapa</a></p>
@@ -99,10 +100,29 @@ export async function viewModerar() {
     <h2 class="titulo-forte">Eventos pendentes</h2><ul class="lista-mod" id="l-events">${eventos || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Denúncias</h2><ul class="lista-mod" id="l-reports">${reps || '<li class="miudo">Nenhuma denúncia.</li>'}</ul></div>`;
   $("#sair").onclick = () => { store.admin.sair(); viewModerar(); };
+  const abrirEdicao = (li, tipo, id) => {
+    if (li.querySelector("form.mod-edicao")) return;
+    const item = (tipo === "points" ? dados.points : dados.events).find(x => String(x.id) === String(id));
+    const campo = (n, rot, v, area) => `<label>${rot}</label>${area ? `<textarea class="campo" name="${n}" rows="3">${esc(v || "")}</textarea>` : `<input class="campo" name="${n}" value="${esc(v || "")}">`}`;
+    const f = document.createElement("form"); f.className = "mod-edicao form-cad"; f.style.marginTop = "14px";
+    f.innerHTML = (tipo === "points" ? blocosFicha(item) : campo("titulo", "Título", item.titulo) + campo("objetivo", "Objetivo", item.objetivo, true) + campo("descricao", "Descrição", item.descricao, true) + campo("roteiro", "Roteiro", item.roteiro, true) + campo("requisitos", "Requisitos", item.requisitos))
+      + '<p class="erro" hidden></p><p style="margin-top:12px"><button class="botao pequeno principal">Salvar correção</button></p>';
+    li.appendChild(f);
+    if (tipo === "points") ligarFicha(f);
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try {
+        const campos = tipo === "points" ? coletarPonto(f) : Object.fromEntries(new FormData(f));
+        if (tipo === "points") { delete campos.lat; delete campos.lng; delete campos.best_time; }
+        await store.admin.editar(tipo, id, campos); viewModerar();
+      } catch (err) { const m = f.querySelector(".erro"); m.hidden = false; m.textContent = "Não deu certo: " + err.message; }
+    };
+  };
   view.onclick = async ev => {
     const b = ev.target.closest("button[data-acao]"); if (!b) return;
     const li = b.closest(".mod-item"), tipo = li.dataset.tipo, id = li.dataset.id;
     try {
+      if (b.dataset.acao === "editar") return abrirEdicao(li, tipo, id);
       if (b.dataset.acao === "aprovar") await store.admin.aprovar(tipo, id);
       else if (b.dataset.acao === "apagar") { if (!confirm("Apagar de vez? Isso não pode ser desfeito.")) return; await store.admin.apagar(tipo, id); }
       else if (b.dataset.acao === "ocultar") { if (!confirm("Cancelar este evento para todo mundo?")) return; await store.admin.ocultarEvento(b.dataset.alvo); }

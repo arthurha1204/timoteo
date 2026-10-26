@@ -170,6 +170,19 @@ test("cadastrar um lugar pela tela deixa pendente, e a moderação aprova pela t
   await chrome.ate("document.body.innerText.includes('Feira do Largo')", 10000);
 });
 
+test("a moderação corrige o texto de um lugar pendente pela tela antes de aprovar", async () => {
+  sql(`insert into points (name, type, lat, lng, approved, description) values ('Lugar com telefone', 'praca', -12.98, -38.52, false, 'Ligue 71 99999-0000');`);
+  await comoModerador(MOD);
+  await entrar("moderar");
+  await chrome.ate("document.body.innerText.includes('Lugar com telefone')", 10000, "lugar na fila");
+  await clicar('.mod-item[data-tipo="points"] [data-acao="editar"]');
+  await chrome.ate("document.querySelector('form.mod-edicao [name=description]')", 5000, "formulário de correção");
+  await chrome.js("(() => { document.querySelector('form.mod-edicao [name=description]').value = 'Praça movimentada'; document.querySelector('form.mod-edicao').requestSubmit(); return true; })()");
+  await chrome.ate("document.body.innerText.includes('Praça movimentada')", 10000, "texto corrigido na fila");
+  assert.equal(sql("select description from points where name='Lugar com telefone'"), "Praça movimentada");
+  assert.equal(sql("select approved from points where name='Lugar com telefone'"), "f");
+});
+
 test("sem sessão a moderação pede login, e quem não é moderador não vê nada", async () => {
   sql(`insert into points (name, type, lat, lng, approved) values ('Pendente secreto', 'praca', -12.98, -38.52, false);`);
   await entrar("moderar");

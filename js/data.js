@@ -128,6 +128,10 @@ const local = {
 };
 
 /* ---------- modo compartilhado (Supabase) ---------- */
+export const CAMPOS_EDITAVEIS = {
+  points: ["name", "type", "povo", "referencia", "description", "publico", "idiomas", "fluxo", "dias", "periodo", "evitar", "abordagem", "autorizacao", "autoriza_quem", "risco", "estrutura", "parceiro", "status", "group_link"],
+  events: ["titulo", "objetivo", "descricao", "roteiro", "requisitos"]
+};
 const KEY_SESSAO = "ev_admin_session";
 
 function sb() {
@@ -216,6 +220,13 @@ function sb() {
         return { points, events };
       },
       async aprovar(tabela, id) { await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ approved: true }), extra: min, ...comoAdmin() }); },
+      // Correção feita pela moderação (tira telefone no texto, conserta erro de digitação). Só campos de texto da lista.
+      async editar(tabela, id, campos) {
+        const permitidos = CAMPOS_EDITAVEIS[tabela]; if (!permitidos) throw new Error("Tabela inválida.");
+        const corpo = Object.fromEntries(Object.entries(campos).filter(([k]) => permitidos.includes(k)));
+        if (!Object.keys(corpo).length) throw new Error("Nada para salvar.");
+        await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(corpo), extra: min, ...comoAdmin() });
+      },
       async apagar(tabela, id) { await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "DELETE", extra: min, ...comoAdmin() }); },
       async ocultarEvento(id) { await call(`/events?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ status: "cancelado" }), extra: min, ...comoAdmin() }); },
       denuncias: () => call("/reports?select=*&order=created_at.desc", comoAdmin())

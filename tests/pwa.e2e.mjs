@@ -7,7 +7,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFile
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { abrirChrome, espera } from "../scripts/lib/chrome.mjs";
+import { abrirChrome } from "../scripts/lib/chrome.mjs";
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORTA = Number(process.env.PWA_PORTA || 5191);

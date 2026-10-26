@@ -159,7 +159,13 @@ index.html                página única, com rotas por hash (#/perto, #/eventos
 manifest.webmanifest      manifesto do PWA (instalar na tela inicial)
 sw.js                     service worker (offline)
 css/                      visual (style.css) e fonte (fontes.css)
-js/app.js                 mapa, ficha do lugar, cadastro, páginas
+js/app.js                 roteador e registro do service worker
+js/perto.js               painel + mapa, lista e ficha do lugar
+js/cadastrar.js           cadastro de lugar com ficha padrão
+js/cidade.js              números da cidade: Censo, povos, bairro e raio
+js/lambe.js               lambe com QR e impressão
+js/paginas.js             povos, conversas, mensagem, dados, oração, legal
+js/util.js                ajudantes comuns
 js/eventos.js             eventos, trajeto, participação, link secreto, denúncia
 js/moderar.js             painel de moderação (#/moderar)
 js/ficha.js               ficha padrão, checklist e pedidos de oração do ponto

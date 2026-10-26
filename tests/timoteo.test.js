@@ -210,8 +210,8 @@ test("modo local traz pontos e eventos de exemplo válidos", async () => {
 });
 
 /* ---------- consistência do código da interface ---------- */
-test("toda função de tela chamada em app.js e eventos.js está definida", () => {
-  for (const arq of ["app.js", "eventos.js"]) {
+test("toda função de tela chamada em qualquer módulo está definida ou importada", () => {
+  for (const arq of readdirSync(path.join(raiz, "js")).filter(f => f.endsWith(".js"))) {
     const src = readFileSync(path.join(raiz, "js", arq), "utf8");
     const chamadas = new Set([...src.matchAll(/\b(view[A-Z]\w*|preencher[A-Z]\w*|mount[A-Z]\w*|estimar[A-Z]\w*)\(/g)].map(m => m[1]));
     for (const nome of chamadas) {

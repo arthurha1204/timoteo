@@ -8,7 +8,7 @@
   "scripts": {
     "test": "node --test tests/timoteo.test.js",
     "start": "python -m http.server 5173",
-    "check": "node --check js/app.js && node --check js/eventos.js && node --check js/ficha.js && node --check js/orar.js && node --check js/ibge.js && node --check js/bairros.js && node --check js/content.js && node --check js/dados.js && node --check js/data.js && node --check js/moderar.js && node --check js/legal.js",
+    "check": "npm run lint",
     "banco:subir": "docker compose -f supabase/teste-local/docker-compose.yml up -d --wait",
     "banco:parar": "docker compose -f supabase/teste-local/docker-compose.yml down",
     "test:banco": "node --test supabase/teste-local/testar.mjs",
@@ -16,7 +16,8 @@
     "test:tudo": "npm test && npm run test:pwa && npm run test:banco && npm run test:e2e",
     "test:pwa": "node --test tests/pwa.e2e.mjs",
     "legal": "node scripts/gerar_legal.mjs",
-    "checar:publicacao": "node scripts/checar_publicacao.mjs"
+    "checar:publicacao": "node scripts/checar_publicacao.mjs",
+    "lint": "eslint . --max-warnings=0"
   },
   "engines": {
     "node": ">=20"
@@ -36,5 +37,9 @@
     "ibge",
     "brasil",
     "open-source"
-  ]
+  ],
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0"
+  }
 }

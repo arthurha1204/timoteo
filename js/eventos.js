@@ -4,18 +4,10 @@
 import { store } from "./data.js";
 import { TIPOS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
+import { $, view, COR, cruz, SETA_IR, esc, siteBase, waze, tiles } from "./util.js";
 
-const $ = (s, r = document) => r.querySelector(s);
-const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const nf = n => Number(n).toLocaleString("pt-BR");
+// Específico dos eventos: o WhatsApp leva o número do responsável (diferente do link genérico de util.js).
 const wa = (num, txt) => `https://wa.me/${num}?text=${encodeURIComponent(txt)}`;
-const waze = p => `https://waze.com/ul?ll=${p.lat},${p.lng}&navigate=yes`;
-const siteBase = () => location.href.split("#")[0];
-const view = $("#view");
-const SETA = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const CRUZ = '<svg width="200" height="200" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3h3v6.5H20v3h-6.5V21h-3v-8.5H4v-3h6.5z" fill="currentColor"/></svg>';
-const COR = "#3a5fcf";
-const tiles = () => L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", { subdomains: "abc", maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">colaboradores do OpenStreetMap</a>, estilo <a href="https://www.hotosm.org/">Humanitarian OSM Team</a>, servido por <a href="https://openstreetmap.fr/">OSM France</a>' });
 const rodape = () => `<footer class="rodape" style="padding-left:0"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p><p class="miudo" style="margin-top:8px"><a href="#/privacidade">Política de privacidade</a> · <a href="#/termos">Termos de uso</a> · <a href="#/sobre">Sobre</a></p><p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>`;
 
 export const PROPOSITOS = {
@@ -45,7 +37,6 @@ const fim = e => new Date(`${e.data}T${e.fim || e.inicio || "23:59"}`);
 const dataLonga = e => ini(e).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 const quando = e => `${dataLonga(e)}, ${e.inicio} às ${e.fim}`;
 const proximos = evs => evs.filter(e => e.status !== "cancelado" && fim(e) >= new Date()).sort((a, b) => ini(a) - ini(b));
-const nomeDe = k => PROPOSITOS[k]?.nome || "Evento";
 const lerJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
 const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const tokens = () => lerJSON("ev_tokens", {});            // link secreto de cada evento que a pessoa criou
@@ -82,7 +73,7 @@ function baixarICS(e, ponto) {
 function itemEvento(e, pt) {
   const d = ini(e);
   return `<li><a href="#/eventos/${encodeURIComponent(e.id)}" class="evento-item"><div class="evento-data"><b class="titulo-forte">${d.getDate()}</b><span>${d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></div>
-    <div><b class="evento-nome">${esc(e.titulo)}</b><span class="miudo">${esc(PROPOSITOS[e.proposito]?.curto || "")} · ${esc(e.inicio)} às ${esc(e.fim)}${pt ? " · " + esc(pt.name) : ""}${e.example ? " · exemplo" : ""}</span></div>${SETA}</a></li>`;
+    <div><b class="evento-nome">${esc(e.titulo)}</b><span class="miudo">${esc(PROPOSITOS[e.proposito]?.curto || "")} · ${esc(e.inicio)} às ${esc(e.fim)}${pt ? " · " + esc(pt.name) : ""}${e.example ? " · exemplo" : ""}</span></div>${SETA_IR}</a></li>`;
 }
 
 async function viewLista() {
@@ -352,7 +343,7 @@ async function viewNovo(q) {
       guardar("ev_tokens", r.event.id, r.token);
       if (r.pending) guardar("ev_pendentes", r.event.id, { ...ev2, id: r.event.id });
       const link = linkGerenciar(r.event.id, r.token);
-      view.innerHTML = `<div class="pagina"><div class="destaque-conta"><span class="destaque-cruz">${CRUZ}</span><h2>Evento enviado.</h2><p>${r.pending ? "Ele aparece na lista assim que a moderação aprovar." : "Já está na lista de eventos."} Avise a equipe e marque o dia.</p></div>
+      view.innerHTML = `<div class="pagina"><div class="destaque-conta"><span class="destaque-cruz">${cruz(200)}</span><h2>Evento enviado.</h2><p>${r.pending ? "Ele aparece na lista assim que a moderação aprovar." : "Já está na lista de eventos."} Avise a equipe e marque o dia.</p></div>
         <div class="contexto"><b>Guarde o seu link secreto</b>
           <p style="font-weight:400;margin-top:6px">É a única forma de cancelar ou editar o evento. Ele fica salvo neste aparelho, mas guarde também em outro lugar. Quem tiver o link pode gerenciar o evento: não compartilhe.</p>
           <p class="miudo" style="margin-top:8px;word-break:break-all">${esc(link)}</p>

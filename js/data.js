@@ -148,7 +148,7 @@ function sb() {
     mode: "supabase",
     listPoints: () => call("/points?approved=eq.true&select=*&order=created_at.desc"),
     async addPoint(p) {
-      const { example, id, ...limpo } = p;
+      const limpo = { ...p }; delete limpo.example; delete limpo.id;
       await post("/points", limpo, { extra: min });
       return { point: limpo, pending: true };
     },

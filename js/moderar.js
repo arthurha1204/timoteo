@@ -3,10 +3,8 @@
 import { store } from "./data.js";
 import { TIPOS, GUIAS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
+import { $, view, esc } from "./util.js";
 
-const $ = (s, r = document) => r.querySelector(s);
-const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const view = $("#view");
 
 // Sinais para o moderador prestar atenção. Não substituem a leitura.
 const TEL = /(\+?\d[\d\s().-]{8,}\d)/, EMAIL = /\S+@\S+\.\S+/, LINK = /https?:\/\//i;

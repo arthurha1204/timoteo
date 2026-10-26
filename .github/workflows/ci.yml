@@ -14,8 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Sintaxe dos módulos JavaScript
-        run: npm run check
+      - run: npm ci
+      - name: Lint (nomes não definidos, código morto)
+        run: npm run lint
       - name: Testes
         run: npm test
       - name: PWA no Chrome, sem internet

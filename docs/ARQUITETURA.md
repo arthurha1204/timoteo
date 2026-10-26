@@ -33,7 +33,13 @@ Navegação por hash, sem recarregar a página:
 
 | Arquivo | Função |
 |---|---|
-| `js/app.js` | Roteador, painel e mapa (`mountPerto`), ficha do lugar, cadastro, páginas de conteúdo, lambe |
+| `js/app.js` | Roteador: escolhe a tela pelo endereço e registra o service worker |
+| `js/perto.js` | Painel + mapa (`montarPerto`), lista, filtros e ficha do lugar |
+| `js/cadastrar.js` | Cadastro de lugar, em blocos, seguindo a ficha padrão |
+| `js/cidade.js` | Bloco "Em <cidade>": Censo 2022, povos indígenas e quilombolas, estimativa por bairro e raio |
+| `js/lambe.js` | Lambe: prévia com QR e impressão em A4 |
+| `js/paginas.js` | Páginas de conteúdo: povos, conversas, mensagem, o que fazer, dados, oração, textos legais e sobre |
+| `js/util.js` | Ajudantes comuns: texto seguro (`esc`), mapa, distância, links do Waze e WhatsApp |
 | `js/eventos.js` | Eventos: lista, detalhe com mapa e trajeto, criação com compromissos, participação, denúncia, arquivo de calendário (.ics) |
 | `js/ficha.js` | Ficha padrão (14 campos fixos), cálculo de preenchimento, checklist "Antes de ir", pedidos de oração do ponto |
 | `js/orar.js` | Oração do dia: alterna nação (Portas Abertas) e povo do Brasil (Joshua Project) por data |

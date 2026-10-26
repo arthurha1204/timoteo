@@ -328,3 +328,20 @@ test("moderação corrige o texto de um lugar e de um evento; visitante não con
   ruim(await api("/points?id=eq.22222222-2222-2222-2222-222222222222", { metodo: "PATCH", corpo: { name: "Invasor" } }));
   assert.equal(sql("select name from points where id='22222222-2222-2222-2222-222222222222'"), "Ponto pendente corrigido");
 });
+
+test("com exigir_captcha.sql, só o envio com o segredo entra; sem ele o banco recusa; desfazer volta ao normal", async () => {
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "opcional");
+  sql(readFileSync(path.join(dir, "exigir_captcha.sql"), "utf8"));
+  sql("insert into protecao (segredo) values ('segredo-de-teste');");
+  const alvo = `evento:${randomUUID()}`;
+  const corpo = { name: "Pelo proxy", type: "praca", lat: -12.9, lng: -38.5 };
+  ruim(await api("/points", { metodo: "POST", corpo }));
+  ruim(await api("/points", { metodo: "POST", corpo, cab: { "x-proxy-secret": "errado" } }));
+  ok(await api("/points", { metodo: "POST", corpo, cab: { "x-proxy-secret": "segredo-de-teste" } }));
+  assert.equal(sql("select count(*) from points where name='Pelo proxy' and approved=false"), "1");
+  ruim(await api("/reports", { metodo: "POST", corpo: { alvo, motivo: "teste" } }));
+  ok(await api("/reports", { metodo: "POST", corpo: { alvo, motivo: "teste" }, cab: { "x-proxy-secret": "segredo-de-teste" } }));
+  sql(readFileSync(path.join(dir, "desfazer_captcha.sql"), "utf8"));
+  ok(await api("/reports", { metodo: "POST", corpo: { alvo, motivo: "depois de desfazer" } }));
+  sql("drop table protecao cascade;");
+});

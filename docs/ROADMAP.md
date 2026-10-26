@@ -35,9 +35,11 @@ Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 
 - [x] **Editar e cancelar** evento no modo compartilhado.
 - [x] **Editar e pausar o lugar** com o link secreto do responsável.
 - [x] **Painel de moderação** (`#/moderar`): aprovar, apagar, cancelar evento e **ler denúncias**, com sinais de atenção.
-- [ ] Editar pelo painel e papéis diferentes (moderador e administrador).
+- [x] **Corrigir texto** de lugares e eventos pelo painel de moderação.
+- [ ] Papéis diferentes (moderador e administrador).
 - [x] **Validação no servidor** e **trava global** contra enxurrada de envios.
-- [ ] **Captcha** (por exemplo Cloudflare Turnstile) e limite por pessoa, com função de borda.
+- [x] **Captcha opcional** (Cloudflare Turnstile) com função de borda e SQL que exige o segredo: código e testes prontos, falta ligar com as suas contas (`docs/CAPTCHA.md`).
+- [ ] Limite de envios por pessoa.
 - [x] **Testes automáticos das regras de acesso (RLS)**: provam o que visitante, moderador e intruso podem e não podem.
 
 ## Bloco 2: confiança e segurança

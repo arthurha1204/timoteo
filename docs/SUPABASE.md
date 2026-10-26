@@ -68,7 +68,7 @@ Ao criar um evento, o navegador gera um código aleatório, envia ao banco **só
 
 ## Limitações conhecidas
 
-- **Sem captcha nem limite por pessoa.** A trava é global. Para proteção de verdade, ponha o formulário atrás de uma função de borda com captcha (por exemplo Cloudflare Turnstile).
+- **Captcha desligado por padrão e sem limite por pessoa.** A trava é global. Para proteção de verdade, ligue o captcha opcional: veja `docs/CAPTCHA.md`.
 - **Link secreto perdido** não se recupera.
 - **Edição só de alguns campos** e sempre volta para aprovação.
 - **Moderação por e-mail** depende de o Supabase Auth enviar e-mails (o plano gratuito limita o envio; configure um SMTP próprio para produção).

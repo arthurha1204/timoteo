@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "test": "node --test tests/timoteo.test.js",
+    "test": "node --test tests/timoteo.test.js tests/captcha.test.js",
     "start": "python -m http.server 5173",
     "check": "npm run lint",
     "banco:subir": "docker compose -f supabase/teste-local/docker-compose.yml up -d --wait",

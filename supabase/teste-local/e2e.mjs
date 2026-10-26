@@ -57,7 +57,7 @@ before(async () => {
 try {
   tmp = mkdtempSync(path.join(os.tmpdir(), "timoteo-e2e-"));
   for (const x of ["index.html", "manifest.webmanifest", "sw.js", "css", "js", "data", "vendor", "icons"]) copiar(path.join(raiz, x), path.join(tmp, x));
-  writeFileSync(path.join(tmp, "js", "config.js"), `export const SUPABASE_URL = ${JSON.stringify(SITE)};\nexport const SUPABASE_ANON_KEY = ${JSON.stringify(ANON)};\n`);
+  writeFileSync(path.join(tmp, "js", "config.js"), `export const SUPABASE_URL = ${JSON.stringify(SITE)};\nexport const SUPABASE_ANON_KEY = ${JSON.stringify(ANON)};\nexport const TURNSTILE_SITE_KEY = "";\nexport const ENVIAR_URL = "";\n`);
 
   servidor = http.createServer(async (req, res) => {
     try {

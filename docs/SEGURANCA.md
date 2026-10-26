@@ -42,7 +42,7 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 | Contato do responsável público | **Resolvido no modo compartilhado:** o contato só sai pela função `contato_do_evento`, para quem confirmou presença. No modo local (teste) não há privacidade, pois tudo fica no próprio aparelho | Manter o aviso para usar o contato da igreja ou do grupo |
 | Lista de quem confirmou presença pública | **Resolvido:** só a contagem é pública | Nada |
 | Responsável não consegue cancelar ou editar | **Resolvido** com o link secreto (só o hash fica no banco). Quem perde o link depende da moderação | Considerar login do responsável no futuro |
-| Qualquer pessoa pode enviar sem limite | **Parcial:** o banco tem trava global (60 pendentes por hora, por exemplo) e validações fortes, mas não há captcha nem limite por pessoa | Captcha (Cloudflare Turnstile) e função de borda |
+| Qualquer pessoa pode enviar sem limite | **Parcial:** o banco tem trava global (60 pendentes por hora, por exemplo) e validações fortes, mas sem captcha por padrão nem limite por pessoa | Ligar o captcha opcional (`docs/CAPTCHA.md`) |
 | Moderação só pelo painel do Supabase | **Resolvido:** painel em `#/moderar`, com sinais de atenção e fila de denúncias. O login por e-mail ainda não foi testado num Supabase hospedado | Testar com um projeto real |
 | Denúncias não são lidas | **Resolvido:** aparecem no painel de moderação | Definir prazo de resposta |
 | Evento em lugar perigoso | Depende do que o responsável declara e da moderação. O painel destaca lugares de segurança média ou alta, escolas e hospitais | Revisão humana obrigatória nesses casos |

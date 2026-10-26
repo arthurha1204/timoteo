@@ -1,4 +1,5 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, ENVIAR_URL, TURNSTILE_SITE_KEY } from "./config.js";
+import { obterToken } from "./captcha.js";
 
 // Pontos de exemplo (aparecem só em modo local).
 const SEED = [
@@ -150,6 +151,13 @@ function sb() {
   const post = (path, corpo, opts = {}) => call(path, { method: "POST", body: JSON.stringify(corpo), ...opts });
   const min = { Prefer: "return=minimal" };
   const rpc = (nome, corpo) => post("/rpc/" + nome, corpo);
+  // Envios novos (lugar, evento, plano, denúncia). Com captcha ligado passam pela função de borda; sem ele, vão direto.
+  const enviar = async (tabela, corpo) => {
+    if (!(ENVIAR_URL && TURNSTILE_SITE_KEY)) return post("/" + tabela, corpo, { extra: min });
+    const token = await obterToken();
+    const r = await fetch(ENVIAR_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tabela, corpo, token }) });
+    if (!r.ok) { let m = ""; try { m = (await r.json()).message; } catch { /* sem corpo */ } const e = new Error(m || "Erro " + r.status); e.status = r.status; throw e; }
+  };
 
   const sessao = () => {
     const s = read(KEY_SESSAO, null);
@@ -165,12 +173,12 @@ function sb() {
     async addPoint(p) {
       const id = novoUuid(), token = novoToken();
       const limpo = { ...p, id, manage_token_hash: await sha256Hex(token) }; delete limpo.example;
-      await post("/points", limpo, { extra: min });
+      await enviar("points", limpo);
       return { point: { ...limpo, manage_token_hash: undefined }, pending: true, token };
     },
     editPoint: (id, token, dados) => rpc("editar_lugar", { p_point: id, p_token: token || "", p_dados: dados }),
     listPlans: pointId => call("/plans?point_id=eq." + encodeURIComponent(pointId) + "&select=who,when_text&order=created_at.asc"),
-    async addPlan(plan) { await post("/plans", { point_id: plan.point_id, who: plan.who, when_text: plan.when_text }, { extra: min }); },
+    async addPlan(plan) { await enviar("plans", { point_id: plan.point_id, who: plan.who, when_text: plan.when_text }); },
     allPlans: () => call("/plans?select=point_id,when_text,who"),
     // Visão pública: sem contato e sem o hash do link secreto. Inclui eventos cancelados (a tela mostra o aviso).
     listEvents: () => call("/events_public?select=*&order=data.asc"),
@@ -178,7 +186,7 @@ function sb() {
       const id = novoUuid(), token = novoToken();
       const corpo = { ...e, id, manage_token_hash: await sha256Hex(token) };
       delete corpo.example; delete corpo.status;
-      await post("/events", corpo, { extra: min });
+      await enviar("events", corpo);
       return { event: { ...corpo, manage_token_hash: undefined, contato: undefined }, pending: true, token };
     },
     cancelEvent: (id, token) => rpc("cancelar_evento", { p_event: id, p_token: token || "" }),
@@ -190,7 +198,7 @@ function sb() {
     },
     addPart: p => rpc("participar", { p_event: p.event_id, p_who: p.who || "", p_qtd: p.qtd || 1 }),
     contatoDoEvento: (eventId, partId) => rpc("contato_do_evento", { p_event: eventId, p_part: partId }),
-    async addReport(r) { await post("/reports", { alvo: r.alvo, motivo: r.motivo, detalhe: r.detalhe || "" }, { extra: min }); },
+    async addReport(r) { await enviar("reports", { alvo: r.alvo, motivo: r.motivo, detalhe: r.detalhe || "" }); },
 
     /* ----- moderação: exige entrar com um e-mail da tabela "admins" ----- */
     admin: {

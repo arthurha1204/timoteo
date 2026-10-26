@@ -372,3 +372,5 @@ mark.preencher{background:var(--amarelo);color:var(--tinta);padding:0 .25em;bord
 .camadas .opcoes{margin-top:8px}
 .camadas .miudo{margin-top:8px}
 @media (width>=960px){.camadas{padding-left:24px;padding-right:24px}}
+.captcha-fundo{position:fixed;inset:0;background:oklch(0.2 0.02 255 / .55);display:grid;place-items:center;z-index:2000;padding:16px}
+.captcha-caixa{background:var(--fundo);padding:20px;max-width:360px;width:100%;display:grid;gap:14px;justify-items:start}

@@ -48,7 +48,10 @@ export async function montarPerto() {
           <p class="erro" id="erro" hidden></p>
         </section>
         <div id="resultado"></div>
-        <div class="legenda"><span><i class="l-vai"></i> alguém já marcou que vai</span><span><i class="l-sem"></i> ninguém marcou ainda</span></div>
+        <div class="legenda"><span><i class="l-vai"></i> alguém já marcou que vai</span><span><i class="l-sem"></i> ninguém marcou ainda</span><span id="leg-ind" hidden><i class="l-ind"></i> pessoas indígenas</span><span id="leg-qui" hidden><i class="l-qui"></i> pessoas quilombolas</span></div>
+        <fieldset class="camadas"><legend>Povos no mapa</legend>
+          <div class="opcoes"><label class="opcao"><input type="checkbox" id="cam-ind"><span>Pessoas indígenas</span></label><label class="opcao"><input type="checkbox" id="cam-qui"><span>Pessoas quilombolas</span></label></div>
+          <p class="miudo" id="cam-nota" hidden></p></fieldset>
         <div class="controles"><div class="alternador" role="group" aria-label="Ordem da lista"><button aria-pressed="true" data-m="perto">Perto de você</button><button aria-pressed="false" data-m="tipo">Por tipo</button></div>
           <label class="raio">Até <select id="raio"><option value="1">1 km</option><option value="5" selected>5 km</option><option value="20">20 km</option><option value="100">100 km</option><option value="0">Todos</option></select></label></div>
         <ul class="lista" id="lista"></ul>
@@ -74,6 +77,8 @@ export async function montarPerto() {
   const map = L.map("mapa", { zoomControl: true }).setView([-14.2, -51.9], 4);
   tiles().addTo(map);
   const layer = L.layerGroup().addTo(map);
+  const camadaPovos = L.layerGroup().addTo(map);
+  let dadosPovos = null;
   let userMk = null, circle = null;
   st.map = map;
 
@@ -327,6 +332,36 @@ export async function montarPerto() {
     }
     if (st.center) setCenter(st.center); else { drawResultado(); drawLista(); }
   };
+  /* camada de povos: um círculo por cidade, do tamanho do número de pessoas (Censo 2022) */
+  const COR_IND = "#d9730d", COR_QUI = "#0f8f7a";
+  async function desenharPovos() {
+    camadaPovos.clearLayers();
+    const ind = $("#cam-ind").checked, qui = $("#cam-qui").checked, nota = $("#cam-nota");
+    $("#leg-ind").hidden = !ind; $("#leg-qui").hidden = !qui;
+    if (!ind && !qui) { nota.hidden = true; return; }
+    nota.hidden = false; nota.textContent = "Carregando…";
+    try {
+      if (!dadosPovos) { const r = await fetch("data/povos/municipios.json"); if (!r.ok) throw new Error(); dadosPovos = await r.json(); }
+    } catch { nota.textContent = "Não consegui carregar a camada agora."; return; }
+    const itens = [];
+    for (const [, nome, uf, lat, lng, i, q] of dadosPovos.municipios) {
+      if (ind && i >= dadosPovos.limiar) itens.push({ nome, uf, lat, lng, n: i, cor: COR_IND, i, q });
+      if (qui && q >= dadosPovos.limiar) itens.push({ nome, uf, lat, lng, n: q, cor: COR_QUI, i, q });
+    }
+    itens.sort((a, b) => b.n - a.n);   // os maiores embaixo, para os menores aparecerem por cima
+    for (const it of itens) {
+      const c = L.circleMarker([it.lat, it.lng], { radius: 3 + Math.sqrt(it.n) / 9, color: it.cor, weight: 1.5, fillColor: it.cor, fillOpacity: .28 }).addTo(camadaPovos);
+      c.bindPopup(`<b>${esc(it.nome)} (${esc(it.uf)})</b><br>${nf(it.i)} ${plural(it.i, "pessoa indígena", "pessoas indígenas")}<br>${nf(it.q)} ${plural(it.q, "pessoa quilombola", "pessoas quilombolas")}<br><a href="#/povos/${it.cor === COR_IND ? "indigenas" : "quilombolas"}">Ver o guia deste povo</a>`);
+      c.on("click", e => L.DomEvent.stopPropagation(e));
+      c.bringToBack();
+    }
+    const cobertura = [];
+    if (ind) cobertura.push(`${Math.round(dadosPovos.coberto.indigenas / dadosPovos.brasil.indigenas * 100)}% das pessoas indígenas`);
+    if (qui) cobertura.push(`${Math.round(dadosPovos.coberto.quilombolas / dadosPovos.brasil.quilombolas * 100)}% das pessoas quilombolas`);
+    nota.textContent = `Cada círculo é uma cidade com pelo menos ${nf(dadosPovos.limiar)} pessoas do povo escolhido, e o tamanho segue o número. Censo 2022, IBGE: conta quem se declara indígena ou quilombola na cidade toda, dentro ou fora de aldeias e territórios. As cidades mostradas somam ${cobertura.join(" e ")} do país. Toque num círculo para ver os números.`;
+  }
+  $("#cam-ind").onchange = desenharPovos; $("#cam-qui").onchange = desenharPovos;
+
   drawMarkers();
   st.destruir = () => map.remove();
   return st;

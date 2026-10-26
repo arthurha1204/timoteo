@@ -355,3 +355,30 @@ test("as migrações são idempotentes por escrito: nada de create sem if not ex
     assert.ok(!/create\s+(?:unique\s+)?index\s+(?!if not exists)/i.test(sqlTxt), `${f}: create index sem "if not exists"`);
   }
 });
+
+/* ---------- camada de povos no mapa ---------- */
+import { centroide } from "../scripts/gerar_povos.mjs";
+
+test("data/povos/municipios.json: estrutura, coordenadas no Brasil e totais coerentes com o país", () => {
+  const d = JSON.parse(readFileSync(path.join(raiz, "data", "povos", "municipios.json"), "utf8"));
+  assert.deepEqual(d.colunas, ["codigo", "nome", "uf", "lat", "lng", "indigenas", "quilombolas"]);
+  assert.ok(d.municipios.length > 500 && d.municipios.length < 2000);
+  for (const [cod, nome, uf, lat, lng, ind, qui] of d.municipios) {
+    assert.match(cod, /^\d{7}$/); assert.ok(nome && /^[A-Z]{2}$/.test(uf), cod);
+    assert.ok(lat > -34 && lat < 6 && lng > -75 && lng < -28, `${nome}: fora do Brasil`);
+    assert.ok(ind >= d.limiar || qui >= d.limiar, `${nome}: abaixo do limiar`);
+  }
+  const ind = d.municipios.reduce((s, m) => s + m[5], 0), qui = d.municipios.reduce((s, m) => s + m[6], 0);
+  assert.equal(ind, d.coberto.indigenas); assert.equal(qui, d.coberto.quilombolas);
+  assert.ok(ind <= d.brasil.indigenas && qui <= d.brasil.quilombolas);
+  assert.ok(ind / d.brasil.indigenas > 0.8 && qui / d.brasil.quilombolas > 0.8, "a camada deveria cobrir a maior parte das pessoas");
+  const manaus = d.municipios.find(m => m[1] === "Manaus"), sg = d.municipios.find(m => m[1] === "São Gabriel da Cachoeira");
+  assert.ok(manaus && manaus[5] > 60000 && sg && sg[5] > 40000);
+});
+
+test("centroide: quadrado, retângulo e multipolígono ponderado pela área", () => {
+  const quad = { type: "Polygon", coordinates: [[[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]]] };
+  const c = centroide(quad); assert.ok(Math.abs(c.lng - 1) < 1e-9 && Math.abs(c.lat - 1) < 1e-9);
+  const multi = { type: "MultiPolygon", coordinates: [[[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]], [[[100, 100], [101, 100], [101, 101], [100, 101], [100, 100]]]] };
+  const m = centroide(multi); assert.ok(m.lng < 10 && m.lat < 10, "a ilha pequena quase não puxa o centro");
+});

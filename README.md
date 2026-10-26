@@ -22,6 +22,8 @@ Timóteo foi um jovem que seguiu e serviu ao lado do apóstolo Paulo (Atos 16:1-
 - **Conversas.** Roteiros para situações difíceis: quem se feriu na igreja, luto e doença, sofrimento emocional (com CVV 188), espíritas, religiões de matriz africana e outras.
 - **Orar hoje.** Cada dia, uma nação da Lista Mundial da Perseguição (Portas Abertas) ou um povo ainda não alcançado no Brasil (Joshua Project), com três pedidos de oração.
 - **Dados e fontes.** Página com todos os números, os links e as ressalvas.
+- **Quem mora na região.** Para cada cidade, o número de pessoas indígenas e quilombolas do Censo 2022, ligado aos guias desses povos.
+- **Privacidade e termos** (rascunho para revisão de advogado) dentro do site e em `docs/legal/`.
 - **Instalável e offline.** Funciona como aplicativo (PWA): dá para instalar na tela inicial e abrir a ficha, os guias e o roteiro sem sinal.
 - **Sem terceiros no navegador.** Mapa à parte, o site não carrega fonte, biblioteca nem script de ninguém: tudo vem do próprio site, com Content-Security-Policy.
 
@@ -135,6 +137,9 @@ npm run banco:subir  # sobe uma réplica local do banco (precisa de Docker)
 npm run test:banco   # regras de acesso do banco, direto na API
 npm run test:e2e     # o site no Chrome falando com a réplica (precisa do Chrome)
 npm run test:pwa     # instala o PWA, tira a internet e confere que o site abre
+npm run test:tudo    # todos os anteriores
+npm run checar:publicacao   # lista o que falta antes de publicar de verdade
+npm run legal        # regera docs/legal/*.md a partir de js/legal.js
 ```
 
 ## Dados compartilhados

@@ -16,7 +16,7 @@ const SETA = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
 const CRUZ = '<svg width="200" height="200" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3h3v6.5H20v3h-6.5V21h-3v-8.5H4v-3h6.5z" fill="currentColor"/></svg>';
 const COR = "#3a5fcf";
 const tiles = () => L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", { subdomains: "abc", maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">colaboradores do OpenStreetMap</a>, estilo <a href="https://www.hotosm.org/">Humanitarian OSM Team</a>, servido por <a href="https://openstreetmap.fr/">OSM France</a>' });
-const rodape = () => `<footer class="rodape" style="padding-left:0"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p><p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>`;
+const rodape = () => `<footer class="rodape" style="padding-left:0"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p><p class="miudo" style="margin-top:8px"><a href="#/privacidade">Política de privacidade</a> · <a href="#/termos">Termos de uso</a> · <a href="#/sobre">Sobre</a></p><p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>`;
 
 export const PROPOSITOS = {
   "culto": { nome: "Culto ao ar livre", curto: "Culto", roteiro: ["Abertura e oração (10 min)", "Louvor (20 min)", "Mensagem curta (15 min)", "Oração por quem pedir (30 min)", "Encerramento e convite (5 min)"] },
@@ -178,7 +178,7 @@ async function viewEvento(id, q = {}) {
   const vou = $("#vou");
   if (vou) vou.onclick = () => {
     const f = $("#form-part"); f.hidden = false;
-    f.innerHTML = `<form class="plano-form" id="pf" style="margin-top:12px;max-width:420px"><input class="campo" name="who" maxlength="60" placeholder="Seu nome ou apelido (opcional)" aria-label="Seu nome"><select class="campo" name="qtd" aria-label="Quantas pessoas"><option value="1">Só eu</option>${[2, 3, 4, 5].map(n => `<option value="${n}">Eu e mais ${n - 1}</option>`).join("")}</select><button class="botao principal">Confirmar presença</button></form>`;
+    f.innerHTML = `<form class="plano-form" id="pf" style="margin-top:12px;max-width:420px"><input class="campo" name="who" maxlength="60" placeholder="Nome ou apelido (opcional)" aria-label="Seu nome"><select class="campo" name="qtd" aria-label="Quantas pessoas"><option value="1">Só eu</option>${[2, 3, 4, 5].map(n => `<option value="${n}">Eu e mais ${n - 1}</option>`).join("")}</select><p class="miudo">O nome não é público: só a moderação vê. Confirmar presença num evento religioso pode revelar sua fé, então use um apelido se preferir. <a href="#/privacidade">Privacidade</a></p><button class="botao principal">Confirmar presença</button></form>`;
     $("#pf").onsubmit = async ev => {
       ev.preventDefault(); const fd = new FormData(ev.target);
       try {
@@ -296,6 +296,7 @@ async function viewNovo(q) {
         <label for="ct">WhatsApp para contato (com DDD)</label><input class="campo" id="ct" name="contato" inputmode="tel" maxlength="20" placeholder="(11) 90000-0000"></fieldset>
       <fieldset class="bloco-form"><legend>6. Compromissos de segurança</legend><div id="comp"></div></fieldset>
       <p class="erro" id="erro" hidden></p>
+      <p class="miudo" style="margin-top:14px">O nome e a igreja ou grupo aparecem no evento. O WhatsApp só aparece para quem confirmar presença e para a moderação. Ao publicar, você aceita os <a href="#/termos">Termos de uso</a> e a <a href="#/privacidade">Política de privacidade</a>.</p>
       <button class="botao principal" id="sub">Publicar evento</button>
     </form>${rodape()}</div>`;
   const erro = t => { const e = $("#erro"); e.hidden = !t; e.textContent = t || ""; };

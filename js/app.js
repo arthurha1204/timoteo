@@ -5,6 +5,7 @@ import * as IB from "./ibge.js";
 import * as BX from "./bairros.js";
 import { eventosRoute, eventosDoPonto } from "./eventos.js";
 import { viewModerar } from "./moderar.js";
+import { PRIVACIDADE, TERMOS, ATUALIZADO } from "./legal.js";
 import { OPCOES, linhasFicha, completude, preparacao, oracaoDoPonto, diasEPeriodos, csv } from "./ficha.js";
 import { oracaoDe, proximosDias, NACOES, GRUPOS_BR, FONTES_ORACAO } from "./orar.js";
 
@@ -60,7 +61,7 @@ let P = null;
 
 /* ---------- DADOS DA CIDADE (IBGE) ---------- */
 const pct1 = n => n.toFixed(1).replace(".", ",") + "%";
-function cidadeHTML(m, d, pop, uf, br) {
+function cidadeHTML(m, d, pop, uf, br, povos) {
   const s = IB.resumo(d, pop), u = uf && IB.resumo(uf), b = br && IB.resumo(br);
   const seg = [["Evangélicos", s.pct.evangelica, "var(--cor)"], ["Católicos", s.pct.catolica, "oklch(80% .02 258)"], ["Sem religião", s.pct.sem, "var(--amarelo)"], ["Outras religiosidades", s.pct.espirita + s.pct.afro + s.pct.outras, "var(--tinta-2)"]];
   const cmp = u && b ? `No estado (${esc(m.uf)}), o máximo é ${pct1(u.pct.naoCristaos)} e o mínimo ${pct1(u.pct.minNao)}. No Brasil, ${pct1(b.pct.naoCristaos)} e ${pct1(b.pct.minNao)}. Esta cidade está ${s.pct.naoCristaos > u.pct.naoCristaos + 0.5 ? "acima" : s.pct.naoCristaos < u.pct.naoCristaos - 0.5 ? "abaixo" : "na média"} do estado.` : "";
@@ -71,6 +72,7 @@ function cidadeHTML(m, d, pop, uf, br) {
     <div class="barra-rel" role="img" aria-label="Composição religiosa de ${esc(m.nome)}">${seg.map(x => `<i style="width:${Math.max(x[1], .4)}%;background:${x[2]}"></i>`).join("")}</div>
     <ul class="legenda-rel">${seg.map(x => `<li><i style="background:${x[2]}"></i>${x[0]} ${pct1(x[1])}</li>`).join("")}</ul>
     <p class="decomposicao">Dentro desses outros grupos: <b>${nf(s.sem)}</b> sem religião, <b>${nf(s.espirita)}</b> espíritas, <b>${nf(s.afro)}</b> de umbanda e candomblé, <b>${nf(s.indigena)}</b> de tradições indígenas e <b>${nf(s.outras)}</b> em “outras religiosidades”. Este último grupo do IBGE mistura religiões não cristãs (judaica, islâmica, budista) com grupos que se dizem cristãos (ortodoxos, testemunhas de Jeová, mórmons e quem responde apenas “cristão”). Por isso o número tem mínimo e máximo. Com quem tem outra fé, a conversa é de respeito e convite, nunca de confronto.</p>
+    ${povos && (povos.indigenas || povos.quilombolas) ? `<p class="decomposicao">Segundo o Censo 2022, moram na cidade ${[povos.indigenas ? `<b>${nf(povos.indigenas)}</b> ${plural(povos.indigenas, "pessoa indígena", "pessoas indígenas")}` : "", povos.quilombolas ? `<b>${nf(povos.quilombolas)}</b> ${plural(povos.quilombolas, "pessoa quilombola", "pessoas quilombolas")}` : ""].filter(Boolean).join(" e ")}. Quem se declara indígena pode viver em aldeia ou na cidade. Veja ${[povos.indigenas ? '<a href="#/povos/indigenas">o guia dos povos indígenas</a>' : "", povos.quilombolas ? '<a href="#/povos/quilombolas">o guia dos quilombolas</a>' : ""].filter(Boolean).join(" e ")} antes de qualquer visita.</p>` : ""}
     ${cmp ? `<p class="miudo">${cmp}</p>` : ""}
     <details class="como-calc"><summary>Como ler este número</summary>
       <p>O Censo 2022 perguntou a religião de cada pessoa de 10 anos ou mais. O <b>máximo</b> é o total menos católicos e evangélicos. O <b>mínimo</b> soma só quem declara sem religião, espírita, umbanda ou candomblé e tradição indígena.</p>
@@ -110,9 +112,9 @@ async function preencherCidade(el, lat, lng, raioKm = 1) {
     if (tok !== tokCidade) return;
     if (!m) { el.innerHTML = '<p class="miudo">Não consegui identificar a cidade deste ponto.</p>'; return; }
     const ufId = m.id.slice(0, 2);
-    const [r, pop, ufs, br] = await Promise.all([IB.religiao("N6", m.id), IB.populacao("N6", m.id).catch(() => ({})), IB.religiao("N3", ufId).catch(() => ({})), IB.religiao("N1", "1").catch(() => ({}))]);
+    const [r, pop, ufs, br, pv] = await Promise.all([IB.religiao("N6", m.id), IB.populacao("N6", m.id).catch(() => ({})), IB.religiao("N3", ufId).catch(() => ({})), IB.religiao("N1", "1").catch(() => ({})), IB.povos("N6", m.id).catch(() => ({}))]);
     if (tok !== tokCidade) return;
-    el.innerHTML = r[m.id] ? cidadeHTML(m, r[m.id], pop[m.id], ufs[ufId], br["1"]) : "";
+    el.innerHTML = r[m.id] ? cidadeHTML(m, r[m.id], pop[m.id], ufs[ufId], br["1"], pv[m.id]) : "";
     if (r[m.id]) estimarArea(el, m, r[m.id], pop[m.id], lat, lng, raioKm, tok);
   } catch { if (tok === tokCidade) el.innerHTML = '<p class="miudo">Os números da cidade não carregaram agora. Tente de novo em instantes.</p>'; }
 }
@@ -209,7 +211,7 @@ async function mountPerto() {
           <p class="grupo-nota">Só entra no grupo quem topar. Nada de adicionar quem não pediu nem de mandar mensagem em massa.</p>
           <a class="botao botao-whatsapp largo" id="zap" target="_blank" rel="noopener" href="#">Mandar no WhatsApp</a>
         </section>
-        <footer class="rodape"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p><p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>
+        <footer class="rodape"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p>${LINKS_LEGAIS}<p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>
       </div>
       <div id="slot"></div>
     </div>
@@ -385,7 +387,8 @@ async function mountPerto() {
     pe.innerHTML = `<button class="botao principal largo" id="vou">Vou evangelizar por aqui</button><p class="miudo">Sem cadastro. Conta uma vez por aparelho.</p>`;
     $("#vou").onclick = () => {
       pe.innerHTML = `<form class="plano-form" id="pf"><div class="duas"><input class="campo" type="date" name="d" required aria-label="Dia"><input class="campo" type="time" name="h" required aria-label="Hora"></div>
-        <input class="campo" name="who" maxlength="60" placeholder="Seu nome ou apelido (opcional)" aria-label="Seu nome">
+        <input class="campo" name="who" maxlength="60" placeholder="Apelido (opcional)" aria-label="Seu apelido">
+        <p class="miudo">O apelido aparece para todos neste lugar. Use um apelido se preferir. <a href="#/privacidade">Privacidade</a></p>
         <button class="botao principal largo">Confirmar</button><button type="button" class="botao-texto" id="cx">Cancelar</button></form>`;
       $("#cx").onclick = () => renderPe(p, id);
       $("#pf").onsubmit = async e => {
@@ -470,6 +473,7 @@ function viewCadastrar(q) {
       <p class="miudo" id="prog" style="margin-top:18px"></p>
       <label class="aceite"><input type="checkbox" id="ok"> <span>Li as regras acima. Este lugar não expõe pessoas nem outras religiões.</span></label>
       <p class="erro" id="erro" hidden></p>
+      <p class="miudo" style="margin-top:14px">Ao enviar, você aceita os <a href="#/termos">Termos de uso</a> e a <a href="#/privacidade">Política de privacidade</a>. Não coloque dados de pessoas.</p>
       <button class="botao principal" id="sub">Enviar lugar</button>
     </form>
     <footer class="rodape" style="padding-left:0"><p>Evangelizar é convidar, ouvir e servir, com respeito.</p></footer></div>`;
@@ -501,7 +505,8 @@ function viewCadastrar(q) {
 }
 
 /* ---------- PÁGINAS ---------- */
-const rodapePag = () => `<footer class="rodape" style="padding-left:0"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p><p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>`;
+const LINKS_LEGAIS = '<p class="miudo" style="margin-top:8px"><a href="#/privacidade">Política de privacidade</a> · <a href="#/termos">Termos de uso</a> · <a href="#/sobre">Sobre</a></p>';
+const rodapePag = () => `<footer class="rodape" style="padding-left:0"><p>Este site é uma iniciativa independente e voluntária. Não pertence a nenhuma igreja, denominação ou partido.</p>${LINKS_LEGAIS}<p class="rodape-assinatura">Evangelizar é convidar, ouvir e servir, com respeito.</p></footer>`;
 const ul = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
 
 function viewPovos() {
@@ -628,10 +633,17 @@ async function preencherCenso() {
       <h3 class="titulo-forte" style="margin:22px 0 8px;font-size:1.25rem">Por estado: quem ainda não se declara cristão</h3>
       <div class="indice-conversas" id="ord" style="margin:0 0 12px"><button type="button" data-o="n" class="on">Maior número (máx.)</button><button type="button" data-o="p">Maior percentual</button></div>
       <div class="tabela"><table><thead><tr><th>Estado</th><th>Pessoas (máx.)</th><th>Pessoas (mín.)</th><th>% cristãos declarados</th><th>% sem religião</th></tr></thead><tbody id="tbody-uf"></tbody></table></div>
+      <h3 class="titulo-forte" style="margin:26px 0 8px;font-size:1.25rem">Povos indígenas e quilombolas por estado</h3>
+      <div class="tabela"><table><thead><tr><th>Estado</th><th>Pessoas indígenas</th><th>Pessoas quilombolas</th></tr></thead><tbody id="tbody-povos"><tr><td colspan="3" class="miudo">Carregando…</td></tr></tbody></table></div>
+      <p class="miudo" style="margin-top:8px">Censo 2022, tabelas 10168 e 10089 do SIDRA. Contam pessoas que se declaram indígenas ou quilombolas, dentro ou fora de aldeias e de territórios. Não dizem nada sobre religião nem sobre acesso ao evangelho.</p>
       <p class="miudo" style="margin-top:8px">Cristãos declarados = católicos + evangélicos. O grupo “outras religiosidades” do IBGE inclui ortodoxos, testemunhas de Jeová, mórmons e quem se diz apenas cristão, por isso há mínimo e máximo. O Censo mede a religião declarada, não conversão nem compreensão do evangelho. Calculado agora a partir da API do IBGE.</p>
       <p class="fonte">Fonte: <a href="${IB.FONTE_CENSO.url}" target="_blank" rel="noopener">${esc(IB.FONTE_CENSO.nome)}</a>.</p>`;
     $("#ord").onclick = e => { const x = e.target.closest("button"); if (!x) return; ordem = x.dataset.o; document.querySelectorAll("#ord button").forEach(y => y.classList.toggle("on", y === x)); tabela(); };
     tabela();
+    IB.povos("N3", "all").then(pv => {
+      const l = Object.values(pv).sort((x, y) => (y.indigenas + y.quilombolas) - (x.indigenas + x.quilombolas));
+      $("#tbody-povos").innerHTML = l.map(x => `<tr><td>${esc(x.nome)}</td><td>${nf(x.indigenas)}</td><td>${nf(x.quilombolas)}</td></tr>`).join("");
+    }).catch(() => { $("#tbody-povos").innerHTML = '<tr><td colspan="3" class="miudo">Não carregou agora.</td></tr>'; });
   } catch { el.innerHTML = '<p class="miudo">Os números do IBGE não carregaram agora. Tente recarregar a página.</p>'; }
 }
 function viewOrar() {
@@ -655,6 +667,16 @@ function viewOrar() {
     <p class="corpo">Grupos na escala 1 do Joshua Project. Oramos à distância e sem entrar em território sem autorização.</p>
     <ul class="conversas-da-regiao" style="margin-top:14px">${GRUPOS_BR.map(g => acc(g.nome, `${nf(g.pop)} pessoas`, g.contexto, g.pedidos)).join("")}</ul>
     <p class="miudo" style="margin-top:20px">Ordem do dia: alterna entre uma nação e um povo do Brasil, igual para todo mundo. Mais sobre povos não alcançados no mundo: <a href="${FONTES_ORACAO.lausanne.url}" target="_blank" rel="noopener">${esc(FONTES_ORACAO.lausanne.nome)}</a>.</p>
+    ${rodapePag()}</div>`;
+}
+function viewLegal(doc, outro) {
+  const marca = t => esc(t).replace(/\[(?:PREENCHER|REVISAR COM ADVOGADO)[^\]]*\]/g, m => `<mark class="preencher">${m}</mark>`);
+  view.innerHTML = `<div class="pagina"><span class="sobretitulo">Rascunho</span>
+    <h1 class="titulo-forte titulo-pagina">${esc(doc.titulo)}</h1>
+    <p class="chamada">${esc(doc.chamada)}</p>
+    <p class="disputa"><b>Rascunho.</b> Este texto ainda precisa de revisão de advogado antes de valer como documento oficial. Os trechos marcados como <mark class="preencher">[PREENCHER]</mark> dependem de quem publica o site. Última atualização: ${esc(ATUALIZADO)}.</p>
+    ${doc.secoes.map(sec => `<h2 class="titulo-forte">${esc(sec.h)}</h2>${(sec.p || []).map(t => `<p class="corpo">${marca(t)}</p>`).join("")}${sec.ul ? `<ul>${sec.ul.map(t => `<li>${marca(t)}</li>`).join("")}</ul>` : ""}`).join("")}
+    <p class="miudo" style="margin-top:28px"><a href="#/${outro.rota}">${esc(outro.nome)}</a></p>
     ${rodapePag()}</div>`;
 }
 function viewSobre() {
@@ -698,6 +720,8 @@ async function route() {
     else if (r === "dados") viewDados();
     else if (r === "orar") viewOrar();
     else if (r === "moderar") await viewModerar();
+    else if (r === "privacidade") viewLegal(PRIVACIDADE, { rota: "termos", nome: "Ler também os Termos de uso" });
+    else if (r === "termos") viewLegal(TERMOS, { rota: "privacidade", nome: "Ler também a Política de privacidade" });
     else if (r === "eventos") { const c = await eventosRoute(a1, q); if (c) cleanup = c; }
     else if (r === "sobre") viewSobre();
     else { location.hash = "#/perto"; }

@@ -293,7 +293,7 @@ test("marcar 'vou evangelizar por aqui' num lugar aprovado funciona", async () =
 test("nenhuma tela do modo compartilhado é bloqueada pelo CSP nem lança exceção", async () => {
   const e = await criarEventoPelaTela(); aprovarEvento(e.id);
   chrome.problemas.length = 0;
-  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "mensagem", "o-que-fazer", "orar", "dados", "sobre"]) {
+  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "mensagem", "o-que-fazer", "orar", "dados", "sobre", "privacidade", "termos", "moderar"]) {
     await entrar(rota);
     await espera(1500);
   }

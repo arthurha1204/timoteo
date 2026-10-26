@@ -67,6 +67,25 @@ export function populacao(nivel, ids) {
   });
 }
 
+// Pessoas indígenas (tabela 10168) e quilombolas (tabela 10089) do Censo 2022, por nível territorial.
+// O IBGE escreve "-" quando o valor é zero ou não se aplica: vira 0.
+const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+export function povos(nivel, ids) {
+  const lista = Array.isArray(ids) ? ids.join(",") : ids;
+  return memo(`povos:${nivel}:${lista}`, async () => {
+    const lugares = `${nivel}[${lista}]`;
+    const [a, b] = await Promise.all([
+      fetch(`${BASE}/v3/agregados/10168/periodos/2022/variaveis/350?localidades=${lugares}`),
+      fetch(`${BASE}/v3/agregados/10089/periodos/2022/variaveis/4709?localidades=${lugares}&classificacao=2[6794]|58[95253]|2661[32776]|1[6795]`)
+    ]);
+    if (!a.ok || !b.ok) throw new Error("IBGE " + (a.ok ? b.status : a.status));
+    const out = {};
+    for (const s of (await a.json())[0].resultados[0].series) (out[s.localidade.id] ||= { id: s.localidade.id, nome: s.localidade.nome, indigenas: 0, quilombolas: 0 }).indigenas = num(s.serie["2022"]);
+    for (const s of (await b.json())[0].resultados[0].series) (out[s.localidade.id] ||= { id: s.localidade.id, nome: s.localidade.nome, indigenas: 0, quilombolas: 0 }).quilombolas = num(s.serie["2022"]);
+    return out;
+  });
+}
+
 // Números derivados. “Sem religião” é o foco; os demais ajudam a entender a cidade.
 export function resumo(d, popTotal) {
   const pct = n => d.total ? (n / d.total) * 100 : 0;

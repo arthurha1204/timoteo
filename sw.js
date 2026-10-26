@@ -11,7 +11,7 @@ const NUCLEO = [
   "./", "index.html", "manifest.webmanifest",
   "css/style.css", "css/fontes.css",
   "js/app.js", "js/eventos.js", "js/moderar.js", "js/ficha.js", "js/orar.js", "js/ibge.js", "js/bairros.js",
-  "js/content.js", "js/dados.js", "js/data.js", "js/config.js",
+  "js/content.js", "js/dados.js", "js/data.js", "js/config.js", "js/legal.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css", "vendor/qrcode/qrcode.min.js",
   "vendor/leaflet/images/layers.png", "vendor/leaflet/images/layers-2x.png", "vendor/leaflet/images/marker-icon.png", "vendor/leaflet/images/marker-icon-2x.png", "vendor/leaflet/images/marker-shadow.png",
   "vendor/fonts/archivo-latin-wdth-normal.woff2", "vendor/fonts/archivo-latin-ext-wdth-normal.woff2",

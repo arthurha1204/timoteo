@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -292,4 +293,49 @@ test("o CSP bloqueia o que não deve e libera só o que o site usa", () => {
   assert.match(dir("connect-src"), /nominatim\.openstreetmap\.org/);
   assert.match(dir("img-src"), /tile\.openstreetmap\.fr/);
   assert.ok(!/unsafe-eval/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp));
+});
+
+/* ---------- textos legais coerentes com o código ---------- */
+import { PRIVACIDADE, TERMOS, pendencias } from "../js/legal.js";
+
+test("os Markdown de docs/legal estão em dia com js/legal.js", () => {
+  execFileSync(process.execPath, [path.join(raiz, "scripts", "gerar_legal.mjs"), "--conferir"], { stdio: "pipe" });
+});
+
+test("a política de privacidade não promete o que o código não cumpre", () => {
+  const codigo = readdirSync(path.join(raiz, "js")).map(f => readFileSync(path.join(raiz, "js", f), "utf8")).join("\n") + readFileSync(path.join(raiz, "index.html"), "utf8") + readFileSync(path.join(raiz, "sw.js"), "utf8");
+  // prometemos: sem cookies e sem ferramenta de análise
+  assert.ok(!/document\.cookie/.test(codigo), "o código usa cookies");
+  assert.ok(!/googletagmanager|google-analytics|gtag\(|plausible|matomo|hotjar|facebook\.net|clarity\.ms/i.test(codigo), "há ferramenta de análise no código");
+  const txt = JSON.stringify(PRIVACIDADE);
+  assert.match(txt, /cookies/); assert.match(txt, /Nominatim/); assert.match(txt, /IBGE/); assert.match(txt, /OSM France/);
+  assert.match(txt, /sens[ií]vel/i); assert.match(txt, /art\. 18/);
+  // os dados que o servidor guarda estão descritos
+  for (const termo of ["WhatsApp", "hash", "denúncias", "moderador"]) assert.ok(txt.toLowerCase().includes(termo.toLowerCase()), `a política não cita: ${termo}`);
+});
+
+test("os termos citam os telefones de emergência e o CVV, e o rascunho é visível", () => {
+  const t = JSON.stringify(TERMOS);
+  for (const n of ["190", "192", "193", "188"]) assert.ok(t.includes(n), `os termos não citam ${n}`);
+  assert.ok(pendencias().length >= 4, "os campos a preencher sumiram: o texto foi publicado sem completar?");
+});
+
+/* ---------- povos indígenas e quilombolas (IBGE), com a API simulada ---------- */
+import { povos } from "../js/ibge.js";
+
+test("povos(): lê indígenas e quilombolas e trata o '-' do IBGE como zero", async () => {
+  const respostas = url => {
+    const serie = (id, nome, v) => ({ localidade: { id, nome }, serie: { 2022: v } });
+    const corpo = /10168/.test(url)
+      ? [{ resultados: [{ series: [serie("2927408", "Salvador (BA)", "29724"), serie("1303809", "São Gabriel da Cachoeira (AM)", "48271")] }] }]
+      : [{ resultados: [{ series: [serie("2927408", "Salvador (BA)", "15897"), serie("1303809", "São Gabriel da Cachoeira (AM)", "-")] }] }];
+    return { ok: true, status: 200, json: async () => corpo };
+  };
+  const original = globalThis.fetch; globalThis.fetch = async url => respostas(String(url));
+  try {
+    const r = await povos("N6", ["2927408", "1303809"]);
+    assert.deepEqual(r["2927408"], { id: "2927408", nome: "Salvador (BA)", indigenas: 29724, quilombolas: 15897 });
+    assert.equal(r["1303809"].quilombolas, 0);
+    assert.equal(r["1303809"].indigenas, 48271);
+  } finally { globalThis.fetch = original; }
 });

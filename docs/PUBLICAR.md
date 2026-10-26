@@ -28,6 +28,8 @@ Os caminhos do site são relativos e a navegação é por hash, então funciona 
 
 ## Antes de divulgar
 
+Rode `npm run checar:publicacao`: ele lista o que ainda falta (banco ligado, cabeçalho `noindex`, trechos `[PREENCHER]` dos textos legais, revisão dos guias, moderador testado, captcha). Com `--estrito`, sai com erro se houver pendência.
+
 - **Tire os dados de exemplo.** Os lugares e eventos de exemplo só aparecem em modo local, então em modo compartilhado (com `js/config.js` preenchido) eles não aparecem. Confira.
 - **Lambe com QR.** O QR usa o endereço da página aberta. Gere os lambes **depois** de publicar, nunca em `localhost`. O site avisa quando o endereço é local.
 - **Modo compartilhado e moderação.** Veja [SUPABASE.md](SUPABASE.md) e [SEGURANCA.md](SEGURANCA.md). Combine antes quem modera e em quanto tempo.

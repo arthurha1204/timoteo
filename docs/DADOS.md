@@ -21,6 +21,15 @@ O IBGE agrupa as respostas em: Católica Apostólica Romana, Evangélicas, Espí
 
 **Atenção ao grupo "Outras religiosidades".** Conforme a planilha descritora do IBGE, ele reúne religiões não cristãs (judaica, islâmica, budista, hinduísta e outras) e também grupos que se dizem cristãos: ortodoxos, testemunhas de Jeová, mórmons e quem responde apenas "cristão". Por isso o projeto nunca trata "total menos católicos e evangélicos" como "não cristãos". Usa faixa.
 
+## Povos indígenas e quilombolas
+
+Para ligar o mapa aos guias de povos, o site mostra quantas pessoas indígenas e quilombolas o Censo 2022 contou em cada cidade e estado:
+
+- **Pessoas indígenas:** tabela 10168 do SIDRA, variável 350.
+- **Pessoas quilombolas:** tabela 10089 do SIDRA, variável 4709, somando dentro e fora de territórios quilombolas, zona urbana e rural, todas as idades.
+
+**Limites:** são pessoas que se declaram indígenas ou quilombolas, e muitas vivem em cidades, não em aldeias ou territórios. O número não diz onde elas moram dentro da cidade, não mede religião nem acesso ao evangelho, e não substitui o guia: antes de qualquer visita a território indígena ou quilombola é preciso autorização e conversa com a liderança. O IBGE escreve "-" onde o valor é zero ou não se aplica, e o site lê como zero.
+
 ## Mínimo e máximo de pessoas que não se declaram cristãs
 
 - **Cristãos declarados** = católicos + evangélicos.

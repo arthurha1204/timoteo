@@ -44,7 +44,8 @@ Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 
 
 Um site que marca encontros reais na rua precisa disso antes de abrir ao público.
 
-- [ ] **Política de privacidade e termos de uso** (LGPD): quais dados, por quê, por quanto tempo, como pedir remoção, quem é o controlador. Revisão por profissional.
+- [x] **Rascunho** da política de privacidade e dos termos de uso, dentro do site (`#/privacidade`, `#/termos`) e em `docs/legal/`, coerente com o que o código faz (testado).
+- [ ] **Completar os trechos `[PREENCHER]`** (controlador, contato, prazos, foro) e **revisão por advogado**.
 - [ ] Página **Sobre** com quem mantém, contato e declaração de fé.
 - [ ] **Selo "organização verificada"**: o moderador confere igreja ou grupo antes de aprovar eventos.
 - [ ] **Bloquear usuário** e fila de denúncias com prazo de resposta.
@@ -66,7 +67,8 @@ Um site que marca encontros reais na rua precisa disso antes de abrir ao públic
 ## Bloco 4: dados
 
 - [ ] **Camada de povos não alcançados** no mapa (API do Joshua Project, com chave gratuita).
-- [ ] Camadas do IBGE que combinam com os guias: população indígena, quilombola, favelas e comunidades urbanas, pessoas surdas.
+- [x] Número de **pessoas indígenas e quilombolas** por cidade e por estado (Censo 2022), ligado aos guias.
+- [ ] Mostrar essas populações como **camada no mapa** e acrescentar favelas e comunidades urbanas e pessoas surdas.
 - [ ] Verificar o CNEFE (endereços de estabelecimentos religiosos) para mostrar áreas com poucas igrejas.
 - [ ] Revisão da **metodologia da estimativa por bairro** por alguém de demografia ou estatística.
 - [ ] Rotina anual de atualização dos dados e **verificação automática dos links** das fontes.

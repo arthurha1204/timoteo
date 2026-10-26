@@ -19,7 +19,8 @@ Antes de começar, leia o [propósito](docs/PROPOSITO.md) e o [Código de Condut
 git clone https://github.com/arthurha1204/timoteo.git
 cd timoteo
 python -m http.server 5173     # abra http://localhost:5173
-npm test                       # Node 20 ou mais novo, sem dependências
+npm test                       # Node 22 ou mais novo, sem dependências
+npm run test:tudo              # inclui banco local (Docker) e navegador (Chrome)
 ```
 
 ## Fluxo

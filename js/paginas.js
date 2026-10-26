@@ -1,4 +1,5 @@
 // Páginas de conteúdo: povos, conversas, mensagem, o que fazer, dados, oração, textos legais e sobre.
+import { instalarHTML, ligarInstalar } from "./instalar.js";
 import { store } from "./data.js";
 import { GUIAS, CONVERSAS, MENSAGEM } from "./content.js";
 import * as D from "./dados.js";
@@ -192,10 +193,12 @@ export function viewSobre() {
     <ul><li>Ouvir antes de falar.</li><li>Respeito a todas as pessoas e religiões.</li><li>Sem mensagem em massa, constrangimento ou imposição.</li><li>Privacidade: lugares, nunca pessoas.</li><li>Humildade com povos e culturas diferentes.</li></ul>
     <h2 class="titulo-forte">De onde vêm os dados</h2>
     <p class="corpo">IBGE, Joshua Project, Movimento de Lausanne e Portas Abertas. Os links ficam na página <a href="#/dados">Dados</a>. Os guias por povo são rascunhos que dependem de revisão de quem convive com cada realidade.</p>
+    ${instalarHTML()}
     <h2 class="titulo-forte">Código aberto</h2>
     <p class="corpo">O Timóteo é software livre. O código, a documentação e o modo de contribuir ficam no repositório do projeto.</p>
     <h2 class="titulo-forte">Mapa</h2>
     <p class="corpo">Base do OpenStreetMap, estilo Humanitarian OSM Team, servido por OSM France.</p>
     <p class="miudo" style="margin-top:24px">Modo de dados: ${store.mode === "supabase" ? "banco compartilhado" : "teste, só neste aparelho"}.</p>
     ${rodapePag()}</div>`;
+  ligarInstalar();
 }

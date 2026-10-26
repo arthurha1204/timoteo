@@ -382,3 +382,11 @@ test("centroide: quadrado, retângulo e multipolígono ponderado pela área", ()
   const multi = { type: "MultiPolygon", coordinates: [[[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]], [[[100, 100], [101, 100], [101, 101], [100, 101], [100, 100]]]] };
   const m = centroide(multi); assert.ok(m.lng < 10 && m.lat < 10, "a ilha pequena quase não puxa o centro");
 });
+
+import { gerarICS } from "../js/calendario.js";
+test("o arquivo de calendário tem os dois lembretes e escapa vírgulas e quebras de linha", () => {
+  const ics = gerarICS({ id: "e1", titulo: "Culto, na praça", objetivo: "Orar;\nconversar", local: "Praça", link: "https://x/#/eventos/e1", inicio: new Date("2026-11-01T12:00:00Z"), fim: new Date("2026-11-01T14:00:00Z"), agora: new Date("2026-10-26T00:00:00Z") });
+  assert.match(ics, /TRIGGER:-P1D/); assert.match(ics, /TRIGGER:-PT1H/);
+  assert.ok(ics.includes(String.raw`SUMMARY:Culto\, na praça`)); assert.ok(ics.includes(String.raw`DESCRIPTION:Orar\;\nconversar`));
+  assert.match(ics, /DTSTART:20261101T120000Z/); assert.equal((ics.match(/BEGIN:VALARM/g) || []).length, 2);
+});

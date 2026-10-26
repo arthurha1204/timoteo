@@ -1,6 +1,7 @@
 // Eventos de evangelização: culto, boca a boca, ação social e oração na rua.
 // Sempre ligados a um ponto do mapa (ponto de encontro), com responsável identificado,
 // compromissos de segurança obrigatórios, aprovação antes de publicar e denúncia.
+import { gerarICS } from "./calendario.js";
 import { store } from "./data.js";
 import { TIPOS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
@@ -58,12 +59,19 @@ const resumoTrajeto = pts => {
 const normZap = s => { const d = String(s || "").replace(/\D/g, ""); return d.length === 10 || d.length === 11 ? "55" + d : d; };
 
 function baixarICS(e, ponto) {
-  const f = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const x = t => String(t || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
-  const l = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Timoteo//PT", "BEGIN:VEVENT", `UID:${e.id}@timoteo`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(ini(e))}`, `DTEND:${f(fim(e))}`, `SUMMARY:${x(e.titulo)}`, `LOCATION:${x(ponto ? ponto.name : "")}`, `DESCRIPTION:${x(e.objetivo + "\n" + siteBase() + "#/eventos/" + e.id)}`, "END:VEVENT", "END:VCALENDAR"];
+  const texto = gerarICS({ id: e.id, titulo: e.titulo, objetivo: e.objetivo, local: ponto ? ponto.name : "", link: siteBase() + "#/eventos/" + e.id, inicio: ini(e), fim: fim(e) });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([l.join("\r\n")], { type: "text/calendar" }));
+  a.href = URL.createObjectURL(new Blob([texto], { type: "text/calendar" }));
   a.download = "evento.ics"; document.body.appendChild(a); a.click(); a.remove();
+}
+
+// Compartilha pelo menu do aparelho; sem ele, copia o link.
+async function compartilhar(e, botao) {
+  const dados = { title: e.titulo, text: `${e.titulo}, ${quando(e)}`, url: siteBase() + "#/eventos/" + e.id };
+  try {
+    if (navigator.share) { await navigator.share(dados); return; }
+    await navigator.clipboard.writeText(dados.url); botao.textContent = "Link copiado";
+  } catch { /* o usuário fechou o menu de compartilhar */ }
 }
 
 /* ---------- LISTA ---------- */
@@ -125,6 +133,7 @@ async function viewEvento(id, q = {}) {
     <div class="acoes-evento">
       ${cancelado ? "" : feito ? `<button class="botao feito" disabled>Você vai: ${esc(feito)}</button>` : lotado ? '<button class="botao" disabled>Vagas esgotadas</button>' : '<button class="botao principal" id="vou">Vou participar</button>'}
       <button class="botao" id="ics">Adicionar ao calendário</button>
+      <button class="botao" id="compartilhar">Compartilhar</button>
       <a class="botao" id="falar" target="_blank" rel="noopener" href="${wa(num || "", `Quero saber mais sobre o evento "${e.titulo}" (${quando(e)}).`).replace("wa.me//", "wa.me/")}" ${num ? "" : "hidden"}>Falar com o responsável</a>
     </div>
     ${!num && compartilhado && !cancelado ? '<p class="miudo" id="aviso-contato" style="margin-top:8px">O contato do responsável aparece depois que você confirma presença.</p>' : ""}
@@ -163,6 +172,7 @@ async function viewEvento(id, q = {}) {
   }
   map.fitBounds(L.featureGroup(grupo.length ? grupo : [L.marker([-14.2, -51.9])]).getBounds().pad(.25), { maxZoom: 17 });
   $("#ics").onclick = () => baixarICS(e, p);
+  $("#compartilhar").onclick = ev => compartilhar(e, ev.currentTarget);
   const vou = $("#vou");
   if (vou) vou.onclick = () => {
     const f = $("#form-part"); f.hidden = false;

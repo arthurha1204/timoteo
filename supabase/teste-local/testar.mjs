@@ -6,7 +6,7 @@ import { test, before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHmac, createHash, randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -84,7 +84,7 @@ beforeEach(async () => {
 
 /* ---------- lugares ---------- */
 test("visitante só vê lugares aprovados", async () => {
-  const r = await api("/points?select=name");
+  const r = await api("/points_public?select=name");
   ok(r); assert.deepEqual(r.json.map(p => p.name), ["Ponto aprovado"]);
 });
 
@@ -247,5 +247,77 @@ test("a trava global barra uma enxurrada de lugares pendentes", async () => {
   const r = await api("/points", { metodo: "POST", corpo: { name: "Mais um lugar", type: "praca", lat: -10, lng: -40 } });
   assert.equal(r.status, 429); assert.match(r.txt, /muitos envios/);
   // lugares aprovados e o uso normal por moderadores seguem funcionando
-  ok(await api("/points?select=name&limit=1"));
+  ok(await api("/points_public?select=name&limit=1"));
+});
+
+/* ---------- lugares editáveis com link secreto (migração 2) ---------- */
+const LUGAR = "33333333-3333-3333-3333-333333333333";
+async function lugarDoResponsavel(extra = {}) {
+  ok(await api("/points", { metodo: "POST", corpo: { id: LUGAR, name: "Feira do responsável", type: "feira", lat: -8.28, lng: -35.97, description: "Texto original", manage_token_hash: hash("segredo-lugar"), ...extra }, cab: { Prefer: "return=minimal" } }));
+  ok(await api(`/points?id=eq.${LUGAR}`, { metodo: "PATCH", corpo: { approved: true }, token: MOD }));
+}
+
+test("o público lê lugares só pela visão, e ela nunca traz o hash do link secreto", async () => {
+  await lugarDoResponsavel();
+  ruim(await api("/points?select=*"));
+  const linha = (await api(`/points_public?id=eq.${LUGAR}&select=*`)).json[0];
+  assert.ok(linha); assert.ok(!("manage_token_hash" in linha));
+  assert.ok(!JSON.stringify(linha).includes(hash("segredo-lugar")));
+  ruim(await api("/points?select=manage_token_hash"));
+});
+
+test("editar lugar exige o link secreto; mudar a ficha volta para a moderação, pausar não", async () => {
+  await lugarDoResponsavel();
+  assert.equal((await rpc("editar_lugar", { p_point: LUGAR, p_token: "errado", p_dados: { name: "Hackeado" } })).json, false);
+  assert.equal((await rpc("editar_lugar", { p_point: LUGAR, p_token: "", p_dados: { name: "Hackeado" } })).json, false);
+  // pausar e reativar: continua aprovado e visível, só muda o status
+  assert.equal((await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { status: "pausado" } })).json, true);
+  assert.equal((await api(`/points_public?id=eq.${LUGAR}&select=status`)).json[0].status, "pausado");
+  assert.equal((await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { status: "ativo" } })).json, true);
+  // mudar a ficha: sai do mapa até a moderação aprovar de novo
+  assert.equal((await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { name: "Feira do Largo", risco: "medio", dias: "sab", publico: "adultos,idosos" } })).json, true);
+  assert.deepEqual((await api(`/points_public?id=eq.${LUGAR}&select=id`)).json, []);
+  ok(await api(`/points?id=eq.${LUGAR}`, { metodo: "PATCH", corpo: { approved: true }, token: MOD }));
+  const l = (await api(`/points_public?id=eq.${LUGAR}&select=name,risco,dias,publico,description`)).json[0];
+  assert.deepEqual(l, { name: "Feira do Largo", risco: "medio", dias: "sab", publico: "adultos,idosos", description: "Texto original" });
+});
+
+test("editar lugar passa pelas mesmas validações do cadastro", async () => {
+  await lugarDoResponsavel();
+  ruim(await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { group_link: "http://inseguro.com" } }));
+  ruim(await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { risco: "enorme" } }));
+  ruim(await rpc("editar_lugar", { p_point: LUGAR, p_token: "segredo-lugar", p_dados: { name: "ab" } }));
+  assert.equal(sql(`select name from points where id='${LUGAR}'`), "Feira do responsável");
+});
+
+test("lugar antigo, sem link secreto, não pode ser editado por ninguém além da moderação", async () => {
+  assert.equal((await rpc("editar_lugar", { p_point: PONTO, p_token: "qualquer", p_dados: { name: "Hackeado" } })).json, false);
+  assert.equal((await rpc("editar_lugar", { p_point: PONTO, p_token: hash(""), p_dados: { name: "Hackeado" } })).json, false);
+  assert.equal(sql(`select name from points where id='${PONTO}'`), "Ponto aprovado");
+});
+
+test("proposta de lugar com o hash vira pendente e o visitante não consegue forçar aprovação nem ler o hash", async () => {
+  ruim(await api("/points", { metodo: "POST", corpo: { name: "Forçando", type: "praca", lat: -8, lng: -35, approved: true } }));
+  ruim(await api("/points", { metodo: "POST", corpo: { name: "Hash ruim", type: "praca", lat: -8, lng: -35, manage_token_hash: "abc" } }));
+});
+
+/* ---------- atualizar um banco que já tem dados (migração 1 -> 2) ---------- */
+test("aplicar a migração 2 sobre um banco com dados da migração 1 não perde nada", async () => {
+  const dirMig = path.join(aqui, "..", "migrations");
+  const migracoes = readdirSync(dirMig).filter(f => f.endsWith(".sql")).sort();
+  assert.ok(migracoes.length >= 2);
+  sql(`drop schema public cascade; create schema public;
+       grant usage on schema public to anon, authenticated;
+       alter default privileges in schema public grant all on tables to anon, authenticated;
+       alter default privileges in schema public grant all on sequences to anon, authenticated;`);
+  sql(readFileSync(path.join(dirMig, migracoes[0]), "utf8"));
+  sql(`insert into points (id, name, type, lat, lng, approved) values ('${PONTO}', 'Lugar antigo', 'praca', -12.97, -38.51, true);
+       insert into events (id, titulo, proposito, point_id, data, inicio, fim, objetivo, responsavel, organizacao, contato, compromissos, manage_token_hash, approved)
+         values ('44444444-4444-4444-4444-444444444444', 'Evento antigo', 'culto', '${PONTO}', current_date + 5, '17:00', '18:00', 'Objetivo de teste do evento', 'Fulano', 'Igreja', '5571999998888', 'maior18,respeito,dados,menores,fim,emergencia', '${hash("x")}', true);`);
+  for (const m of migracoes.slice(1)) sql(readFileSync(path.join(dirMig, m), "utf8"));
+  sql("notify pgrst, 'reload schema';");
+  await aguardarApi();
+  assert.deepEqual((await api("/points_public?select=name")).json, [{ name: "Lugar antigo" }]);
+  assert.equal((await api("/events_public?select=titulo")).json[0].titulo, "Evento antigo");
+  assert.equal(sql("select count(*) from points where manage_token_hash is null"), "1");   // o lugar antigo segue sem link: só a moderação edita
 });

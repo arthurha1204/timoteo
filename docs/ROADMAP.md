@@ -28,12 +28,12 @@ Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 
 
 - [x] Esquema e site **testados de ponta a ponta contra uma réplica local** (Postgres + PostgREST): cadastrar, aprovar, ver, marcar presença, criar evento, denunciar. `npm run test:banco` e `npm run test:e2e`.
 - [ ] Repetir o teste num **projeto Supabase hospedado**, principalmente o login do moderador por e-mail.
-- [ ] Migrações versionadas (`supabase/migrations`) no lugar do SQL único. Hoje `supabase/schema.sql` é idempotente.
+- [x] **Migrações versionadas** em `supabase/migrations`, com `supabase/schema.sql` gerado e testes de atualização sobre dados antigos.
 - [x] **Link secreto** do responsável para editar e cancelar o que criou (só o hash fica no banco).
 - [ ] Login do responsável (opcional, para recuperar o controle se perder o link).
 - [x] **Contato do responsável privado**: só aparece para quem confirmou presença.
 - [x] **Editar e cancelar** evento no modo compartilhado.
-- [ ] Editar lugar já cadastrado.
+- [x] **Editar e pausar o lugar** com o link secreto do responsável.
 - [x] **Painel de moderação** (`#/moderar`): aprovar, apagar, cancelar evento e **ler denúncias**, com sinais de atenção.
 - [ ] Editar pelo painel e papéis diferentes (moderador e administrador).
 - [x] **Validação no servidor** e **trava global** contra enxurrada de envios.

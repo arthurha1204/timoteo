@@ -306,3 +306,47 @@ test("nenhuma tela do modo compartilhado é bloqueada pelo CSP nem lança exceç
   const excecoes = chrome.problemas.filter(p => p.tipo === "exceção");
   assert.deepEqual(excecoes, [], "exceções na página: " + JSON.stringify(excecoes.slice(0, 3)));
 });
+
+test("o responsável vê o lugar em análise, e depois edita e pausa com o link secreto", async () => {
+  await entrar("cadastrar?lat=-12.9714&lng=-38.5107");
+  await chrome.ate("document.querySelector('#f')");
+  await chrome.js(`(() => { const f = document.querySelector('#f'); f.name.value = 'Feira do Largo'; f.type.value = 'feira'; f.referencia.value = 'Perto da igreja'; document.querySelector('#ok').checked = true; return true; })()`);
+  await clicar("#sub");
+  await esperarTexto("Lugar enviado");
+  const link = await chrome.js("document.querySelector('.contexto .miudo').innerText");
+  const m = link.match(/#\/perto\/ponto\/([0-9a-f-]{36})\?gerenciar=([0-9a-f]{32})/);
+  assert.ok(m, "o link secreto do lugar deveria aparecer: " + link);
+  const [, id, token] = m;
+  assert.equal(sql(`select manage_token_hash from points where id='${id}'`), createHash("sha256").update(token).digest("hex"));   // só o hash no banco
+
+  // em análise: só quem tem o link vê
+  await entrar(`perto/ponto/${id}`);
+  await esperarTexto("Aguardando aprovação");
+  assert.equal(await chrome.js("!!document.querySelector('#editar-lugar')"), true);
+  assert.equal(await chrome.js("!!document.querySelector('#pausar-lugar')"), false);   // não dá para pausar o que ainda nem foi aprovado
+  sql(`update points set approved = true where id = '${id}'`);
+
+  // aprovado: pausar vale na hora, e o aviso aparece
+  await entrar(`perto/ponto/${id}`);
+  await chrome.ate("document.querySelector('#pausar-lugar')", 15000, "botão pausar");
+  await clicar("#pausar-lugar");
+  await esperarTexto("Lugar pausado");
+  assert.equal(sql(`select status || '|' || approved from points where id='${id}'`), "pausado|true");
+  await clicar("#pausar-lugar");
+  await chrome.ate("!document.body.innerText.includes('Lugar pausado')", 15000, "reativar");
+  assert.equal(sql(`select status from points where id='${id}'`), "ativo");
+
+  // editar a ficha: volta para a moderação
+  await clicar("#editar-lugar");
+  await chrome.js("(() => { const f = document.querySelector('#ef-lugar'); f.name.value = 'Feira do Largo, aos sábados'; return true; })()");
+  await chrome.js("document.querySelector('#ef-lugar').requestSubmit(); true");
+  await esperarTexto("Alterações enviadas");
+  assert.equal(sql(`select name || '|' || approved from points where id='${id}'`), "Feira do Largo, aos sábados|false");
+
+  // um visitante sem o link vê o lugar (depois de aprovado) mas não gerencia
+  sql(`update points set approved = true where id = '${id}'`);
+  await chrome.js("localStorage.removeItem('ev_tokens_lugar'); true");
+  await entrar(`perto/ponto/${id}`);
+  await esperarTexto("Feira do Largo, aos sábados");
+  assert.equal(await chrome.js("!!document.querySelector('#gerenciar-lugar')"), false);
+});

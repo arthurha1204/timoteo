@@ -14,6 +14,7 @@ Timóteo foi um jovem que seguiu e serviu ao lado do apóstolo Paulo (Atos 16:1-
 
 - **Mapa de lugares.** Cada ponto tem uma ficha padrão de 14 campos (quem passa, idiomas, melhores dias e períodos, autorização, segurança, estrutura, parceiro local) e um checklist "Antes de ir" gerado a partir dela.
 - **Como chegar.** Abre o lugar no Waze e no Google Maps.
+- **Quem cadastra, cuida.** Quem cadastra um lugar recebe um link secreto para editar a ficha e pausar o lugar quando não houver evangelização ali.
 - **"Vou evangelizar por aqui".** Quem vai marca o dia, e ninguém repete o mesmo trecho nem vai sozinho.
 - **Eventos.** Culto ao ar livre, evangelização boca a boca, ação social e oração na rua, com objetivo, roteiro opcional, trajeto desenhado no mapa, responsável identificado e compromissos de segurança obrigatórios. Dá para baixar o evento para o calendário e denunciar.
 - **Lambe imprimível.** Cartaz em A4 com QR que leva ao lugar ou à região.
@@ -180,7 +181,8 @@ vendor/                   Leaflet, qrcode.js e a fonte Archivo, sem CDN (licenç
 icons/                    ícones do aplicativo
 data/bairros/             população e contornos por bairro (gerado)
 scripts/                  dados de bairros, capturas de tela e ajudante do Chrome
-supabase/schema.sql       esquema do banco com regras de acesso
+supabase/migrations/      esquema do banco em migrações numeradas, com regras de acesso
+supabase/schema.sql       as migrações juntas num arquivo só (gerado: npm run schema)
 supabase/teste-local/     réplica local do banco (Docker) e seus testes
 docs/                     documentação
 tests/                    testes unitários e do PWA

@@ -20,7 +20,7 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 - **Denúncia** em todo evento, com motivo.
 - **Aprovação antes de publicar**, em modo compartilhado, num painel que destaca os pontos de atenção.
 - **Contato do responsável privado:** só aparece para quem confirmou presença naquele evento.
-- **Link secreto** para o responsável cancelar ou editar, guardando só o hash no banco. Edição volta para aprovação.
+- **Link secreto** para o responsável cancelar ou editar o evento, ou editar e pausar o lugar, guardando só o hash no banco. Edição volta para aprovação.
 - **Validação no servidor:** a API recusa evento sem os compromissos mínimos, no passado, com contato inválido ou em lugar inexistente, mesmo que alguém ignore o site.
 
 **Em geral**

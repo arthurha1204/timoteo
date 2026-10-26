@@ -339,3 +339,19 @@ test("povos(): lê indígenas e quilombolas e trata o '-' do IBGE como zero", as
     assert.equal(r["1303809"].indigenas, 48271);
   } finally { globalThis.fetch = original; }
 });
+
+test("supabase/schema.sql está em dia com as migrações", () => {
+  execFileSync(process.execPath, [path.join(raiz, "scripts", "gerar_schema.mjs"), "--conferir"], { stdio: "pipe" });
+});
+
+test("as migrações são idempotentes por escrito: nada de create sem if not exists, nem policy sem drop antes", () => {
+  const dir = path.join(raiz, "supabase", "migrations");
+  for (const f of readdirSync(dir).filter(x => x.endsWith(".sql"))) {
+    const sqlTxt = readFileSync(path.join(dir, f), "utf8").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
+    assert.ok(!/create\s+table\s+(?!if not exists)/i.test(sqlTxt), `${f}: create table sem "if not exists"`);
+    for (const m of sqlTxt.matchAll(/create\s+policy\s+"([^"]+)"\s+on\s+(\w+)/gi)) {
+      assert.ok(new RegExp(`drop\\s+policy\\s+if\\s+exists\\s+"${m[1]}"\\s+on\\s+${m[2]}`, "i").test(sqlTxt), `${f}: policy "${m[1]}" sem "drop policy if exists" antes`);
+    }
+    assert.ok(!/create\s+(?:unique\s+)?index\s+(?!if not exists)/i.test(sqlTxt), `${f}: create index sem "if not exists"`);
+  }
+});

@@ -19,6 +19,8 @@ const seedEventos = () => [
 ];
 
 const KEY_POINTS = "ev_points_v2";
+// Campos que o responsável pode mudar no lugar (os mesmos que a função editar_lugar aceita no banco).
+const CAMPOS_LUGAR = ["name", "type", "povo", "description", "best_time", "group_link", "referencia", "publico", "idiomas", "fluxo", "dias", "periodo", "evitar", "abordagem", "autorizacao", "autoriza_quem", "risco", "estrutura", "parceiro", "status"];
 const KEY_PLANS = "ev_plans_v1";
 const KEY_EVENTS = "ev_events_v1";
 const KEY_PARTS = "ev_parts_v1";
@@ -74,11 +76,19 @@ const local = {
     if (!pts) { pts = SEED; write(KEY_POINTS, pts); }
     return pts;
   },
+  // Devolve também o "token": o link secreto para editar e pausar o lugar. Guardamos só o hash, como no servidor.
   async addPoint(p) {
-    const pts = await this.listPoints();
-    const np = { ...p, id: uid(), created_at: new Date().toISOString() };
+    const pts = await this.listPoints(), token = novoToken();
+    const np = { ...p, id: uid(), manage_token_hash: await sha256Hex(token), created_at: new Date().toISOString() };
     pts.push(np); write(KEY_POINTS, pts);
-    return { point: np, pending: false };
+    return { point: np, pending: false, token };
+  },
+  async editPoint(id, token, dados) {
+    const h = await sha256Hex(token || ""), pts = await this.listPoints();
+    const alvo = pts.find(x => x.id === id && x.manage_token_hash && x.manage_token_hash === h);
+    if (!alvo) return false;
+    for (const c of CAMPOS_LUGAR) if (c in dados) alvo[c] = dados[c];
+    write(KEY_POINTS, pts); return true;
   },
   async listPlans(pointId) {
     return read(KEY_PLANS, []).filter(x => x.point_id === pointId);
@@ -146,12 +156,15 @@ function sb() {
 
   return {
     mode: "supabase",
-    listPoints: () => call("/points?approved=eq.true&select=*&order=created_at.desc"),
+    // Leitura pública pela visão: só lugares aprovados e sem o hash do link secreto.
+    listPoints: () => call("/points_public?select=*&order=created_at.desc"),
     async addPoint(p) {
-      const limpo = { ...p }; delete limpo.example; delete limpo.id;
+      const id = novoUuid(), token = novoToken();
+      const limpo = { ...p, id, manage_token_hash: await sha256Hex(token) }; delete limpo.example;
       await post("/points", limpo, { extra: min });
-      return { point: limpo, pending: true };
+      return { point: { ...limpo, manage_token_hash: undefined }, pending: true, token };
     },
+    editPoint: (id, token, dados) => rpc("editar_lugar", { p_point: id, p_token: token || "", p_dados: dados }),
     listPlans: pointId => call("/plans?point_id=eq." + encodeURIComponent(pointId) + "&select=who,when_text&order=created_at.asc"),
     async addPlan(plan) { await post("/plans", { point_id: plan.point_id, who: plan.who, when_text: plan.when_text }, { extra: min }); },
     allPlans: () => call("/plans?select=point_id,when_text,who"),

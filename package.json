@@ -17,7 +17,8 @@
     "test:pwa": "node --test tests/pwa.e2e.mjs",
     "legal": "node scripts/gerar_legal.mjs",
     "checar:publicacao": "node scripts/checar_publicacao.mjs",
-    "lint": "eslint . --max-warnings=0"
+    "lint": "eslint . --max-warnings=0",
+    "schema": "node scripts/gerar_schema.mjs"
   },
   "engines": {
     "node": ">=20"

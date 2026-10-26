@@ -4,7 +4,7 @@
 import { store } from "./data.js";
 import { TIPOS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
-import { $, view, COR, cruz, SETA_IR, esc, siteBase, waze, tiles } from "./util.js";
+import { $, view, COR, cruz, SETA_IR, esc, siteBase, waze, tiles, lerJSON, guardar } from "./util.js";
 
 // Específico dos eventos: o WhatsApp leva o número do responsável (diferente do link genérico de util.js).
 const wa = (num, txt) => `https://wa.me/${num}?text=${encodeURIComponent(txt)}`;
@@ -37,13 +37,10 @@ const fim = e => new Date(`${e.data}T${e.fim || e.inicio || "23:59"}`);
 const dataLonga = e => ini(e).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 const quando = e => `${dataLonga(e)}, ${e.inicio} às ${e.fim}`;
 const proximos = evs => evs.filter(e => e.status !== "cancelado" && fim(e) >= new Date()).sort((a, b) => ini(a) - ini(b));
-const lerJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
-const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const tokens = () => lerJSON("ev_tokens", {});            // link secreto de cada evento que a pessoa criou
 const partIds = () => lerJSON("ev_part_ids", {});         // código da presença confirmada (abre o contato do responsável)
 const pendentes = () => lerJSON("ev_pendentes", {});      // eventos criados e ainda em análise (só neste aparelho)
 const partDone = () => lerJSON("ev_part_done", {});
-const guardar = (chave, id, valor) => { const o = lerJSON(chave, {}); o[id] = valor; gravarJSON(chave, o); };
 const linkGerenciar = (id, token) => `${siteBase()}#/eventos/${id}?gerenciar=${token}`;
 
 const parseTrajeto = t => String(t || "").split(";").map(x => x.split(",").map(Number)).filter(a => a.length === 2 && a.every(isFinite)).map(([lat, lng]) => ({ lat, lng }));

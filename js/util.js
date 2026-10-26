@@ -48,3 +48,8 @@ export const tiles = () => L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z
 });
 export const userIcon = () => L.divIcon({ className: "", html: '<div class="ponto-usuario"><i></i></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
 export const pct1 = n => n.toFixed(1).replace(".", ",") + "%";
+
+// Armazenamento local simples (não quebra se o navegador bloquear).
+export const lerJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
+export const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* sem armazenamento: segue sem guardar */ } };
+export const guardar = (chave, id, valor) => { const o = lerJSON(chave, {}); o[id] = valor; gravarJSON(chave, o); };

@@ -38,7 +38,7 @@ npm run test:tudo              # inclui banco local (Docker) e navegador (Chrome
 - Siga o estilo do arquivo que estiver editando (nomes em português para coisas do domínio, aspas duplas, ponto e vírgula).
 - Todo texto vindo de usuários passa por `esc()` antes de entrar em HTML.
 - Não guarde dados pessoais além do necessário. Lugares, nunca pessoas.
-- Quando mudar um campo da ficha ou do evento, atualize `supabase/schema.sql` e `docs/`.
+- Quando mudar um campo da ficha ou do evento, crie uma **migração nova** em `supabase/migrations` (veja docs/SUPABASE.md), rode `npm run schema` e atualize `docs/`.
 - Números novos precisam de **fonte, data da consulta e fórmula** em `docs/DADOS.md`.
 
 ## Mensagens de commit

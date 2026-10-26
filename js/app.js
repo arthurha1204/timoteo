@@ -20,12 +20,12 @@ async function route() {
   const q = Object.fromEntries(new URLSearchParams(qs || ""));
   const [, r, a1, a2] = path.split("/");
   document.querySelectorAll("#nav a").forEach(a => { if (a.dataset.r === r) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-  if (r === "perto" && tela?.perto) { await tela.apply(a1, a2); return; }
+  if (r === "perto" && tela?.perto) { await tela.apply(a1, a2, q); return; }
   if (tela?.destruir) tela.destruir();
   tela = null;
   window.scrollTo(0, 0);
   try {
-    if (r === "perto" || !r) { const s = await montarPerto(); tela = { perto: true, apply: s.apply, destruir: s.destruir }; await s.apply(a1, a2); }
+    if (r === "perto" || !r) { const s = await montarPerto(); tela = { perto: true, apply: s.apply, destruir: s.destruir }; await s.apply(a1, a2, q); }
     else if (r === "cadastrar") tela = { destruir: viewCadastrar(q) };
     else if (r === "povos") a1 ? viewPovo(a1) : viewPovos();
     else if (r === "conversas") viewConversas();

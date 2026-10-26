@@ -7,8 +7,9 @@ import { oracaoDe } from "./orar.js";
 import { eventosDoPonto } from "./eventos.js";
 import { preencherCidade } from "./cidade.js";
 import { montarLambe } from "./lambe.js";
+import { blocosFicha, ligarFicha, coletarPonto, linkLugar } from "./cadastrar.js";
 import { LINKS_LEGAIS } from "./paginas.js";
-import { $, view, COR, cruz, SETA_VOLTAR, esc, nf, safeUrl, guiaBySlug, tipo, siteBase, pointUrl, waze, gmaps, wa, fmtDist, plural, doneGet, doneSet, dist, geocode, locate, tiles, userIcon } from "./util.js";
+import { $, view, COR, cruz, SETA_VOLTAR, esc, nf, safeUrl, guiaBySlug, tipo, siteBase, pointUrl, waze, gmaps, wa, fmtDist, plural, doneGet, doneSet, lerJSON, guardar, dist, geocode, locate, tiles, userIcon } from "./util.js";
 
 let ultimoCentro = null;   // lembra a área escolhida ao navegar entre telas
 
@@ -88,7 +89,8 @@ export async function montarPerto() {
     layer.clearLayers();
     st.pts.forEach(p => {
       const n = planCount.get(String(p.id)) || 0, sel = String(st.sel) === String(p.id);
-      const opt = n ? { radius: 8 + Math.min(n, 8) * 1.5, color: "#fff", weight: 2, fillColor: COR, fillOpacity: .85 }
+      const opt = p.status === "pausado" ? { radius: 6, color: "#8a8f98", weight: 2.5, fillColor: "#e6e8ec", fillOpacity: 1 }
+                : n ? { radius: 8 + Math.min(n, 8) * 1.5, color: "#fff", weight: 2, fillColor: COR, fillOpacity: .85 }
                     : { radius: 6, color: COR, weight: 2.5, fillColor: "#fff", fillOpacity: 1 };
       if (sel) { opt.radius += 4; opt.color = "#111"; opt.weight = 3; }
       L.circleMarker([p.lat, p.lng], opt).addTo(layer).bindTooltip(esc(p.name))
@@ -99,6 +101,7 @@ export async function montarPerto() {
   function itemHTML(p, i) {
     const bits = [tipo(p.type).nome];
     if (p._d != null) bits.push(fmtDist(p._d));
+    if (p.status === "pausado") bits.push("pausado");
     if (p.example) bits.push("exemplo");
     return `<li class="item${String(st.sel) === String(p.id) ? " selecionado" : ""}" style="--i:${Math.min(i, 12)}"><button type="button" data-id="${esc(p.id)}"><span><span class="item-nome">${esc(p.name)}</span><span class="item-sub">${esc(bits.join(" · "))}</span></span><span class="item-ate"><small>${p._n === 1 ? "vai" : "vão"}</small><b>${p._n}</b></span></button></li>`;
   }
@@ -173,11 +176,13 @@ export async function montarPerto() {
 
   /* ficha */
   async function abrirFicha(id) {
-    const p = st.pts.find(x => String(x.id) === String(id));
+    const token = lerJSON("ev_tokens_lugar", {})[id];
+    let p = st.pts.find(x => String(x.id) === String(id)), emAnalise = false;
     const slot = $("#slot");
+    if (!p && token && lerJSON("ev_pendentes_lugar", {})[id]) { p = lerJSON("ev_pendentes_lugar", {})[id]; emAnalise = true; }   // só o responsável vê, neste aparelho
     if (!p) { slot.innerHTML = ""; return; }
     st.sel = p.id; drawMarkers(); drawLista();
-    const list = await store.listPlans(p.id).catch(() => []);
+    const list = emAnalise ? [] : await store.listPlans(p.id).catch(() => []);
     const n = list.length, g = guiaBySlug(p.povo), t = tipo(p.type), gl = safeUrl(p.group_link);
     const dKm = st.center ? dist(st.center, p) : null, cmp = completude(p);
     const msg = `Vamos evangelizar juntos? Marquei um lugar no mapa: ${p.name}. Veja como chegar e combine com a gente: ${pointUrl(p.id)}`;
@@ -197,9 +202,15 @@ export async function montarPerto() {
       <div class="folha-topo"><button type="button" id="voltar">${SETA_VOLTAR}Voltar para a lista</button></div>
       <div class="folha-corpo"><div>
         <h2 id="ficha-titulo" class="titulo-forte ficha-titulo">${esc(p.name)}</h2>
-        <p class="ficha-onde">${esc(t.nome)}${dKm != null ? ` · a ${fmtDist(dKm)} do ponto escolhido` : ""}${p.example ? " · lugar de exemplo" : ""}</p>
+        <p class="ficha-onde">${esc(t.nome)}${dKm != null ? ` · a ${fmtDist(dKm)} do ponto escolhido` : ""}${p.status === "pausado" ? " · pausado" : ""}${p.example ? " · lugar de exemplo" : ""}</p>
+        ${emAnalise ? '<p class="disputa"><b>Aguardando aprovação.</b> A moderação confere o lugar antes de ele aparecer no mapa. Guarde o link secreto: é a única forma de editar depois.</p>' : ""}
+        ${p.status === "pausado" ? '<p class="disputa"><b>Lugar pausado.</b> O responsável avisou que, por enquanto, não há evangelização aqui.</p>' : ""}
         ${p.description ? `<p class="ficha-abertura">${esc(p.description)}</p>` : ""}
         ${diasEPeriodos(p) ? `<p class="titulo-forte ficha-numero">Melhores dias e períodos: <strong>${esc(diasEPeriodos(p))}</strong></p>` : ""}
+        ${token ? `<div class="contexto" id="gerenciar-lugar"><b>Você cadastrou este lugar</b>
+          <p class="miudo" style="font-weight:400;margin-top:6px">${store.mode === "supabase" ? "Mudanças na ficha voltam para aprovação e o lugar some do mapa até lá. Pausar e reativar valem na hora." : "Mudanças valem na hora."}</p>
+          <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno" id="editar-lugar">Editar a ficha</button>${emAnalise ? "" : `<button class="botao pequeno" id="pausar-lugar">${p.status === "pausado" ? "Reativar o lugar" : "Pausar o lugar"}</button>`}<button class="botao pequeno" id="copiar-lugar">Copiar o link secreto</button></p>
+          <div id="form-edit-lugar" hidden></div></div>` : ""}
         <div id="cidade-ficha" style="margin-top:18px"></div>
         <div class="lambe"><button class="botao" id="lambe-pt" aria-expanded="false">Baixar lambe para colar neste lugar</button><div id="lambe-box"></div></div>
         <p class="disputa">${n ? `<b>${n} ${plural(n, "pessoa marcou", "pessoas marcaram")}</b> que ${plural(n, "vai", "vão")} evangelizar por aqui. Quanto mais gente junta, melhor a conversa.` : "Ninguém marcou ainda. Marque o seu dia e chame mais gente: dupla ou trio rende mais que ir sozinho."}</p>
@@ -225,14 +236,57 @@ export async function montarPerto() {
       e.target.setAttribute("aria-expanded", String(!open));
       if (open) $("#lambe-box").innerHTML = ""; else montarLambe($("#lambe-box"), { url: pointUrl(p.id), lugar: p.name });
     };
-    renderPe(p, id);
+    renderPe(p, id, emAnalise);
+    if (token) ligarGerenciarLugar(p, token, emAnalise);
     preencherCidade($("#cidade-ficha"), p.lat, p.lng);
     eventosDoPonto(p.id).then(h => { const el = $("#eventos-ficha"); if (el) el.innerHTML = h; });
     map.setView([p.lat, p.lng], Math.max(map.getZoom(), 15));
   }
 
-  function renderPe(p, id) {
+  // Recarrega a lista depois de editar ou pausar.
+  async function recarregar() {
+    st.pts = await store.listPoints();
+    $("#n1").textContent = nf(st.pts.length);
+    drawMarkers(); drawLista();
+  }
+
+  // Editar a ficha, pausar e copiar o link secreto: só para quem tem o link.
+  function ligarGerenciarLugar(p, token, emAnalise) {
+    $("#copiar-lugar").onclick = async e => { const link = linkLugar(p.id, token); try { await navigator.clipboard.writeText(link); e.target.textContent = "Link copiado"; } catch { prompt("Copie este link e guarde:", link); } };
+    const pausar = $("#pausar-lugar");
+    if (pausar) pausar.onclick = async () => {
+      try {
+        if (!(await store.editPoint(p.id, token, { status: p.status === "pausado" ? "ativo" : "pausado" }))) return alert("O link secreto não confere. Abra o lugar pelo link que você recebeu ao cadastrá-lo.");
+        await recarregar(); abrirFicha(p.id);
+      } catch (err) { alert("Não foi possível salvar: " + err.message); }
+    };
+    $("#editar-lugar").onclick = () => {
+      const f = $("#form-edit-lugar"); f.hidden = false;
+      f.innerHTML = `<form class="form-cad" id="ef-lugar" novalidate style="margin-top:8px">${blocosFicha(p)}<p class="erro" id="erro-edit" hidden></p>
+        <p style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao principal">Salvar alterações</button><button type="button" class="botao-texto" id="ecx-lugar">Cancelar</button></p></form>`;
+      ligarFicha($("#ef-lugar"));
+      $("#ecx-lugar").onclick = () => { f.hidden = true; f.innerHTML = ""; };
+      $("#ef-lugar").onsubmit = async ev => {
+        ev.preventDefault();
+        const dados = coletarPonto(ev.target); delete dados.lat; delete dados.lng; delete dados.best_time;
+        const erro = t => { const e = $("#erro-edit"); e.hidden = !t; e.textContent = t || ""; };
+        if (dados.name.length < 3) return erro("Dê um nome ao lugar, com pelo menos 3 letras.");
+        try {
+          if (!(await store.editPoint(p.id, token, dados))) return erro("O link secreto não confere.");
+          if (store.mode === "supabase") {
+            guardar("ev_pendentes_lugar", p.id, { ...p, ...dados });
+            f.innerHTML = '<p class="ok-box" style="padding:12px 0"><b>Alterações enviadas.</b> O lugar volta para a moderação e some do mapa até ser aprovado de novo.</p>';
+            await recarregar();
+          } else { await recarregar(); abrirFicha(p.id); }
+        } catch (err) { erro("Não foi possível salvar: " + err.message); }
+      };
+    };
+    if (emAnalise) $("#editar-lugar").textContent = "Editar a ficha";
+  }
+
+  function renderPe(p, id, emAnalise = false) {
     const pe = $("#pe"), fez = doneGet()[p.id];
+    if (emAnalise) { pe.innerHTML = '<p class="miudo">Você poderá marcar presença quando a moderação aprovar este lugar.</p>'; return; }
     if (fez) {
       pe.innerHTML = `<button class="botao feito largo" disabled>Marcado: ${esc(fez)}</button><p class="miudo">Sem cadastro. Conta uma vez por aparelho.</p>`;
       return;
@@ -260,8 +314,12 @@ export async function montarPerto() {
     };
   }
 
-  st.apply = async (arg1, arg2) => {
-    if (arg1 === "ponto") { await abrirFicha(decodeURIComponent(arg2 || "")); return; }
+  st.apply = async (arg1, arg2, q = {}) => {
+    if (arg1 === "ponto") {
+      const id = decodeURIComponent(arg2 || "");
+      if (q.gerenciar) { guardar("ev_tokens_lugar", id, q.gerenciar); history.replaceState(null, "", "#/perto/ponto/" + encodeURIComponent(id)); }
+      await abrirFicha(id); return;
+    }
     $("#slot").innerHTML = ""; st.sel = null; drawMarkers();
     if (arg1 && arg1.startsWith("@")) {
       const [la, ln] = arg1.slice(1).split(",").map(Number);

@@ -9,7 +9,7 @@ Em modo local os dados ficam só no navegador de cada pessoa. Para que todos vej
 ## Passo a passo
 
 1. Crie um projeto em https://supabase.com.
-2. Em **SQL Editor**, cole e rode o conteúdo de [`supabase/schema.sql`](../supabase/schema.sql). Pode rodar de novo sem perder dados.
+2. Em **SQL Editor**, cole e rode o conteúdo de [`supabase/schema.sql`](../supabase/schema.sql). Ele reúne todas as migrações e pode ser rodado de novo sem perder dados. Quem usa a CLI do Supabase pode aplicar a pasta [`supabase/migrations`](../supabase/migrations) (`supabase db push`).
 3. Em **Project Settings > API**, copie a **Project URL** e a chave **anon public**.
 4. Preencha `js/config.js`:
 
@@ -44,13 +44,14 @@ Quem tem conta no Auth mas **não** está em `admins` entra e não enxerga nem a
 |---|---|
 | Visitante | Ver lugares e eventos **aprovados** (eventos pela visão `events_public`); propor lugares e eventos (entram não aprovados); marcar "vou evangelizar por aqui" em lugar aprovado; confirmar presença; denunciar |
 | Responsável pelo evento | Com o **link secreto**: cancelar e editar o próprio evento (a edição volta para aprovação) |
+| Responsável pelo lugar | Com o **link secreto**: editar a ficha (volta para aprovação) e **pausar ou reativar** o lugar (vale na hora) |
 | Quem confirmou presença | Ver o contato do responsável, usando o código da própria presença |
 | Moderador | Ver a fila de pendentes e as denúncias, aprovar, apagar e cancelar eventos |
 
 ### O que o visitante nunca consegue ler
 
 - O **contato** do responsável (só pela função `contato_do_evento`, com o código de uma presença naquele evento).
-- O **hash do link secreto**.
+- O **hash do link secreto**, de eventos e de lugares. Lugares também só são lidos pela visão `points_public`.
 - A **lista de quem confirmou presença** (só a contagem).
 - As **denúncias** e a tabela de moderadores.
 
@@ -76,4 +77,11 @@ Ao criar um evento, o navegador gera um código aleatório, envia ao banco **só
 
 ## Mudando o esquema
 
-Ao alterar um campo da ficha do lugar (`js/ficha.js`) ou do evento (`js/eventos.js`), atualize `supabase/schema.sql`, rode `npm run test:banco` e `npm run test:e2e` e, se já houver dados, escreva uma migração (`alter table ... add column ...`).
+O esquema vive em **migrações numeradas** (`supabase/migrations/AAAAMMDDHHMMSS_nome.sql`). Para mudar o banco:
+
+1. Crie uma migração **nova**, nunca edite uma já publicada.
+2. Escreva-a de modo que possa rodar de novo sem erro (`if not exists`, `create or replace`, `drop policy if exists` antes de `create policy`). O teste `npm test` confere isso.
+3. Rode `npm run schema` para regerar `supabase/schema.sql`.
+4. Rode `npm run test:banco` (inclui um teste que aplica as migrações sobre um banco com dados antigos) e `npm run test:e2e`.
+
+Ao alterar um campo da ficha do lugar (`js/ficha.js`) ou do evento (`js/eventos.js`), faça a migração correspondente.

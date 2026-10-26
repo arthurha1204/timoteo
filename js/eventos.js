@@ -158,7 +158,7 @@ async function viewEvento(id, q = {}) {
   if (p) grupo.push(L.circleMarker([p.lat, p.lng], { radius: 10, color: "#fff", weight: 3, fillColor: COR, fillOpacity: 1 }).addTo(map).bindTooltip("Ponto de encontro: " + esc(p.name)));
   if (trajeto.length > 1) {
     const linha = L.polyline(trajeto.map(q => [q.lat, q.lng]), { color: COR, weight: 5, opacity: .85, dashArray: "2 9", lineCap: "round" }).addTo(map);
-    trajeto.slice(1).forEach((q, i) => L.marker([q.lat, q.lng], { icon: L.divIcon({ className: "", html: `<div class="parada">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(map));
+    trajeto.slice(1).forEach((q, i) => L.marker([q.lat, q.lng], { icon: L.divIcon({ className: "", html: `<div class="parada">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] }), interactive: false, keyboard: false }).addTo(map));
     grupo.push(linha);
   }
   map.fitBounds(L.featureGroup(grupo.length ? grupo : [L.marker([-14.2, -51.9])]).getBounds().pad(.25), { maxZoom: 17 });
@@ -309,7 +309,7 @@ async function viewNovo(q) {
     const pts2 = ponto ? [{ lat: ponto.lat, lng: ponto.lng }, ...rota] : [];
     if (ponto) L.circleMarker([ponto.lat, ponto.lng], { radius: 10, color: "#fff", weight: 3, fillColor: COR, fillOpacity: 1 }).addTo(camada).bindTooltip("Ponto de encontro");
     if (pts2.length > 1) L.polyline(pts2.map(x => [x.lat, x.lng]), { color: COR, weight: 5, opacity: .85, dashArray: "2 9", lineCap: "round" }).addTo(camada);
-    rota.forEach((x, i) => L.marker([x.lat, x.lng], { icon: L.divIcon({ className: "", html: `<div class="parada">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(camada));
+    rota.forEach((x, i) => L.marker([x.lat, x.lng], { icon: L.divIcon({ className: "", html: `<div class="parada">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] }), interactive: false, keyboard: false }).addTo(camada));
     $("#rinfo").textContent = ponto ? (rota.length ? resumoTrajeto(pts2) : "Sem trajeto. O evento acontece só no ponto de encontro.") : "Escolha primeiro o ponto de encontro.";
   }
   map.on("click", e => { if (!ponto) { erro("Escolha o ponto de encontro antes de marcar o trajeto."); return; } erro(""); if (rota.length < 20) rota.push({ lat: e.latlng.lat, lng: e.latlng.lng }); draw(); });

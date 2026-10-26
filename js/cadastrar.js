@@ -8,7 +8,7 @@ const checks = (campo, nome, valores = "") => {
   const marcados = new Set(csv(valores));
   return Object.entries(OPCOES[campo]).map(([k, v]) => `<label class="opcao"><input type="checkbox" name="${nome}" value="${k}"${marcados.has(k) ? " checked" : ""}><span>${esc(v)}</span></label>`).join("");
 };
-const selecao = (campo, nome, vazio, padrao = "") => `<select class="campo" name="${nome}">${vazio ? `<option value="">${esc(vazio)}</option>` : ""}${Object.entries(OPCOES[campo]).map(([k, v]) => `<option value="${k}"${k === padrao ? " selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+const selecao = (campo, nome, vazio, padrao = "", id = "") => `<select class="campo"${id ? ` id="${id}"` : ""} name="${nome}">${vazio ? `<option value="">${esc(vazio)}</option>` : ""}${Object.entries(OPCOES[campo]).map(([k, v]) => `<option value="${k}"${k === padrao ? " selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
 
 // Os seis blocos da ficha. Com `p`, vêm preenchidos (edição).
 export function blocosFicha(p = {}) {
@@ -22,7 +22,7 @@ export function blocosFicha(p = {}) {
         <label for="pv">Povo ou perfil principal</label><select class="campo" id="pv" name="povo"><option value="">Não sei, é variado</option>${GUIAS.map(g => `<option value="${g.slug}"${g.slug === p.povo ? " selected" : ""}>${esc(g.nome)}</option>`).join("")}</select>
         <label>Faixa de público</label><div class="opcoes">${checks("publico", "publico", p.publico)}</div>
         <label>Idiomas</label><div class="opcoes">${checks("idiomas", "idiomas", p.idiomas)}</div>
-        <label for="fl">Movimento de pessoas</label>${selecao("fluxo", "fluxo", "Não sei", p.fluxo)}</fieldset>
+        <label for="fl">Movimento de pessoas</label>${selecao("fluxo", "fluxo", "Não sei", p.fluxo, "fl")}</fieldset>
       <fieldset class="bloco-form"><legend>3. Quando ir</legend>
         <label>Melhores dias</label><div class="opcoes">${checks("dias", "dias", p.dias)}</div>
         <label>Melhores períodos</label><div class="opcoes">${checks("periodos", "periodo", p.periodo)}</div>
@@ -30,14 +30,14 @@ export function blocosFicha(p = {}) {
       <fieldset class="bloco-form"><legend>4. Como abordar</legend>
         <label>O que funciona neste lugar</label><div class="opcoes">${checks("abordagem", "abordagem", p.abordagem)}</div></fieldset>
       <fieldset class="bloco-form"><legend>5. Cuidados</legend>
-        <label for="au">Precisa de autorização?</label>${selecao("autorizacao", "autorizacao", "Ainda não sei", p.autorizacao)}
+        <label for="au">Precisa de autorização?</label>${selecao("autorizacao", "autorizacao", "Ainda não sei", p.autorizacao, "au")}
         <div id="aq"${p.autorizacao === "sim" ? "" : " hidden"}><label for="aqi">Quem autoriza?</label><input class="campo" id="aqi" name="autoriza_quem" maxlength="120" placeholder="Ex.: direção da escola, administração do mercado" value="${v("autoriza_quem")}"></div>
-        <label for="rs">Segurança do lugar</label>${selecao("risco", "risco", "Não sei", p.risco)}</fieldset>
+        <label for="rs">Segurança do lugar</label>${selecao("risco", "risco", "Não sei", p.risco, "rs")}</fieldset>
       <fieldset class="bloco-form"><legend>6. Estrutura e contato</legend>
         <label>Estrutura por perto</label><div class="opcoes">${checks("estrutura", "estrutura", p.estrutura)}</div>
         <label for="pc">Parceiro local (igreja ou ação que já atua aí)</label><input class="campo" id="pc" name="parceiro" maxlength="120" placeholder="Nome da igreja ou projeto. Sem dados de pessoas." value="${v("parceiro")}">
         <label for="gl">Link de um grupo de WhatsApp (opcional)</label><input class="campo" id="gl" name="group_link" type="url" placeholder="https://chat.whatsapp.com/..." value="${v("group_link")}">
-        <label for="st">Situação do ponto</label>${selecao("status", "status", "", p.status || "ativo")}</fieldset>`;
+        <label for="st">Situação do ponto</label>${selecao("status", "status", "", p.status || "ativo", "st")}</fieldset>`;
 }
 
 // Mostra "Quem autoriza?" só quando faz sentido e avisa a tela de qualquer mudança no formulário.
@@ -83,7 +83,7 @@ export function viewCadastrar(q) {
   tiles().addTo(m);
   let mk = null;
   const erro = t => { const e = $("#erro"); e.hidden = !t; e.textContent = t || ""; };
-  const setPos = c => { pos = c; mk?.remove(); mk = L.marker([c.lat, c.lng], { icon: userIcon() }).addTo(m); $("#coord").textContent = `Marcado: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
+  const setPos = c => { pos = c; mk?.remove(); mk = L.marker([c.lat, c.lng], { icon: userIcon(), keyboard: false, interactive: false }).addTo(m); $("#coord").textContent = `Marcado: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
   if (pos) setPos(pos);
   m.on("click", e => setPos({ lat: e.latlng.lat, lng: e.latlng.lng }));
   ligarFicha($("#f"), () => { const c = completude(coletarPonto($("#f"), pos)); $("#prog").textContent = `Ficha ${c.feitos} de ${c.total} campos preenchidos. Quanto mais completa, mais fácil para outras pessoas se prepararem.`; });

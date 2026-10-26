@@ -13,14 +13,15 @@
     "banco:parar": "docker compose -f supabase/teste-local/docker-compose.yml down",
     "test:banco": "node --test supabase/teste-local/testar.mjs",
     "test:e2e": "node --test supabase/teste-local/e2e.mjs",
-    "test:tudo": "npm run lint && npm test && npm run test:local && npm run test:pwa && npm run test:banco && npm run test:e2e",
+    "test:tudo": "npm run lint && npm test && npm run test:local && npm run test:pwa && npm run test:a11y && npm run test:banco && npm run test:e2e",
     "test:pwa": "node --test tests/pwa.e2e.mjs",
     "legal": "node scripts/gerar_legal.mjs",
     "checar:publicacao": "node scripts/checar_publicacao.mjs",
     "lint": "eslint . --max-warnings=0",
     "schema": "node scripts/gerar_schema.mjs",
     "povos": "node scripts/gerar_povos.mjs",
-    "test:local": "node --test tests/local.e2e.mjs"
+    "test:local": "node --test tests/local.e2e.mjs",
+    "test:a11y": "node --test tests/a11y.e2e.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -42,6 +43,7 @@
     "open-source"
   ],
   "devDependencies": {
+    "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
     "globals": "^17.13.0"
   }

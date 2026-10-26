@@ -20,3 +20,20 @@ jobs:
         run: npm test
       - name: Sintaxe do script de dados (Python)
         run: python3 -m py_compile scripts/gerar_bairros.py
+
+  banco:
+    name: banco e navegador (réplica local)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Subir Postgres + PostgREST
+        run: npm run banco:subir
+      - name: Regras de acesso do banco
+        run: npm run test:banco
+      - name: Site no Chrome contra a réplica
+        run: npm run test:e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

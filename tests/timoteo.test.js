@@ -214,7 +214,8 @@ test("toda função de tela chamada em app.js e eventos.js está definida", () =
     const src = readFileSync(path.join(raiz, "js", arq), "utf8");
     const chamadas = new Set([...src.matchAll(/\b(view[A-Z]\w*|preencher[A-Z]\w*|mount[A-Z]\w*|estimar[A-Z]\w*)\(/g)].map(m => m[1]));
     for (const nome of chamadas) {
-      const definida = new RegExp(`function\\s+${nome}\\s*\\(`).test(src) || new RegExp(`(?:const|let)\\s+${nome}\\s*=`).test(src);
+      const definida = new RegExp(`function\\s+${nome}\\s*\\(`).test(src) || new RegExp(`(?:const|let)\\s+${nome}\\s*=`).test(src)
+        || new RegExp(`import\\s*\\{[^}]*\\b${nome}\\b[^}]*\\}`).test(src);
       assert.ok(definida, `${arq}: ${nome}() é chamada mas não está definida`);
     }
   }

@@ -17,7 +17,7 @@ Respondemos assim que possível. Ainda é um projeto pequeno e voluntário: não
 ## O que está no escopo
 
 - Código deste repositório (`js/`, `index.html`, `css/`, `scripts/`).
-- O esquema e as regras de acesso do banco em `supabase.sql`.
+- O esquema e as regras de acesso do banco em `supabase/schema.sql`.
 - Falhas que permitam expor dados pessoais, publicar conteúdo sem aprovação ou fazer um visitante executar código de outra pessoa.
 
 ## Fora do escopo

@@ -41,21 +41,22 @@ Navegação por hash, sem recarregar a página:
 | `js/bairros.js` | Carrega `data/bairros/<UF>.json`; acha o bairro de um ponto (ponto em polígono); estima população num raio |
 | `js/content.js` | Tipos de lugar, guias por povo, conversas, mensagem, frases do lambe, regras de cadastro |
 | `js/dados.js` | Números e fontes de Joshua Project, Lausanne e Portas Abertas |
-| `js/data.js` | Camada de dados com duas implementações: **local** (localStorage) e **Supabase** (REST) |
+| `js/data.js` | Camada de dados com duas implementações: **local** (localStorage) e **Supabase** (REST). Inclui link secreto (hash SHA-256) e a API de moderação |
+| `js/moderar.js` | Painel de moderação (`#/moderar`): fila de pendentes, sinais de atenção, denúncias |
 | `js/config.js` | URL e chave anon do Supabase. Vazio por padrão |
 
 ## Camada de dados
 
 `js/data.js` exporta `store`, com a mesma interface nos dois modos:
 
-`listPoints`, `addPoint`, `listPlans`, `addPlan`, `allPlans`, `listEvents`, `addEvent`, `cancelEvent`, `listParts`, `addPart`, `addReport`.
+`listPoints`, `addPoint`, `listPlans`, `addPlan`, `allPlans`, `listEvents`, `addEvent` (devolve o link secreto), `cancelEvent(id, token)`, `editEvent(id, token, dados)`, `listParts`, `addPart` (devolve o código da presença), `contatoDoEvento(id, codigo)`, `addReport` e, só no modo compartilhado, `admin.*` (fila, aprovar, apagar, denúncias).
 
 - **Local:** tudo no `localStorage`. Os lugares e eventos de exemplo são gerados em memória e marcados como exemplo. As datas dos eventos de exemplo são sempre as próximas.
-- **Supabase:** chamadas REST com a chave anon. As regras de acesso (RLS) em `supabase.sql` fazem com que lugares e eventos novos entrem com `approved = false` e só apareçam depois de aprovados.
+- **Supabase:** chamadas REST com a chave anon. As regras de acesso (RLS) em `supabase/schema.sql` fazem com que lugares e eventos novos entrem com `approved = false` e só apareçam depois de aprovados. Eventos são lidos pela visão `events_public`, sem contato nem hash do link secreto; presença, contato, cancelamento e edição passam por funções que checam quem pede. Veja [SUPABASE.md](SUPABASE.md).
 
 ## Ficha padrão do ponto
 
-Todo ponto tem os mesmos 14 campos, sempre na mesma ordem (`linhasFicha` em `js/ficha.js`). Campos com várias opções são guardados como texto separado por vírgula. O checklist "Antes de ir" é **gerado** da ficha (por exemplo, autorização "sim" gera o item de pedir autorização; segurança alta gera o item de falar com a liderança local). Quando mudar um campo, atualize também `supabase.sql`.
+Todo ponto tem os mesmos 14 campos, sempre na mesma ordem (`linhasFicha` em `js/ficha.js`). Campos com várias opções são guardados como texto separado por vírgula. O checklist "Antes de ir" é **gerado** da ficha (por exemplo, autorização "sim" gera o item de pedir autorização; segurança alta gera o item de falar com a liderança local). Quando mudar um campo, atualize também `supabase/schema.sql`.
 
 ## Eventos
 

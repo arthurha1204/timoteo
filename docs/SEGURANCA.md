@@ -18,7 +18,10 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 - **Compromissos obrigatórios** antes de publicar: ser maior de 18 anos; respeitar quem não quiser conversar; não coletar dados pessoais; menores só com responsáveis; horário de término e ponto de retorno; saber pedir ajuda (SAMU 192, Polícia 190, Bombeiros 193). Conforme o tipo e a ficha do lugar, entram também: autorização do lugar, falar com a liderança local (segurança alta), ir em duplas ou trios (boca a boca) e respeitar limites de som (culto).
 - **Selos de segurança** no evento mostram o que o responsável declarou.
 - **Denúncia** em todo evento, com motivo.
-- **Aprovação antes de publicar**, em modo compartilhado.
+- **Aprovação antes de publicar**, em modo compartilhado, num painel que destaca os pontos de atenção.
+- **Contato do responsável privado:** só aparece para quem confirmou presença naquele evento.
+- **Link secreto** para o responsável cancelar ou editar, guardando só o hash no banco. Edição volta para aprovação.
+- **Validação no servidor:** a API recusa evento sem os compromissos mínimos, no passado, com contato inválido ou em lugar inexistente, mesmo que alguém ignore o site.
 
 **Em geral**
 - Sem contas, sem rastreamento próprio e sem anúncios.
@@ -35,13 +38,16 @@ O Timóteo marca **encontros reais de pessoas na rua**. Isso muda o nível de cu
 
 | Risco | Situação | O que fazer |
 |---|---|---|
-| Contato (WhatsApp) do responsável fica **público** no evento | Aviso no formulário para usar o contato da igreja ou do grupo | Guardar o contato em tabela privada e revelar só a quem confirmar presença |
-| Qualquer pessoa pode enviar pontos, eventos e presenças sem limite | Sem proteção contra spam | Limite de envios, captcha (por exemplo Cloudflare Turnstile) e função de borda |
-| Moderação só pelo painel do Supabase | Sem painel próprio | Painel de moderação com aprovação, edição e leitura de denúncias |
-| Responsável não consegue cancelar o evento no modo compartilhado | O cancelamento só funciona no modo local | Login do responsável ou link secreto de gerenciamento |
-| Denúncias não são lidas em lugar nenhum | Só no painel do Supabase | Fila de denúncias na moderação |
-| Evento marcado em lugar perigoso | Depende do que o responsável declara e da moderação | Revisão humana de eventos em lugares de segurança média ou alta |
-| Serviços gratuitos de mapa e busca têm limites de uso | Podem bloquear com tráfego real | Provedores próprios ou contratados (veja [PUBLICAR.md](PUBLICAR.md)) |
+| Contato do responsável público | **Resolvido no modo compartilhado:** o contato só sai pela função `contato_do_evento`, para quem confirmou presença. No modo local (teste) não há privacidade, pois tudo fica no próprio aparelho | Manter o aviso para usar o contato da igreja ou do grupo |
+| Lista de quem confirmou presença pública | **Resolvido:** só a contagem é pública | Nada |
+| Responsável não consegue cancelar ou editar | **Resolvido** com o link secreto (só o hash fica no banco). Quem perde o link depende da moderação | Considerar login do responsável no futuro |
+| Qualquer pessoa pode enviar sem limite | **Parcial:** o banco tem trava global (60 pendentes por hora, por exemplo) e validações fortes, mas não há captcha nem limite por pessoa | Captcha (Cloudflare Turnstile) e função de borda |
+| Moderação só pelo painel do Supabase | **Resolvido:** painel em `#/moderar`, com sinais de atenção e fila de denúncias. O login por e-mail ainda não foi testado num Supabase hospedado | Testar com um projeto real |
+| Denúncias não são lidas | **Resolvido:** aparecem no painel de moderação | Definir prazo de resposta |
+| Evento em lugar perigoso | Depende do que o responsável declara e da moderação. O painel destaca lugares de segurança média ou alta, escolas e hospitais | Revisão humana obrigatória nesses casos |
+| Serviços gratuitos de mapa e busca têm limites | Podem bloquear com tráfego real | Provedores próprios ou contratados (veja [PUBLICAR.md](PUBLICAR.md)) |
+| Dependências carregadas de terceiros (fonte e bibliotecas) | Expõem o IP do visitante | Hospedar no próprio site e adicionar CSP |
+| Texto livre pode trazer telefone, e-mail ou link | O painel sinaliza, mas só a leitura humana resolve | Moderadores atentos |
 
 ## Para quem modera
 

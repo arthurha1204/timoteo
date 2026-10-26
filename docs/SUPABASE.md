@@ -2,12 +2,14 @@
 
 Em modo local os dados ficam só no navegador de cada pessoa. Para que todos vejam os mesmos lugares, eventos e presenças, ligue um projeto Supabase (há plano gratuito).
 
-> Este caminho está escrito, mas **ainda não foi testado com um projeto real**. Teste num projeto de rascunho antes de usar com gente de verdade e conte o que encontrar numa issue.
+**O que já foi testado:** o esquema, as regras de acesso e o site inteiro em modo compartilhado (cadastro, moderação, eventos, link secreto, contato privado, presença, denúncia), contra uma réplica local com a mesma camada que o Supabase usa (Postgres + PostgREST). Veja [supabase/teste-local](../supabase/teste-local/README.md).
+
+**O que ainda não foi testado:** um projeto Supabase hospedado de verdade, em especial o **login do moderador por e-mail** (Supabase Auth). Teste num projeto de rascunho antes de usar com gente de verdade e conte o que encontrar numa issue.
 
 ## Passo a passo
 
 1. Crie um projeto em https://supabase.com.
-2. Em **SQL Editor**, cole e rode o conteúdo de [`supabase.sql`](../supabase.sql). Ele cria as tabelas `points`, `plans`, `events`, `event_parts` e `reports`, liga a proteção por linha (RLS) e cria as regras de acesso.
+2. Em **SQL Editor**, cole e rode o conteúdo de [`supabase/schema.sql`](../supabase/schema.sql). Pode rodar de novo sem perder dados.
 3. Em **Project Settings > API**, copie a **Project URL** e a chave **anon public**.
 4. Preencha `js/config.js`:
 
@@ -16,33 +18,62 @@ Em modo local os dados ficam só no navegador de cada pessoa. Para que todos vej
    export const SUPABASE_ANON_KEY = "sua-chave-anon";
    ```
 
-   A chave anon é pública por desenho (ela vai para o navegador). Quem protege os dados são as regras de RLS. **Nunca** coloque a chave `service_role` aqui.
+   A chave anon é pública por desenho (ela vai para o navegador). Quem protege os dados são as regras de acesso do banco. **Nunca** coloque a chave `service_role` aqui.
 5. Publique o site (veja [PUBLICAR.md](PUBLICAR.md)).
 
-## Como funciona a aprovação
+## Moderadores
+
+A moderação fica em `#/moderar` (por exemplo `https://seu-site/#/moderar`) e é restrita a e-mails cadastrados.
+
+1. **Authentication > Providers > Email:** deixe o login por e-mail ligado. Desligue **Enable email signups**: só entra quem for convidado.
+2. **Authentication > URL Configuration:** ponha o endereço do site em **Site URL** e também em **Redirect URLs**. O link do e-mail volta para lá.
+3. **Authentication > Users > Invite user:** convide o e-mail de cada moderador.
+4. No **SQL Editor**, cadastre o mesmo e-mail como moderador (em letras minúsculas):
+
+   ```sql
+   insert into admins (email) values ('moderador@exemplo.com');
+   ```
+
+5. O moderador abre `#/moderar`, digita o e-mail e toca no link que chega por e-mail.
+
+Quem tem conta no Auth mas **não** está em `admins` entra e não enxerga nem altera nada: as regras de acesso do banco checam a tabela `admins`.
+
+## Como funciona
 
 | Quem | Pode |
 |---|---|
-| Qualquer visitante | Ver lugares e eventos **aprovados**; propor lugares e eventos (entram com `approved = false`); marcar presença; denunciar |
-| Moderador (no painel do Supabase) | Aprovar (`approved = true`), editar, apagar e ler denúncias |
+| Visitante | Ver lugares e eventos **aprovados** (eventos pela visão `events_public`); propor lugares e eventos (entram não aprovados); marcar "vou evangelizar por aqui" em lugar aprovado; confirmar presença; denunciar |
+| Responsável pelo evento | Com o **link secreto**: cancelar e editar o próprio evento (a edição volta para aprovação) |
+| Quem confirmou presença | Ver o contato do responsável, usando o código da própria presença |
+| Moderador | Ver a fila de pendentes e as denúncias, aprovar, apagar e cancelar eventos |
 
-Para aprovar: **Table Editor > points** (ou **events**) > marque `approved` nas linhas aceitas. As denúncias ficam na tabela `reports`, sem nenhuma regra de leitura pública.
+### O que o visitante nunca consegue ler
 
-## Regras de acesso (resumo)
+- O **contato** do responsável (só pela função `contato_do_evento`, com o código de uma presença naquele evento).
+- O **hash do link secreto**.
+- A **lista de quem confirmou presença** (só a contagem).
+- As **denúncias** e a tabela de moderadores.
 
-- `points`: leitura só de `approved = true`; inserção só com `approved = false`.
-- `events`: leitura só de `approved = true`; inserção só com `approved = false` e `status = 'ativo'`.
-- `plans` e `event_parts`: leitura e inserção públicas.
-- `reports`: inserção pública; **sem leitura pública**.
+### Link secreto
 
-## Limitações
+Ao criar um evento, o navegador gera um código aleatório, envia ao banco **só o hash** (SHA-256) e mostra o link `#/eventos/ID?gerenciar=CODIGO` ao responsável, que precisa guardá-lo. Quem perder o link perde o controle do evento e depende da moderação. O banco não guarda o código, então nem a moderação consegue recuperá-lo.
 
-- Qualquer pessoa pode inserir sem limite. Antes de abrir para o público, proteja com limite de envios e captcha (veja [SEGURANCA.md](SEGURANCA.md)).
-- O WhatsApp do responsável do evento fica **visível** a quem vê o evento.
-- No modo compartilhado, o cancelamento de evento pelo responsável ainda não existe. Quem cancela é a moderação (campo `status`).
-- A lista de eventos busca só os de `status = 'ativo'`.
+### Proteções no servidor (valem mesmo que alguém ignore o site e chame a API direto)
+
+- Não aceita evento sem os compromissos mínimos, no passado, a mais de 1 ano, com horário invertido, com contato inválido ou com lugar inexistente.
+- Lugares só dentro do Brasil, com tipos válidos e link de grupo só `https://`.
+- Plano ("vou evangelizar") só em lugar aprovado.
+- Trava global contra enxurrada: no máximo 60 lugares e 60 eventos pendentes por hora, 200 denúncias por hora e 2.000 planos e presenças por hora. Isso protege a fila, mas **não** substitui captcha.
+
+## Limitações conhecidas
+
+- **Sem captcha nem limite por pessoa.** A trava é global. Para proteção de verdade, ponha o formulário atrás de uma função de borda com captcha (por exemplo Cloudflare Turnstile).
+- **Link secreto perdido** não se recupera.
+- **Edição só de alguns campos** e sempre volta para aprovação.
+- **Moderação por e-mail** depende de o Supabase Auth enviar e-mails (o plano gratuito limita o envio; configure um SMTP próprio para produção).
 - As colunas de lista (por exemplo `publico`, `dias`) são texto separado por vírgula.
+- A visão `events_public` roda com as permissões do dono, de propósito (é assim que ela esconde o contato). O verificador de segurança do Supabase pode avisar sobre isso. É esperado.
 
 ## Mudando o esquema
 
-Ao alterar um campo da ficha do lugar (`js/ficha.js`) ou do evento (`js/eventos.js`), atualize também `supabase.sql` e, se já houver dados, escreva uma migração (`alter table ... add column ...`).
+Ao alterar um campo da ficha do lugar (`js/ficha.js`) ou do evento (`js/eventos.js`), atualize `supabase/schema.sql`, rode `npm run test:banco` e `npm run test:e2e` e, se já houver dados, escreva uma migração (`alter table ... add column ...`).

@@ -4,6 +4,7 @@ import * as D from "./dados.js";
 import * as IB from "./ibge.js";
 import * as BX from "./bairros.js";
 import { eventosRoute, eventosDoPonto } from "./eventos.js";
+import { viewModerar } from "./moderar.js";
 import { OPCOES, linhasFicha, completude, preparacao, oracaoDoPonto, diasEPeriodos, csv } from "./ficha.js";
 import { oracaoDe, proximosDias, NACOES, GRUPOS_BR, FONTES_ORACAO } from "./orar.js";
 
@@ -676,6 +677,10 @@ function viewSobre() {
 
 /* ---------- ROTEADOR ---------- */
 async function route() {
+  // Volta do link de acesso da moderação: #access_token=...
+  if (location.hash.startsWith("#access_token=")) {
+    if (store.admin?.guardarDoLink(location.hash)) history.replaceState(null, "", "#/moderar");
+  }
   const [path, qs] = (location.hash.slice(1) || "/perto").split("?");
   const q = Object.fromEntries(new URLSearchParams(qs || ""));
   const [, r, a1, a2] = path.split("/");
@@ -692,6 +697,7 @@ async function route() {
     else if (r === "o-que-fazer") viewOQueFazer();
     else if (r === "dados") viewDados();
     else if (r === "orar") viewOrar();
+    else if (r === "moderar") await viewModerar();
     else if (r === "eventos") { const c = await eventosRoute(a1, q); if (c) cleanup = c; }
     else if (r === "sobre") viewSobre();
     else { location.hash = "#/perto"; }

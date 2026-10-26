@@ -125,15 +125,18 @@ python -m http.server 5173
 
 Abra http://localhost:5173. Por padrão roda em **modo local**: os dados ficam só no navegador, com alguns lugares e eventos de exemplo marcados como tal.
 
-Para os testes (Node 20 ou mais novo, sem dependências):
+Testes (Node 22 ou mais novo, sem dependências):
 
 ```bash
-npm test
+npm test             # unitários e checagens de código (rápido, sem Docker)
+npm run banco:subir  # sobe uma réplica local do banco (precisa de Docker)
+npm run test:banco   # regras de acesso do banco, direto na API
+npm run test:e2e     # o site no Chrome falando com a réplica (precisa do Chrome)
 ```
 
 ## Dados compartilhados
 
-Para que várias pessoas vejam os mesmos lugares e eventos, ligue um banco Supabase. O passo a passo está em [docs/SUPABASE.md](docs/SUPABASE.md).
+Para que várias pessoas vejam os mesmos lugares e eventos, ligue um banco Supabase. O passo a passo, com a moderação por e-mail, está em [docs/SUPABASE.md](docs/SUPABASE.md). O esquema e as regras de acesso foram testados contra uma réplica local; falta testar num projeto hospedado.
 
 ## Publicar
 
@@ -158,7 +161,7 @@ js/data.js          camada de dados (modo local ou Supabase)
 js/config.js        chaves do Supabase (vazio por padrão)
 data/bairros/       população e contornos por bairro (gerado)
 scripts/            geração dos dados de bairros
-supabase.sql        esquema do banco, com regras de acesso
+supabase/schema.sql        esquema do banco, com regras de acesso
 docs/               documentação
 tests/              testes sem dependências
 ```

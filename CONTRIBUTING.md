@@ -37,7 +37,7 @@ npm test                       # Node 20 ou mais novo, sem dependências
 - Siga o estilo do arquivo que estiver editando (nomes em português para coisas do domínio, aspas duplas, ponto e vírgula).
 - Todo texto vindo de usuários passa por `esc()` antes de entrar em HTML.
 - Não guarde dados pessoais além do necessário. Lugares, nunca pessoas.
-- Quando mudar um campo da ficha ou do evento, atualize `supabase.sql` e `docs/`.
+- Quando mudar um campo da ficha ou do evento, atualize `supabase/schema.sql` e `docs/`.
 - Números novos precisam de **fonte, data da consulta e fórmula** em `docs/DADOS.md`.
 
 ## Mensagens de commit

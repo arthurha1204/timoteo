@@ -46,9 +46,14 @@ const dataLonga = e => ini(e).toLocaleDateString("pt-BR", { weekday: "long", day
 const quando = e => `${dataLonga(e)}, ${e.inicio} às ${e.fim}`;
 const proximos = evs => evs.filter(e => e.status !== "cancelado" && fim(e) >= new Date()).sort((a, b) => ini(a) - ini(b));
 const nomeDe = k => PROPOSITOS[k]?.nome || "Evento";
-const mine = () => { try { return JSON.parse(localStorage.getItem("ev_mine") || "[]"); } catch { return []; } };
-const addMine = id => { try { localStorage.setItem("ev_mine", JSON.stringify([...mine(), id])); } catch {} };
-const partDone = () => { try { return JSON.parse(localStorage.getItem("ev_part_done") || "{}"); } catch { return {}; } };
+const lerJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
+const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const tokens = () => lerJSON("ev_tokens", {});            // link secreto de cada evento que a pessoa criou
+const partIds = () => lerJSON("ev_part_ids", {});         // código da presença confirmada (abre o contato do responsável)
+const pendentes = () => lerJSON("ev_pendentes", {});      // eventos criados e ainda em análise (só neste aparelho)
+const partDone = () => lerJSON("ev_part_done", {});
+const guardar = (chave, id, valor) => { const o = lerJSON(chave, {}); o[id] = valor; gravarJSON(chave, o); };
+const linkGerenciar = (id, token) => `${siteBase()}#/eventos/${id}?gerenciar=${token}`;
 
 const parseTrajeto = t => String(t || "").split(";").map(x => x.split(",").map(Number)).filter(a => a.length === 2 && a.every(isFinite)).map(([lat, lng]) => ({ lat, lng }));
 const fmtTrajeto = a => a.map(p => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`).join(";");
@@ -105,15 +110,19 @@ async function viewLista() {
 }
 
 /* ---------- DETALHE ---------- */
-async function viewEvento(id) {
+async function viewEvento(id, q = {}) {
+  if (q.gerenciar) { guardar("ev_tokens", id, q.gerenciar); history.replaceState(null, "", "#/eventos/" + encodeURIComponent(id)); }
+  const token = tokens()[id];
   const [evs, pts, parts] = await Promise.all([store.listEvents(), store.listPoints(), store.listParts(id).catch(() => [])]);
   const e = evs.find(x => String(x.id) === String(id));
+  if (!e && token && pendentes()[id]) return viewEmAnalise(id, token, pendentes()[id]);
   if (!e) { view.innerHTML = `<div class="pagina"><h1 class="titulo-forte titulo-pagina">Evento não encontrado.</h1><p class="chamada"><a href="#/eventos">Ver todos os eventos</a></p></div>`; return; }
   const p = pts.find(x => String(x.id) === String(e.point_id));
   const trajeto = parseTrajeto(e.trajeto);
-  const comp = csv(e.compromissos), total = parts.reduce((s, x) => s + (Number(x.qtd) || 1), 0);
+  const comp = csv(e.compromissos), total = parts.reduce((s, x) => s + (Number.isFinite(Number(x.qtd)) ? Number(x.qtd) : 1), 0);
   const lotado = e.vagas && total >= e.vagas, cancelado = e.status === "cancelado", feito = partDone()[e.id];
   const num = normZap(e.contato);
+  const compartilhado = store.mode === "supabase";
   const pr = PROPOSITOS[e.proposito];
   const roteiro = String(e.roteiro || "").split("\n").map(x => x.trim()).filter(Boolean);
   const fichaP = p ? linhasFicha(p).filter(l => ["referencia", "autorizacao", "risco", "estrutura"].includes(l.chave)) : [];
@@ -128,8 +137,9 @@ async function viewEvento(id) {
     <div class="acoes-evento">
       ${cancelado ? "" : feito ? `<button class="botao feito" disabled>Você vai: ${esc(feito)}</button>` : lotado ? '<button class="botao" disabled>Vagas esgotadas</button>' : '<button class="botao principal" id="vou">Vou participar</button>'}
       <button class="botao" id="ics">Adicionar ao calendário</button>
-      <a class="botao" target="_blank" rel="noopener" href="${wa(num || "", `Quero saber mais sobre o evento "${e.titulo}" (${quando(e)}).`).replace("wa.me//", "wa.me/")}" ${num ? "" : "hidden"}>Falar com o responsável</a>
+      <a class="botao" id="falar" target="_blank" rel="noopener" href="${wa(num || "", `Quero saber mais sobre o evento "${e.titulo}" (${quando(e)}).`).replace("wa.me//", "wa.me/")}" ${num ? "" : "hidden"}>Falar com o responsável</a>
     </div>
+    ${!num && compartilhado && !cancelado ? '<p class="miudo" id="aviso-contato" style="margin-top:8px">O contato do responsável aparece depois que você confirma presença.</p>' : ""}
     <div id="form-part" hidden></div>
     <p class="miudo" style="margin-top:12px">${total} ${total === 1 ? "pessoa vai" : "pessoas vão"}${e.vagas ? ` · ${e.vagas} vagas` : ""}</p>
     <h2 class="titulo-forte">Objetivo</h2><p class="corpo">${esc(e.objetivo)}</p>
@@ -147,8 +157,12 @@ async function viewEvento(id) {
     <p class="miudo" style="margin-top:10px">Declarado pelo responsável. A plataforma não verifica cada informação: use o bom senso e denuncie o que parecer errado.</p>
     ${e.requisitos ? `<h2 class="titulo-forte">O que levar</h2><p class="corpo">${esc(e.requisitos)}</p>` : ""}
     <div class="duas-col" style="margin-top:28px"><div><h3>Compartilhar</h3><p><a class="botao pequeno" target="_blank" rel="noopener" href="${wa("", `Evangelização: ${e.titulo}, ${quando(e)}. Veja e confirme presença: ${siteBase()}#/eventos/${e.id}`).replace("wa.me//", "wa.me/")}">Mandar no WhatsApp</a></p></div>
-      <div><h3>Algo errado?</h3><p><button class="botao-texto" id="den">Denunciar este evento</button>${mine().includes(e.id) && !cancelado ? ' · <button class="botao-texto" id="canc">Cancelar evento</button>' : ""}</p></div></div>
+      <div><h3>Algo errado?</h3><p><button class="botao-texto" id="den">Denunciar este evento</button></p></div></div>
     <div id="form-den" hidden></div>
+    ${token && !cancelado ? `<div class="contexto" id="gerenciar"><b>Você é o responsável por este evento</b>
+      <p class="miudo" style="font-weight:400;margin-top:6px">${compartilhado ? "Alterações voltam para aprovação e o evento some da lista até lá." : "Alterações valem na hora."}</p>
+      <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno" id="editar">Editar evento</button><button class="botao pequeno" id="canc">Cancelar evento</button><button class="botao pequeno" id="copiar">Copiar o link secreto</button></p>
+      <div id="form-edit" hidden></div></div>` : ""}
     ${rodape()}</div>`;
   const map = L.map("emap", { scrollWheelZoom: false });
   tiles().addTo(map);
@@ -168,8 +182,8 @@ async function viewEvento(id) {
     $("#pf").onsubmit = async ev => {
       ev.preventDefault(); const fd = new FormData(ev.target);
       try {
-        await store.addPart({ event_id: String(e.id), who: String(fd.get("who") || "").slice(0, 60), qtd: Number(fd.get("qtd")) || 1 });
-        const d = partDone(); d[e.id] = "presença confirmada"; localStorage.setItem("ev_part_done", JSON.stringify(d));
+        const codigo = await store.addPart({ event_id: String(e.id), who: String(fd.get("who") || "").slice(0, 60), qtd: Number(fd.get("qtd")) || 1 });
+        guardar("ev_part_done", e.id, "presença confirmada"); guardar("ev_part_ids", e.id, codigo);
         viewEvento(id);
       } catch (err) { alert("Não foi possível confirmar: " + err.message); }
     };
@@ -183,9 +197,64 @@ async function viewEvento(id) {
       catch (err) { alert("Não foi possível enviar: " + err.message); }
     };
   };
-  const canc = $("#canc");
-  if (canc) canc.onclick = async () => { if (!confirm("Cancelar este evento?")) return; try { await store.cancelEvent(e.id); viewEvento(id); } catch (err) { alert(err.message); } };
+  ligarGerenciar(e, token, id);
+  if (!num && compartilhado && !cancelado && partIds()[e.id]) {
+    store.contatoDoEvento(e.id, partIds()[e.id]).then(c => {
+      const n = normZap(c); if (!n) return;
+      const a = $("#falar"); a.href = wa(n, `Quero saber mais sobre o evento "${e.titulo}" (${quando(e)}).`); a.hidden = false;
+      $("#aviso-contato")?.remove();
+    }).catch(() => {});
+  }
   return () => map.remove();
+}
+
+// Cancelar, editar e copiar o link secreto (só quem tem o link).
+function ligarGerenciar(e, token, id) {
+  const canc = $("#canc");
+  if (canc) canc.onclick = async () => {
+    if (!confirm("Cancelar este evento? Isso não pode ser desfeito.")) return;
+    try { (await store.cancelEvent(e.id, token)) ? viewEvento(id) : alert("O link secreto não confere. Abra o evento pelo link que você recebeu ao criá-lo."); }
+    catch (err) { alert(err.message); }
+  };
+  const cop = $("#copiar");
+  if (cop) cop.onclick = async () => { try { await navigator.clipboard.writeText(linkGerenciar(e.id, token)); cop.textContent = "Link copiado"; } catch { prompt("Copie este link e guarde:", linkGerenciar(e.id, token)); } };
+  const ed = $("#editar");
+  if (ed) ed.onclick = () => {
+    const f = $("#form-edit"); f.hidden = false;
+    f.innerHTML = `<form class="plano-form" id="ef" style="margin-top:12px;max-width:560px">
+      <input class="campo" name="titulo" value="${esc(e.titulo)}" maxlength="100" aria-label="Título">
+      <div class="duas"><input class="campo" type="date" name="data" value="${esc(e.data)}" aria-label="Dia"><input class="campo" type="number" name="vagas" value="${e.vagas ?? ""}" min="1" max="1000" placeholder="Vagas" aria-label="Vagas"></div>
+      <div class="duas"><input class="campo" type="time" name="inicio" value="${esc(e.inicio)}" aria-label="Início"><input class="campo" type="time" name="fim" value="${esc(e.fim)}" aria-label="Término"></div>
+      <textarea class="campo" name="objetivo" rows="2" maxlength="300" aria-label="Objetivo">${esc(e.objetivo)}</textarea>
+      <textarea class="campo" name="roteiro" rows="4" maxlength="1200" aria-label="Roteiro">${esc(e.roteiro || "")}</textarea>
+      <button class="botao principal">Salvar alterações</button><button type="button" class="botao-texto" id="ecx">Cancelar</button></form>`;
+    $("#ecx").onclick = () => { f.hidden = true; f.innerHTML = ""; };
+    $("#ef").onsubmit = async ev => {
+      ev.preventDefault(); const fd = new FormData(ev.target), v = n => String(fd.get(n) || "").trim();
+      if (v("fim") <= v("inicio")) return alert("O término precisa ser depois do início.");
+      if (new Date(v("data") + "T" + v("inicio")) < new Date()) return alert("A data e a hora precisam estar no futuro.");
+      const dados = { titulo: v("titulo"), data: v("data"), inicio: v("inicio"), fim: v("fim"), objetivo: v("objetivo"), roteiro: v("roteiro"), vagas: v("vagas") };
+      try {
+        if (!(await store.editEvent(e.id, token, dados))) return alert("O link secreto não confere.");
+        if (store.mode === "supabase") { guardar("ev_pendentes", e.id, { ...e, ...dados }); f.innerHTML = '<p class="ok-box" style="padding:12px 0"><b>Alterações enviadas.</b> O evento volta para a moderação e some da lista até ser aprovado de novo.</p>'; }
+        else viewEvento(id);
+      } catch (err) { alert("Não foi possível salvar: " + err.message); }
+    };
+  };
+}
+
+// Evento criado e ainda em análise: só quem tem o link secreto o vê, com os dados guardados neste aparelho.
+function viewEmAnalise(id, token, e) {
+  view.innerHTML = `<div class="pagina"><p class="miudo"><a href="#/eventos">Todos os eventos</a></p>
+    <span class="sobretitulo" style="margin-top:14px">Em análise</span>
+    <h1 class="titulo-forte titulo-pagina">${esc(e.titulo)}</h1>
+    <p class="chamada">${esc(quando(e))}</p>
+    <p class="disputa"><b>Aguardando aprovação.</b> A moderação confere o evento antes de ele aparecer na lista. Guarde o link secreto abaixo: é a única forma de cancelar ou editar.</p>
+    <div class="contexto" id="gerenciar"><b>Você é o responsável por este evento</b>
+      <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno" id="canc">Cancelar evento</button><button class="botao pequeno" id="copiar">Copiar o link secreto</button></p></div>
+    ${rodape()}</div>`;
+  ligarGerenciar({ ...e, id }, token, id);
+  return null;
 }
 
 /* ---------- NOVO EVENTO ---------- */
@@ -279,9 +348,16 @@ async function viewNovo(q) {
     $("#sub").disabled = true;
     try {
       const r = await store.addEvent(ev2);
-      if (!r.pending) addMine(r.event.id);
-      view.innerHTML = `<div class="pagina"><div class="destaque-conta"><span class="destaque-cruz">${CRUZ}</span><h2>Evento enviado.</h2><p>${r.pending ? "Ele aparece na lista assim que for aprovado." : "Já está na lista de eventos."} Avise a equipe e marque o dia.</p></div>
-        <p style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a class="botao principal" href="${r.pending ? "#/eventos" : "#/eventos/" + encodeURIComponent(r.event.id)}">${r.pending ? "Ver os eventos" : "Abrir o evento"}</a><a class="botao" href="#/eventos/novo">Criar outro</a></p></div>`;
+      guardar("ev_tokens", r.event.id, r.token);
+      if (r.pending) guardar("ev_pendentes", r.event.id, { ...ev2, id: r.event.id });
+      const link = linkGerenciar(r.event.id, r.token);
+      view.innerHTML = `<div class="pagina"><div class="destaque-conta"><span class="destaque-cruz">${CRUZ}</span><h2>Evento enviado.</h2><p>${r.pending ? "Ele aparece na lista assim que a moderação aprovar." : "Já está na lista de eventos."} Avise a equipe e marque o dia.</p></div>
+        <div class="contexto"><b>Guarde o seu link secreto</b>
+          <p style="font-weight:400;margin-top:6px">É a única forma de cancelar ou editar o evento. Ele fica salvo neste aparelho, mas guarde também em outro lugar. Quem tiver o link pode gerenciar o evento: não compartilhe.</p>
+          <p class="miudo" style="margin-top:8px;word-break:break-all">${esc(link)}</p>
+          <p style="margin-top:10px"><button class="botao pequeno" id="cp">Copiar o link</button></p></div>
+        <p style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a class="botao principal" href="#/eventos/${encodeURIComponent(r.event.id)}">${r.pending ? "Ver o meu evento" : "Abrir o evento"}</a><a class="botao" href="#/eventos">Ver os eventos</a><a class="botao" href="#/eventos/novo">Criar outro</a></p></div>`;
+      $("#cp").onclick = async () => { try { await navigator.clipboard.writeText(link); $("#cp").textContent = "Link copiado"; } catch { prompt("Copie este link e guarde:", link); } };
     } catch (err) { erro("Não foi possível enviar: " + err.message); $("#sub").disabled = false; }
   };
   return () => map.remove();
@@ -290,7 +366,7 @@ async function viewNovo(q) {
 /* ---------- ROTAS E INTEGRAÇÃO ---------- */
 export async function eventosRoute(a1, q) {
   if (a1 === "novo") return viewNovo(q);
-  if (a1) return viewEvento(decodeURIComponent(a1));
+  if (a1) return viewEvento(decodeURIComponent(a1), q);
   await viewLista();
   return null;
 }

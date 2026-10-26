@@ -26,14 +26,19 @@ Nada aqui é código. Sem isso, o resto fica parado.
 
 Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 7).
 
-- [ ] Rodar `supabase.sql` num projeto real e **testar de ponta a ponta** (cadastrar lugar, aprovar, ver, marcar presença, criar evento, denunciar).
-- [ ] Migrações versionadas (`supabase/migrations`) no lugar do SQL único.
-- [ ] **Login simples** do responsável (link por e-mail), para ele editar e cancelar o que criou.
-- [ ] **Contato do responsável privado**: revelar só a quem confirmar presença.
-- [ ] **Editar** lugar e evento, e **cancelar** evento no modo compartilhado.
-- [ ] **Painel de moderação**: aprovar, editar, apagar e **ler denúncias**, com papéis (moderador, administrador).
-- [ ] **Proteção contra abuso**: limite de envios por pessoa e por IP, captcha (por exemplo Cloudflare Turnstile) e validação no servidor.
-- [ ] **Testes automáticos das regras de acesso (RLS)**: provar que visitante não lê o que não deve.
+- [x] Esquema e site **testados de ponta a ponta contra uma réplica local** (Postgres + PostgREST): cadastrar, aprovar, ver, marcar presença, criar evento, denunciar. `npm run test:banco` e `npm run test:e2e`.
+- [ ] Repetir o teste num **projeto Supabase hospedado**, principalmente o login do moderador por e-mail.
+- [ ] Migrações versionadas (`supabase/migrations`) no lugar do SQL único. Hoje `supabase/schema.sql` é idempotente.
+- [x] **Link secreto** do responsável para editar e cancelar o que criou (só o hash fica no banco).
+- [ ] Login do responsável (opcional, para recuperar o controle se perder o link).
+- [x] **Contato do responsável privado**: só aparece para quem confirmou presença.
+- [x] **Editar e cancelar** evento no modo compartilhado.
+- [ ] Editar lugar já cadastrado.
+- [x] **Painel de moderação** (`#/moderar`): aprovar, apagar, cancelar evento e **ler denúncias**, com sinais de atenção.
+- [ ] Editar pelo painel e papéis diferentes (moderador e administrador).
+- [x] **Validação no servidor** e **trava global** contra enxurrada de envios.
+- [ ] **Captcha** (por exemplo Cloudflare Turnstile) e limite por pessoa, com função de borda.
+- [x] **Testes automáticos das regras de acesso (RLS)**: provam o que visitante, moderador e intruso podem e não podem.
 
 ## Bloco 2: confiança e segurança
 

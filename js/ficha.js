@@ -105,7 +105,7 @@ export const TIPOS_ORG = {
 // Confere e normaliza o cadastro de igreja, agência ou movimento. As mesmas regras valem no banco.
 export function validarOrg(v) {
   const t = k => String(v[k] ?? "").trim();
-  const o = { tipo: t("tipo"), nome: t("nome"), descricao: t("descricao"), cidade: t("cidade"), uf: t("uf").toUpperCase(), site: t("site"), instagram: t("instagram"), igreja_nome: t("igreja_nome"), contato: t("contato"), aceite: !!v.aceite };
+  const o = { tipo: t("tipo"), nome: t("nome"), descricao: t("descricao"), cidade: t("cidade"), uf: t("uf").toUpperCase(), site: t("site"), instagram: t("instagram"), igreja_nome: t("igreja_nome"), logo_link: t("logo_link"), contato: t("contato"), aceite: !!v.aceite };
   if (o.instagram && !o.instagram.startsWith("@")) o.instagram = "@" + o.instagram;
   if (!TIPOS_ORG[o.tipo]) return { erro: "Tipo inválido." };
   if (o.tipo !== "movimento") o.igreja_nome = "";
@@ -115,6 +115,7 @@ export function validarOrg(v) {
   if (o.uf && !/^[A-Z]{2}$/.test(o.uf)) return { erro: "O estado deve ter 2 letras, como BA." };
   if (o.site && !/^https:\/\/\S{4,255}$/i.test(o.site)) return { erro: "O site precisa começar com https://." };
   if (o.instagram && !/^@[A-Za-z0-9_.]{1,30}$/.test(o.instagram)) return { erro: "O Instagram deve ser só o @, com letras, números, ponto e sublinhado." };
+  if (o.logo_link && !/^https:\/\/\S{4,255}$/i.test(o.logo_link)) return { erro: "O link do logotipo precisa começar com https://." };
   if (o.igreja_nome.length > 100) return { erro: "O nome da igreja deve ter até 100 letras." };
   if (o.contato.length < 5 || o.contato.length > 120) return { erro: "Informe um e-mail ou WhatsApp para a moderação falar com você." };
   if (!o.aceite) return { erro: "Para enviar, confirme que as informações são verdadeiras e que você pode cadastrá-las." };

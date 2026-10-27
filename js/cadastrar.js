@@ -106,7 +106,8 @@ export function viewCadastrar(q) {
           <p style="font-weight:400;margin-top:6px">É a única forma de editar ou pausar este lugar depois. Ele fica salvo neste aparelho, mas guarde também em outro lugar. Quem tiver o link pode gerenciar o lugar: não compartilhe.</p>
           <p class="miudo" style="margin-top:8px;word-break:break-all">${esc(link)}</p>
           <p style="margin-top:10px"><button class="botao pequeno" id="cp" type="button">Copiar o link</button></p></div>
-        <p style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a class="botao principal" href="#/perto/ponto/${encodeURIComponent(id)}">${r.pending ? "Ver o meu lugar" : "Abrir este lugar"}</a><a class="botao" href="#/perto">Ver o mapa</a><a class="botao" href="#/cadastrar">Cadastrar outro</a></p></div>`;
+        <p style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a class="botao principal" href="#/perto/ponto/${encodeURIComponent(id)}">${r.pending ? "Ver o meu lugar" : "Abrir este lugar"}</a><a class="botao" href="#/perto">Ver o mapa</a><a class="botao" href="#/eventos/novo?ponto=${encodeURIComponent(id)}">Criar um evento neste lugar</a><a class="botao" href="#/cadastrar">Cadastrar outro</a></p>
+        <p class="miudo" style="margin-top:10px">Vai fazer um evento num lugar que não está no mapa? Cadastre o lugar e crie o evento nele. Se for só desta vez, tudo bem: o lugar pode ficar marcado como pausado depois.</p></div>`;
       $("#cp").onclick = async () => { try { await navigator.clipboard.writeText(link); $("#cp").textContent = "Link copiado"; } catch { prompt("Copie este link e guarde:", link); } };
     } catch (err) { erro("Não foi possível enviar: " + err.message); $("#sub").disabled = false; }
   };

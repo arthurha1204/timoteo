@@ -143,7 +143,7 @@ test("marcar 'vou evangelizar por aqui' conta uma vez por aparelho", async () =>
 });
 
 test("as páginas de conteúdo abrem sem erro", async () => {
-  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["arte", "Envie a sua arte para um cartaz"], ["rede", "Igrejas, agências e movimentos"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
+  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["arte", "Envie a sua arte para um cartaz"], ["rede", "Quem atua por aqui"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
     await a.entrar(rota);
     await a.esperarTexto(trecho, 15000);
   }
@@ -230,5 +230,41 @@ test("menu Cadastrar abre a lista com as cinco opções e o cadastro de igreja a
   await a.esperarTexto("Igreja da Vila");
   const t = await a.texto();
   assert.doesNotMatch(t, /pastor@exemplo\.com/);   // o contato nunca aparece na lista
+  semProblemas();
+});
+
+test("evento ligado a uma igreja cadastrada e que se repete: aparece na Rede, na agenda e piscando no mapa", async () => {
+  await a.entrar("rede/novo/igreja");
+  await chrome.ate("document.querySelector('#f')");
+  await a.preencher("#f", { nome: "Igreja da Praça", cidade: "São Paulo", uf: "SP", contato: "pastor@exemplo.com" });
+  await chrome.js("document.querySelector('#aceite').checked = true; document.querySelector('#f').requestSubmit(); true");
+  await a.esperarTexto("Cadastro enviado");
+
+  await a.entrar("eventos/novo?ponto=ex-se");
+  await chrome.ate("document.querySelector('#f') && document.querySelectorAll('#comp input').length > 0 && document.querySelectorAll('#o-igreja option').length > 1");
+  assert.deepEqual(await chrome.js("[...document.querySelectorAll('#o-agencia option')].map(o => o.textContent)"), ["Nenhum"]);   // nenhuma agência cadastrada
+  await a.preencher("#f", { titulo: "Culto toda terça na Sé", objetivo: "Cultuar e orar com quem passa pela praça.", data: amanha(), inicio: "19:00", fim: "21:00", responsavel: "Fulano de Tal", organizacao: "Igreja da Praça", contato: "(11) 91234-5678", repete: "semanal" });
+  await chrome.js("document.querySelector('#rp').dispatchEvent(new Event('change')); true");
+  assert.equal(await chrome.js("document.querySelector('#rp-ate').hidden"), false);
+  await chrome.js("(() => { const s = document.querySelector('#o-igreja'); s.value = s.options[1].value; document.querySelectorAll('#comp input').forEach(c => c.checked = true); return true; })()");
+  await a.clicar("#sub");
+  await a.esperarTexto("Evento enviado");
+  const link = await chrome.js("document.querySelector('.contexto .miudo').innerText");
+  const id = link.match(/#\/eventos\/([^?]+)\?gerenciar=/)[1];
+
+  await a.entrar(`eventos/${id}`);
+  await a.esperarTexto("Faz parte de");
+  const t = await a.texto();
+  assert.match(t, /Igreja da Praça/); assert.match(t, /Repete toda terça-feira|Repete toda|Repete todo/); assert.match(t, /outras igrejas|qualquer igreja ou denominação/);
+  const hrefs = await chrome.js("[...document.querySelectorAll('.agenda-itens a')].map(x => x.href)");
+  assert.match(hrefs[0], /^https:\/\/calendar\.google\.com\/calendar\/render\?.*recur=RRULE/); assert.match(hrefs[1], /^https:\/\/outlook\.live\.com\//);
+  assert.ok(await chrome.js("!!document.querySelector('#ics')"));
+
+  await a.entrar("rede");
+  await a.esperarTexto("Igreja da Praça");
+  await a.esperarTexto("1 evento marcado");
+
+  await a.entrar("perto");
+  await chrome.ate("document.querySelectorAll('path.pulso-evento').length > 0", 15000, "lugares com evento piscando");
   semProblemas();
 });

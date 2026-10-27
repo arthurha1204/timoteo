@@ -29,7 +29,8 @@ drop policy if exists "apagar organizações" on organizacoes;
 create policy "apagar organizações" on organizacoes for delete using (is_admin());
 
 -- Visão pública: só aprovadas e sem o contato.
-create or replace view organizacoes_publicas as
+drop view if exists organizacoes_publicas;
+create view organizacoes_publicas as
 select id, tipo, nome, descricao, cidade, uf, site, instagram, igreja_nome, created_at
 from organizacoes
 where approved;

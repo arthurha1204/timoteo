@@ -398,3 +398,27 @@ mark.preencher{background:var(--amarelo);color:var(--tinta);padding:0 .25em;bord
 .menu-cad a:hover,.menu-cad a:focus-visible{background:var(--cor-clara);color:var(--cor-escura)}
 @media (width>=640px){.nav-botao{padding:8px 14px;font-size:.9375rem}}
 @media (width<=380px){.nav-botao{padding:6px 7px;font-size:.78rem}}
+/* rede: cartões com logotipo */
+.org-grade{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:0}
+.org-cartao{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--linha);align-items:start}
+.org-logo{border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--linha);flex:none}
+.org-monograma{display:grid;place-items:center;background:var(--cor-clara);color:var(--cor-escura);font-weight:850;font-size:1.5rem;border-radius:10px}
+.org-nome{font-weight:800;font-size:1.1875rem;color:var(--tinta)}
+.org-desc{margin:6px 0 0;max-width:62ch}
+.org-topo{display:flex;gap:16px;align-items:center;margin-top:10px}
+@media (width>=900px){.org-grade{grid-template-columns:1fr 1fr;column-gap:32px}}
+/* lugares com evento marcado piscam no mapa; sem animação para quem prefere menos movimento */
+.pulso-evento{transform-box:fill-box;transform-origin:center;animation:pulso-evento 1.8s ease-out infinite}
+@keyframes pulso-evento{0%{transform:scale(.55);opacity:.95}100%{transform:scale(1.35);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulso-evento{animation:none;opacity:.7}}
+.l-evento{background:#ffd23f;border:2px solid #e0a800;width:14px;height:14px}
+/* eventos: menu de agenda e organizações */
+.agenda-menu{display:inline-block;position:relative}
+.agenda-menu summary{list-style:none;cursor:pointer}
+.agenda-menu summary::-webkit-details-marker{display:none}
+.agenda-itens{display:grid;gap:2px;margin-top:6px;border:2px solid var(--tinta);border-radius:var(--raio);background:#fff;padding:6px;min-width:240px}
+.agenda-itens a,.agenda-itens button{display:block;text-align:left;padding:11px 12px;border:0;background:none;font:inherit;font-weight:700;color:var(--tinta);border-radius:6px;text-decoration:none;cursor:pointer}
+.agenda-itens a:hover,.agenda-itens button:hover,.agenda-itens a:focus-visible,.agenda-itens button:focus-visible{background:var(--cor-clara);color:var(--cor-escura)}
+.org-chips{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:10px}
+.org-chips a{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--tinta);border:1px solid var(--linha);border-radius:var(--raio);padding:10px}
+.org-chips span span{display:block}

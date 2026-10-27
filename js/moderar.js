@@ -94,7 +94,9 @@ export async function viewModerar() {
   const orgs = (dados.organizacoes || []).map(o => cartao("organizacoes", o, `<h3 class="titulo-forte" style="font-size:1.25rem">${esc(o.nome)}</h3>
       <p class="miudo">${esc((TIPOS_ORG[o.tipo] || {}).nome || o.tipo)} · ${esc([o.cidade, o.uf].filter(Boolean).join(", ") || "sem cidade")}${o.igreja_nome ? " · ligado à " + esc(o.igreja_nome) : ""} · ${new Date(o.created_at).toLocaleString("pt-BR")}</p>
       ${o.descricao ? `<p style="margin-top:8px">${esc(o.descricao)}</p>` : ""}
-      <ul class="locais" style="margin-top:10px">${o.site ? `<li><b>Site</b><a href="${esc(o.site)}" target="_blank" rel="noopener noreferrer">${esc(o.site)}</a></li>` : ""}${o.instagram ? `<li><b>Instagram</b>${esc(o.instagram)}</li>` : ""}<li><b>Contato</b>${esc(o.contato)}</li></ul>
+      <ul class="locais" style="margin-top:10px">${o.site ? `<li><b>Site</b><a href="${esc(o.site)}" target="_blank" rel="noopener noreferrer">${esc(o.site)}</a></li>` : ""}${o.instagram ? `<li><b>Instagram</b>${esc(o.instagram)}</li>` : ""}<li><b>Contato</b>${esc(o.contato)}</li>${o.logo_link ? `<li><b>Logotipo enviado</b><a href="${esc(o.logo_link)}" target="_blank" rel="noopener noreferrer">${esc(o.logo_link)}</a></li>` : ""}</ul>
+      <label for="logo-${esc(o.id)}">Endereço do logotipo no Storage (opcional)</label><input class="campo" id="logo-${esc(o.id)}" data-logo placeholder="https://xxxx.supabase.co/storage/v1/object/public/artes/logo.png" value="${esc(o.logo_url || "")}">
+      <p class="erro" hidden></p>
       <p class="miudo" style="margin-top:8px">Confira se a pessoa representa mesmo a organização (site, Instagram, contato) antes de aprovar.</p>`)).join("");
   const reps = denuncias.map(r => {
     const [kind, id] = r.alvo.split(":");
@@ -137,6 +139,11 @@ export async function viewModerar() {
     const li = b.closest(".mod-item"), tipo = li.dataset.tipo, id = li.dataset.id;
     try {
       if (b.dataset.acao === "editar") return abrirEdicao(li, tipo, id);
+      if (b.dataset.acao === "aprovar" && tipo === "organizacoes") {
+        const url = (li.querySelector("[data-logo]")?.value || "").trim(), msg = li.querySelector(".erro");
+        if (url && !/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/\S+$/i.test(url)) { msg.hidden = false; msg.textContent = "O logotipo precisa estar no Storage do Supabase (https://…supabase.co/storage/v1/object/public/…). Deixe em branco para aprovar sem logotipo."; return; }
+        if (url) await store.admin.editar("organizacoes", id, { logo_url: url });
+      }
       if (b.dataset.acao === "aprovar-arte") {
         const url = li.querySelector("[data-img]").value.trim(), msg = li.querySelector(".erro");
         if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/\S+$/i.test(url)) { msg.hidden = false; msg.textContent = "Cole o endereço público da imagem no Storage do Supabase (começa com https://…supabase.co/storage/v1/object/public/)."; return; }

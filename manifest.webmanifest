@@ -1,5 +1,6 @@
 {
   "name": "Timóteo",
+  "id": "./",
   "short_name": "Timóteo",
   "description": "Mapa colaborativo e de código aberto para evangelizar em conjunto.",
   "lang": "pt-BR",
@@ -54,6 +55,16 @@
       "name": "Cadastrar lugar",
       "short_name": "Cadastrar",
       "url": "./#/cadastrar"
+    },
+    {
+      "name": "Enviar arte para cartaz",
+      "short_name": "Arte",
+      "url": "./#/arte"
+    },
+    {
+      "name": "Rede: igrejas e movimentos",
+      "short_name": "Rede",
+      "url": "./#/rede"
     }
   ]
 }

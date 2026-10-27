@@ -106,7 +106,9 @@ create index if not exists event_parts_event_idx on event_parts (event_id);
 
 -- ===================== Leitura pública segura =====================
 -- Eventos aprovados, SEM contato e SEM hash do link secreto, com a contagem de presenças.
-create or replace view events_public with (security_invoker = false) as
+-- (drop + create: uma migração posterior acrescenta colunas à visão, e `create or replace` não aceita tirá-las ao repetir)
+drop view if exists events_public;
+create view events_public with (security_invoker = false) as
 select e.id, e.titulo, e.proposito, e.point_id, e.data, e.inicio, e.fim, e.objetivo, e.trajeto,
        e.descricao, e.roteiro, e.vagas, e.min_equipe, e.responsavel, e.organizacao, e.requisitos,
        e.compromissos, e.som, e.status, e.created_at,

@@ -38,6 +38,7 @@ Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 
 - [x] **Corrigir texto** de lugares e eventos pelo painel de moderação.
 - [x] **Envio de arte de artistas para os cartazes**, com fila de moderação, crédito e galeria (`#/arte`).
 - [x] **Menu Cadastrar** (lugar, arte, agência missionária, igreja, movimento) e página **Rede** (`#/rede`) com cadastros aprovados.
+- [x] **Rede com logotipos, eventos ligados a igrejas, agências e movimentos cadastrados, eventos que se repetem, agenda (Google, Outlook, .ics) e lugares com evento piscando no mapa.**
 - [ ] Papéis diferentes (moderador e administrador).
 - [x] **Validação no servidor** e **trava global** contra enxurrada de envios.
 - [x] **Captcha opcional** (Cloudflare Turnstile) com função de borda e SQL que exige o segredo: código e testes prontos, falta ligar com as suas contas (`docs/CAPTCHA.md`).

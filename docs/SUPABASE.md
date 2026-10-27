@@ -101,3 +101,13 @@ Para retirar uma arte a pedido do artista, apague a linha no painel ou na tabela
 ## Rede: igrejas, agências e movimentos
 
 Rode também `supabase/migrations/20261029000000_organizacoes.sql` (ou `supabase/schema.sql` de novo). Ela cria a tabela `organizacoes` e a visão pública `organizacoes_publicas`, sem o contato. O cadastro passa pela fila do painel `#/moderar`, em "Rede pendente". Confira o site ou o Instagram e o contato antes de aprovar.
+
+## Eventos ligados à rede, repetição e logotipos
+
+Rode também `supabase/migrations/20261030000000_rede_nos_eventos.sql` (ou `supabase/schema.sql` de novo). Ela:
+
+- acrescenta `logo_link` (privado) e `logo_url` (público, só do Storage do Supabase) às organizações;
+- acrescenta `igreja_id`, `agencia_id`, `movimento_id`, `repete` e `repete_ate` aos eventos. O banco só aceita organização **já aprovada** e do tipo certo;
+- atualiza a visão pública `events_public` com esses campos.
+
+Logotipo: a pessoa manda um link; a moderação baixa a imagem, envia ao bucket público `artes` e cola o endereço público no painel `#/moderar`, em "Rede pendente", antes de aprovar.

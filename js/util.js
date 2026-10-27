@@ -12,6 +12,9 @@ export const SETA_IR = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hid
 
 export const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const nf = n => Number(n).toLocaleString("pt-BR");
+// Só mostramos imagens que estão no Storage do projeto (o CSP também só deixa carregar dali).
+export const imagemSegura = u => /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(u || "") ? u : "";
+export const logoOrg = (o, tam = 56) => { const u = imagemSegura(o.logo_url); return u ? `<img class="org-logo" src="${esc(u)}" alt="Logotipo de ${esc(o.nome)}" width="${tam}" height="${tam}" loading="lazy">` : `<span class="org-logo org-monograma" style="width:${tam}px;height:${tam}px" aria-hidden="true">${esc((o.nome || "?").trim().charAt(0).toUpperCase())}</span>`; };
 export const safeUrl = u => /^https:\/\//i.test(u || "") ? u : "";
 export const guiaBySlug = s => GUIAS.find(g => g.slug === s);
 export const tipo = t => TIPOS[t] || TIPOS.outro;

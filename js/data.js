@@ -133,7 +133,7 @@ export const local = {
   async listArtes() { return []; },
   // No modo de teste não há moderação: o que você cadastra aparece na hora, só neste aparelho.
   async addOrg(o) { const all = read(KEY_ORGS, []); all.push({ ...o, id: uid(), created_at: new Date().toISOString() }); write(KEY_ORGS, all); },
-  async listOrgs() { return read(KEY_ORGS, []).map(({ contato, aceite, ...publico }) => publico); }
+  async listOrgs() { return read(KEY_ORGS, []).map(({ contato, aceite, logo_link, ...publico }) => publico); }
 };
 
 /* ---------- modo compartilhado (Supabase) ---------- */
@@ -141,7 +141,7 @@ export const CAMPOS_EDITAVEIS = {
   points: ["name", "type", "povo", "referencia", "description", "publico", "idiomas", "fluxo", "dias", "periodo", "evitar", "abordagem", "autorizacao", "autoriza_quem", "risco", "estrutura", "parceiro", "status", "group_link"],
   events: ["titulo", "objetivo", "descricao", "roteiro", "requisitos"],
   artes: ["imagem_url", "titulo", "artista", "regiao"],
-  organizacoes: ["nome", "descricao", "cidade", "uf", "site", "instagram", "igreja_nome"]
+  organizacoes: ["nome", "descricao", "cidade", "uf", "site", "instagram", "igreja_nome", "logo_url"]
 };
 const KEY_SESSAO = "ev_admin_session";
 
@@ -210,7 +210,7 @@ function sb() {
     contatoDoEvento: (eventId, partId) => rpc("contato_do_evento", { p_event: eventId, p_part: partId }),
     async addArte(a) { await enviar("artes", { titulo: a.titulo, link: a.link, artista: a.artista, contato: a.contato, tipo: a.tipo, regiao: a.regiao || "", aceite: true }); },
     listArtes: () => call("/artes_publicas?select=*&order=created_at.desc"),
-    async addOrg(o) { await enviar("organizacoes", { tipo: o.tipo, nome: o.nome, descricao: o.descricao, cidade: o.cidade, uf: o.uf, site: o.site, instagram: o.instagram, igreja_nome: o.igreja_nome, contato: o.contato, aceite: true }); },
+    async addOrg(o) { await enviar("organizacoes", { tipo: o.tipo, nome: o.nome, descricao: o.descricao, cidade: o.cidade, uf: o.uf, site: o.site, instagram: o.instagram, igreja_nome: o.igreja_nome, logo_link: o.logo_link || "", contato: o.contato, aceite: true }); },
     listOrgs: () => call("/organizacoes_publicas?select=*&order=nome.asc"),
     async addReport(r) { await enviar("reports", { alvo: r.alvo, motivo: r.motivo, detalhe: r.detalhe || "" }); },
 

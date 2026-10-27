@@ -408,3 +408,38 @@ test("validarOrg: normaliza @ e UF, zera a igreja fora de movimento e recusa dad
   for (const ruim of [{ tipo: "partido" }, { nome: "ab" }, { uf: "BAH" }, { site: "http://x.com" }, { instagram: "@a b" }, { contato: "1" }, { aceite: false }, { descricao: "x".repeat(601) }])
     assert.ok(validarOrg({ ...ok, ...ruim }).erro, JSON.stringify(ruim));
 });
+
+import { proximaOcorrencia, comOcorrencia, descreverRepeticao, regraRepeticao } from "../js/recorrencia.js";
+import { linksAgenda } from "../js/calendario.js";
+test("recorrência: próxima ocorrência semanal, quinzenal e mensal, respeitando o fim da série e o fim do dia", () => {
+  const ev = (extra = {}) => ({ data: "2026-11-03", inicio: "19:00", fim: "21:00", repete: "nao", ...extra });   // terça-feira
+  assert.equal(proximaOcorrencia(ev(), new Date("2026-11-03T20:00:00")), "2026-11-03");          // ainda não terminou
+  assert.equal(proximaOcorrencia(ev(), new Date("2026-11-03T21:30:00")), null);                  // evento único já passou
+  assert.equal(proximaOcorrencia(ev({ repete: "semanal" }), new Date("2026-11-04T08:00:00")), "2026-11-10");
+  assert.equal(proximaOcorrencia(ev({ repete: "quinzenal" }), new Date("2026-11-04T08:00:00")), "2026-11-17");
+  assert.equal(proximaOcorrencia(ev({ repete: "mensal" }), new Date("2026-11-04T08:00:00")), "2026-12-03");
+  assert.equal(proximaOcorrencia(ev({ repete: "semanal", repete_ate: "2026-11-17" }), new Date("2026-11-18T08:00:00")), null);   // série terminou
+  assert.equal(proximaOcorrencia(ev({ repete: "semanal", repete_ate: "2026-11-17" }), new Date("2026-11-11T08:00:00")), "2026-11-17");
+  // mensal no dia 31: meses curtos usam o último dia
+  assert.equal(proximaOcorrencia({ data: "2026-01-31", inicio: "10:00", fim: "11:00", repete: "mensal" }, new Date("2026-02-01T00:00:00")), "2026-02-28");
+  assert.equal(comOcorrencia(ev({ repete: "semanal" }), new Date("2026-11-04T08:00:00")).data, "2026-11-10");
+  assert.equal(comOcorrencia(ev(), new Date("2027-01-01T00:00:00")), null);
+});
+test("recorrência: texto em português e regra do calendário (RRULE)", () => {
+  const e = { data: "2026-11-03", inicio: "19:00", fim: "21:00", repete: "semanal", repete_ate: "2026-12-22" };
+  assert.match(descreverRepeticao(e), /Repete toda terça-feira, até 22 de dezembro/);
+  assert.match(descreverRepeticao({ ...e, repete: "quinzenal", repete_ate: null }), /a cada 15 dias, sempre na terça-feira/);
+  assert.match(descreverRepeticao({ ...e, data: "2026-11-07", repete: "semanal", repete_ate: null }), /todo sábado/);
+  assert.match(descreverRepeticao({ ...e, repete: "mensal", repete_ate: null }), /todo mês, no dia 3/);
+  assert.equal(descreverRepeticao({ ...e, repete: "nao" }), "");
+  assert.match(regraRepeticao(e), /^FREQ=WEEKLY;INTERVAL=1;UNTIL=\d{8}T\d{6}Z$/);
+  assert.equal(regraRepeticao({ ...e, repete: "quinzenal", repete_ate: null }), "FREQ=WEEKLY;INTERVAL=2");
+  assert.equal(regraRepeticao({ ...e, repete: "mensal", repete_ate: null }), "FREQ=MONTHLY;INTERVAL=1");
+  assert.equal(regraRepeticao({ ...e, repete: "nao" }), "");
+});
+test("links de agenda: Google e Outlook com título, horário, local e repetição", () => {
+  const l = linksAgenda({ titulo: "Culto na praça", objetivo: "Orar", local: "Praça da Sé", link: "https://x/#/eventos/1", inicio: new Date(2026, 10, 3, 19, 0), fim: new Date(2026, 10, 3, 21, 0), regra: "FREQ=WEEKLY;INTERVAL=1" });
+  const g = new URL(l.google); assert.equal(g.hostname, "calendar.google.com"); assert.equal(g.searchParams.get("dates"), "20261103T190000/20261103T210000"); assert.equal(g.searchParams.get("recur"), "RRULE:FREQ=WEEKLY;INTERVAL=1"); assert.equal(g.searchParams.get("location"), "Praça da Sé");
+  const o = new URL(l.outlook); assert.equal(o.hostname, "outlook.live.com"); assert.equal(o.searchParams.get("startdt"), "2026-11-03T19:00:00"); assert.equal(o.searchParams.get("subject"), "Culto na praça");
+  assert.ok(!new URL(linksAgenda({ titulo: "x", link: "y", inicio: new Date(), fim: new Date() }).google).searchParams.has("recur"));
+});

@@ -395,3 +395,33 @@ test("organizações: visitante cadastra pendente com aceite; contato nunca vaza
   assert.equal((await api("/organizacoes?select=contato", { token: MOD })).json[0].contato, "lider@exemplo.com");
   ok(await api(`/organizacoes?id=eq.${id}`, { metodo: "DELETE", token: MOD }));
 });
+
+test("eventos ligados à rede e recorrentes: só organização aprovada e do tipo certo; recorrência validada; logo só do Storage", async () => {
+  const org = (tipo, nome, aprovada) => { const id = randomUUID(); sql(`insert into organizacoes (id, tipo, nome, contato, aceite, approved) values ('${id}', '${tipo}', '${nome}', 'x@exemplo.com', true, ${aprovada})`); return id; };
+  const igreja = org("igreja", "Igreja Aprovada", true), pendente = org("igreja", "Igreja Pendente", false), agencia = org("agencia", "Agência Aprovada", true);
+  const base = { id: randomUUID(), titulo: "Culto semanal na praça", proposito: "culto", point_id: PONTO, objetivo: "Cultuar e orar com quem passa pela praça.", responsavel: "Fulano", organizacao: "Igreja Aprovada", contato: "5571999998888",
+    data: new Date(Date.now() + 5 * 864e5).toISOString().slice(0, 10), inicio: "17:00", fim: "18:00", compromissos: "maior18,respeito,dados,menores,fim,emergencia,som", manage_token_hash: hash("segredo-rede") };
+  const enviar = corpo => api("/events", { metodo: "POST", corpo: { ...corpo, id: randomUUID(), manage_token_hash: hash(randomUUID()) }, cab: { Prefer: "return=minimal" } });
+  ok(await enviar({ ...base, igreja_id: igreja, agencia_id: agencia }));
+  ruim(await enviar({ ...base, igreja_id: pendente }));                       // organização não aprovada
+  ruim(await enviar({ ...base, igreja_id: agencia }));                        // tipo errado no campo
+  ruim(await enviar({ ...base, movimento_id: randomUUID() }));                // não existe
+  ok(await enviar({ ...base, repete: "semanal", repete_ate: new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10) }));
+  ruim(await enviar({ ...base, repete: "diaria" }));
+  ruim(await enviar({ ...base, repete: "nao", repete_ate: new Date(Date.now() + 10 * 864e5).toISOString().slice(0, 10) }));
+  ruim(await enviar({ ...base, repete: "semanal", repete_ate: new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10) }));   // termina antes de começar
+  assert.equal(sql("select count(*) from events where igreja_id is not null and approved = false"), "1");
+  // a visão pública traz os vínculos, mas o evento só aparece depois de aprovado
+  sql("update events set approved = true where igreja_id is not null");
+  const pub = (await api(`/events_public?igreja_id=eq.${igreja}&select=igreja_id,agencia_id,repete`)).json;
+  assert.deepEqual(pub, [{ igreja_id: igreja, agencia_id: agencia, repete: "nao" }]);
+  // logo: o link enviado fica privado, a imagem só do Storage do Supabase e só a moderação define
+  ok(await api("/organizacoes", { metodo: "POST", corpo: { tipo: "igreja", nome: "Com Logo", contato: "a@b.co", aceite: true, logo_link: "https://drive.google.com/logo" }, cab: { Prefer: "return=minimal" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { tipo: "igreja", nome: "Logo Ruim", contato: "a@b.co", aceite: true, logo_link: "http://x.com/l.png" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { tipo: "igreja", nome: "Logo Pronto", contato: "a@b.co", aceite: true, logo_url: "https://x.supabase.co/storage/v1/object/public/artes/l.png" } }));
+  const id = sql("select id from organizacoes where nome = 'Com Logo'");
+  ruim(await api(`/organizacoes?id=eq.${id}`, { metodo: "PATCH", corpo: { logo_url: "https://evil.example.com/l.png" }, token: MOD }));
+  ok(await api(`/organizacoes?id=eq.${id}`, { metodo: "PATCH", corpo: { approved: true, logo_url: "https://abc.supabase.co/storage/v1/object/public/artes/logo.png" }, token: MOD }));
+  const l = (await api(`/organizacoes_publicas?id=eq.${id}&select=*`)).json[0];
+  assert.equal(l.logo_url, "https://abc.supabase.co/storage/v1/object/public/artes/logo.png"); assert.equal(l.logo_link, undefined);
+});

@@ -7,7 +7,7 @@ import { montarPerto } from "./perto.js";
 import { viewCadastrar } from "./cadastrar.js";
 import { viewArte } from "./arte.js";
 import { montarMenuCadastrar } from "./menu.js";
-import { viewRede, viewOrgForm } from "./rede.js";
+import { viewRede, viewOrg, viewOrgForm } from "./rede.js";
 import { viewPovos, viewPovo, viewConversas, viewOQueFazer, viewDados, viewOrar, viewLegal, viewSobre } from "./paginas.js";
 import { $, view, esc } from "./util.js";
 
@@ -33,7 +33,7 @@ async function route() {
     if (r === "perto" || !r) { const s = await montarPerto(); tela = { perto: true, apply: s.apply, destruir: s.destruir }; await s.apply(a1, a2, q); }
     else if (r === "cadastrar") tela = { destruir: viewCadastrar(q) };
     else if (r === "arte") viewArte();
-    else if (r === "rede") { if (a1 === "novo") viewOrgForm(a2); else await viewRede(); }
+    else if (r === "rede") { if (a1 === "novo") viewOrgForm(a2); else if (a1) await viewOrg(decodeURIComponent(a1)); else await viewRede(); }
     else if (r === "povos") a1 ? viewPovo(a1) : viewPovos();
     else if (r === "conversas") viewConversas();
     else if (r === "o-que-fazer") viewOQueFazer();

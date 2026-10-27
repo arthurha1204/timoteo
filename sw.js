@@ -10,7 +10,7 @@ const VERSAO = "timoteo-v1";
 const NUCLEO = [
   "./", "index.html", "manifest.webmanifest",
   "css/style.css", "css/fontes.css",
-  "js/app.js", "js/util.js", "js/perto.js", "js/cidade.js", "js/cartaz.js", "js/cadastrar.js", "js/paginas.js", "js/eventos.js", "js/calendario.js", "js/instalar.js", "js/captcha.js", "js/arte.js", "js/menu.js", "js/rede.js", "js/moderar.js", "js/ficha.js", "js/orar.js", "js/ibge.js", "js/bairros.js",
+  "js/app.js", "js/util.js", "js/perto.js", "js/cidade.js", "js/cartaz.js", "js/cadastrar.js", "js/paginas.js", "js/eventos.js", "js/calendario.js", "js/recorrencia.js", "js/instalar.js", "js/captcha.js", "js/arte.js", "js/menu.js", "js/rede.js", "js/moderar.js", "js/ficha.js", "js/orar.js", "js/ibge.js", "js/bairros.js",
   "js/content.js", "js/dados.js", "js/data.js", "js/config.js", "js/legal.js",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css", "vendor/qrcode/qrcode.min.js",
   "vendor/leaflet/images/layers.png", "vendor/leaflet/images/layers-2x.png", "vendor/leaflet/images/marker-icon.png", "vendor/leaflet/images/marker-icon-2x.png", "vendor/leaflet/images/marker-shadow.png",

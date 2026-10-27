@@ -2,10 +2,7 @@
 // Pode usar a arte de um artista da galeria (enviada em #/arte e aprovada pela moderação), sempre com o crédito.
 import { CARTAZ_FRASES } from "./content.js";
 import { store } from "./data.js";
-import { $, esc, cruz } from "./util.js";
-
-// A imagem só é usada se estiver no Storage do projeto (o CSP também só deixa carregar dali).
-const imagemSegura = u => /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//i.test(u || "") ? u : "";
+import { $, esc, cruz, imagemSegura } from "./util.js";
 
 /* ---------- CARTAZ ---------- */
 export function montarCartaz(box, { url, lugar }) {

@@ -1,11 +1,12 @@
 // Eventos de evangelização: culto, boca a boca, ação social e oração na rua.
 // Sempre ligados a um ponto do mapa (ponto de encontro), com responsável identificado,
 // compromissos de segurança obrigatórios, aprovação antes de publicar e denúncia.
-import { gerarICS } from "./calendario.js";
+import { gerarICS, linksAgenda } from "./calendario.js";
+import { comOcorrencia, descreverRepeticao, regraRepeticao, REPETICOES } from "./recorrencia.js";
 import { store } from "./data.js";
 import { TIPOS } from "./content.js";
 import { linhasFicha, csv } from "./ficha.js";
-import { $, view, COR, cruz, SETA_IR, esc, siteBase, waze, tiles, lerJSON, guardar } from "./util.js";
+import { $, view, COR, cruz, SETA_IR, esc, siteBase, waze, tiles, lerJSON, guardar, logoOrg } from "./util.js";
 
 // Específico dos eventos: o WhatsApp leva o número do responsável (diferente do link genérico de util.js).
 const wa = (num, txt) => `https://wa.me/${num}?text=${encodeURIComponent(txt)}`;
@@ -28,6 +29,7 @@ const COMPROMISSOS = [
   { k: "autorizacao", t: "Temos ou vamos obter a autorização do lugar quando for exigida, e vamos conferir as regras da prefeitura para o uso do espaço.", ap: c => !c.ponto || c.ponto.autorizacao !== "nao" },
   { k: "lideranca", t: "Falamos antes com a liderança local, porque este lugar está marcado com segurança alta.", ap: c => c.ponto?.risco === "alto" },
   { k: "dupla", t: "Ninguém evangeliza sozinho: a equipe sai em duplas ou trios.", ap: c => c.proposito !== "culto" },
+  { k: "aberto", t: "Este evento é aberto a pessoas de outras igrejas e denominações, e quem quiser pode vir ajudar e colaborar.", ap: () => true },
   { k: "som", t: "Vamos respeitar os horários e os limites de som do lugar e dos vizinhos.", ap: c => c.proposito === "culto" }
 ];
 const compromissosDe = ctx => COMPROMISSOS.filter(c => c.ap(ctx));
@@ -37,7 +39,8 @@ const ini = e => new Date(`${e.data}T${e.inicio || "00:00"}`);
 const fim = e => new Date(`${e.data}T${e.fim || e.inicio || "23:59"}`);
 const dataLonga = e => ini(e).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 const quando = e => `${dataLonga(e)}, ${e.inicio} às ${e.fim}`;
-const proximos = evs => evs.filter(e => e.status !== "cancelado" && fim(e) >= new Date()).sort((a, b) => ini(a) - ini(b));
+// Eventos que se repetem entram com a data da próxima ocorrência.
+export const proximos = evs => evs.filter(e => e.status !== "cancelado").map(e => comOcorrencia(e)).filter(Boolean).sort((a, b) => ini(a) - ini(b));
 const tokens = () => lerJSON("ev_tokens", {});            // link secreto de cada evento que a pessoa criou
 const partIds = () => lerJSON("ev_part_ids", {});         // código da presença confirmada (abre o contato do responsável)
 const pendentes = () => lerJSON("ev_pendentes", {});      // eventos criados e ainda em análise (só neste aparelho)
@@ -58,10 +61,12 @@ const resumoTrajeto = pts => {
 };
 const normZap = s => { const d = String(s || "").replace(/\D/g, ""); return d.length === 10 || d.length === 11 ? "55" + d : d; };
 
-function baixarICS(e, ponto) {
-  const texto = gerarICS({ id: e.id, titulo: e.titulo, objetivo: e.objetivo, local: ponto ? ponto.name : "", link: siteBase() + "#/eventos/" + e.id, inicio: ini(e), fim: fim(e) });
+function dadosAgenda(e, ponto, serie) {
+  return { id: e.id, titulo: e.titulo, objetivo: e.objetivo, local: ponto ? ponto.name : "", link: siteBase() + "#/eventos/" + e.id, inicio: ini(e), fim: fim(e), regra: regraRepeticao(serie || e) };
+}
+function baixarICS(e, ponto, serie) {
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([texto], { type: "text/calendar" }));
+  a.href = URL.createObjectURL(new Blob([gerarICS(dadosAgenda(e, ponto, serie))], { type: "text/calendar" }));
   a.download = "evento.ics"; document.body.appendChild(a); a.click(); a.remove();
 }
 
@@ -75,10 +80,10 @@ async function compartilhar(e, botao) {
 }
 
 /* ---------- LISTA ---------- */
-function itemEvento(e, pt) {
+export function itemEvento(e, pt) {
   const d = ini(e);
   return `<li><a href="#/eventos/${encodeURIComponent(e.id)}" class="evento-item"><div class="evento-data"><b class="titulo-forte">${d.getDate()}</b><span>${d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></div>
-    <div><b class="evento-nome">${esc(e.titulo)}</b><span class="miudo">${esc(PROPOSITOS[e.proposito]?.curto || "")} · ${esc(e.inicio)} às ${esc(e.fim)}${pt ? " · " + esc(pt.name) : ""}${e.example ? " · exemplo" : ""}</span></div>${SETA_IR}</a></li>`;
+    <div><b class="evento-nome">${esc(e.titulo)}</b><span class="miudo">${esc(PROPOSITOS[e.proposito]?.curto || "")}${e.repete && e.repete !== "nao" ? " · repete" : ""} · ${esc(e.inicio)} às ${esc(e.fim)}${pt ? " · " + esc(pt.name) : ""}${e.example ? " · exemplo" : ""}</span></div>${SETA_IR}</a></li>`;
 }
 
 async function viewLista() {
@@ -109,8 +114,9 @@ async function viewLista() {
 async function viewEvento(id, q = {}) {
   if (q.gerenciar) { guardar("ev_tokens", id, q.gerenciar); history.replaceState(null, "", "#/eventos/" + encodeURIComponent(id)); }
   const token = tokens()[id];
-  const [evs, pts, parts] = await Promise.all([store.listEvents(), store.listPoints(), store.listParts(id).catch(() => [])]);
-  const e = evs.find(x => String(x.id) === String(id));
+  const [evs, pts, parts, orgs] = await Promise.all([store.listEvents(), store.listPoints(), store.listParts(id).catch(() => []), store.listOrgs().catch(() => [])]);
+  const serie = evs.find(x => String(x.id) === String(id));
+  const e = serie ? (comOcorrencia(serie) || serie) : serie;
   if (!e && token && pendentes()[id]) return viewEmAnalise(id, token, pendentes()[id]);
   if (!e) { view.innerHTML = `<div class="pagina"><h1 class="titulo-forte titulo-pagina">Evento não encontrado.</h1><p class="chamada"><a href="#/eventos">Ver todos os eventos</a></p></div>`; return; }
   const p = pts.find(x => String(x.id) === String(e.point_id));
@@ -119,6 +125,8 @@ async function viewEvento(id, q = {}) {
   const lotado = e.vagas && total >= e.vagas, cancelado = e.status === "cancelado", feito = partDone()[e.id];
   const num = normZap(e.contato);
   const compartilhado = store.mode === "supabase";
+  const agenda = linksAgenda(dadosAgenda(e, p, serie));
+  const vinculos = [["igreja", e.igreja_id], ["agencia", e.agencia_id], ["movimento", e.movimento_id]].map(([t, id2]) => orgs.find(o => o.tipo === t && String(o.id) === String(id2))).filter(Boolean);
   const pr = PROPOSITOS[e.proposito];
   const roteiro = String(e.roteiro || "").split("\n").map(x => x.trim()).filter(Boolean);
   const fichaP = p ? linhasFicha(p).filter(l => ["referencia", "autorizacao", "risco", "estrutura"].includes(l.chave)) : [];
@@ -129,10 +137,15 @@ async function viewEvento(id, q = {}) {
     <h1 class="titulo-forte titulo-pagina">${esc(e.titulo)}</h1>
     ${cancelado ? '<p class="disputa"><b>Evento cancelado.</b></p>' : ""}
     <p class="chamada">${esc(quando(e))}${p ? `<br>${esc(p.name)}` : ""}</p>
+    ${descreverRepeticao(serie) ? `<p class="miudo" style="margin-top:6px"><b>${esc(descreverRepeticao(serie))}.</b> A data acima é a próxima.</p>` : ""}
+    <p class="miudo" style="margin-top:6px">Aberto a pessoas de qualquer igreja ou denominação que queiram vir ajudar e colaborar.</p>
     ${e.example ? '<p class="corpo" style="margin-top:12px"><span class="selo">Exemplo</span>Evento fictício para mostrar como funciona.</p>' : ""}
     <div class="acoes-evento">
       ${cancelado ? "" : feito ? `<button class="botao feito" disabled>Você vai: ${esc(feito)}</button>` : lotado ? '<button class="botao" disabled>Vagas esgotadas</button>' : '<button class="botao principal" id="vou">Vou participar</button>'}
-      <button class="botao" id="ics">Adicionar ao calendário</button>
+      <details class="agenda-menu"><summary class="botao">Adicionar à agenda</summary><div class="agenda-itens">
+        <a href="${esc(agenda.google)}" target="_blank" rel="noopener noreferrer">Google Agenda</a>
+        <a href="${esc(agenda.outlook)}" target="_blank" rel="noopener noreferrer">Outlook (web)${serie.repete && serie.repete !== "nao" ? ", sem repetição" : ""}</a>
+        <button type="button" id="ics">Apple, Outlook e outros (.ics)</button></div></details>
       <button class="botao" id="compartilhar">Compartilhar</button>
       <a class="botao" id="falar" target="_blank" rel="noopener" href="${wa(num || "", `Quero saber mais sobre o evento "${e.titulo}" (${quando(e)}).`).replace("wa.me//", "wa.me/")}" ${num ? "" : "hidden"}>Falar com o responsável</a>
     </div>
@@ -147,6 +160,7 @@ async function viewEvento(id, q = {}) {
     ${trajeto.length > 1 ? `<p class="miudo" style="margin-top:8px">${esc(resumoTrajeto(trajeto))}</p><p style="margin-top:8px"><a class="botao pequeno" target="_blank" rel="noopener" href="${gm}">Abrir o trajeto a pé no Google Maps</a></p>` : ""}
     ${p ? `<ul class="locais" style="margin-top:14px"><li><b>${esc(p.name)} <span class="miudo">(${esc((TIPOS[p.type] || TIPOS.outro).nome)})</span></b></li>${fichaP.map(l => `<li><b>${esc(l.rotulo)}</b>${l.valor ? esc(l.valor) : "Não informado"}</li>`).join("")}</ul>
       <p class="como-chegar" style="margin-top:14px"><a class="botao" target="_blank" rel="noopener" href="${waze(p)}">Abrir no Waze</a><a href="#/perto/ponto/${encodeURIComponent(p.id)}">Ver a ficha completa do lugar</a></p>` : ""}
+    ${vinculos.length ? `<h2 class="titulo-forte">Faz parte de</h2><ul class="org-chips">${vinculos.map(o => `<li><a href="#/rede/${encodeURIComponent(o.id)}">${logoOrg(o, 40)}<span><b>${esc(o.nome)}</b><span class="miudo">${esc({ igreja: "Igreja", agencia: "Agência missionária", movimento: "Movimento" }[o.tipo])}</span></span></a></li>`).join("")}</ul>` : ""}
     <h2 class="titulo-forte">Quem é o responsável</h2>
     <div class="contexto" style="margin-top:0"><b>${esc(e.responsavel)}</b><br><span class="miudo">${esc(e.organizacao)}</span></div>
     <h2 class="titulo-forte">Segurança</h2>
@@ -171,7 +185,7 @@ async function viewEvento(id, q = {}) {
     grupo.push(linha);
   }
   map.fitBounds(L.featureGroup(grupo.length ? grupo : [L.marker([-14.2, -51.9])]).getBounds().pad(.25), { maxZoom: 17 });
-  $("#ics").onclick = () => baixarICS(e, p);
+  $("#ics").onclick = () => baixarICS(e, p, serie);
   $("#compartilhar").onclick = ev => compartilhar(e, ev.currentTarget);
   const vou = $("#vou");
   if (vou) vou.onclick = () => {
@@ -257,7 +271,10 @@ function viewEmAnalise(id, token, e) {
 
 /* ---------- NOVO EVENTO ---------- */
 async function viewNovo(q) {
-  const pts = await store.listPoints();
+  const [pts0, orgs] = await Promise.all([store.listPoints(), store.listOrgs().catch(() => [])]);
+  // Um lugar que a própria pessoa acabou de cadastrar (ainda em análise) também serve de ponto de encontro.
+  const meuLugar = lerJSON("ev_pendentes_lugar", {})[q.ponto];
+  const pts = meuLugar && !pts0.some(x => String(x.id) === String(q.ponto)) ? [...pts0, { ...meuLugar, name: meuLugar.name + " (seu lugar, em análise)" }] : pts0;
   const hoje = new Date(), pad = n => String(n).padStart(2, "0"), iso = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
   let prop = "boca-a-boca", ponto = pts.find(x => String(x.id) === String(q.ponto)) || null, rota = [];
   view.innerHTML = `<div class="pagina form-cad"><p class="miudo"><a href="#/eventos">Todos os eventos</a></p>
@@ -275,24 +292,31 @@ async function viewNovo(q) {
         <label for="de">Mais detalhes (opcional)</label><textarea class="campo" id="de" name="descricao" rows="2" maxlength="800"></textarea></fieldset>
       <fieldset class="bloco-form"><legend>3. Quando e onde</legend>
         <div class="duas-col" style="grid-template-columns:1fr 1fr 1fr;background:none;padding:0;margin:0;gap:10px"><div style="padding:0;background:none"><label for="dt" style="margin-top:0">Dia</label><input class="campo" id="dt" type="date" name="data" min="${iso}"></div><div style="padding:0;background:none"><label for="h1" style="margin-top:0">Início</label><input class="campo" id="h1" type="time" name="inicio"></div><div style="padding:0;background:none"><label for="h2" style="margin-top:0">Término</label><input class="campo" id="h2" type="time" name="fim"></div></div>
+        <label for="rp">Esse evento se repete?</label>
+        <select class="campo" id="rp" name="repete">${Object.entries(REPETICOES).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select>
+        <div id="rp-ate" hidden><label for="ra">Repete até (opcional)</label><input class="campo" id="ra" type="date" name="repete_ate"></div>
+        <p class="miudo" id="rp-nota" hidden>A confirmação de presença vale para a série toda, e as vagas ficam sem limite. A cada dia, a lista mostra a próxima data.</p>
         <label for="pt">Ponto de encontro (lugar do mapa)</label>
         <select class="campo" id="pt" name="ponto"><option value="">Escolha um lugar</option>${pts.map(p => `<option value="${esc(p.id)}"${ponto && String(ponto.id) === String(p.id) ? " selected" : ""}>${esc(p.name)} (${esc((TIPOS[p.type] || TIPOS.outro).nome)})</option>`).join("")}</select>
-        <p class="miudo" style="margin-top:6px">Não achou? <a href="#/cadastrar">Cadastre o lugar primeiro</a>. É assim que o evento herda a ficha de autorização e segurança.</p>
+        <p class="miudo" style="margin-top:6px">Não achou? <a href="#/cadastrar">Cadastre o lugar primeiro</a>, mesmo que seja só para este evento. Depois é só voltar aqui pelo botão "Criar um evento neste lugar". É assim que o evento herda a ficha de autorização e segurança.</p>
         <div id="pinfo"></div>
         <label>Trajeto no mapa (opcional)</label>
         <p class="miudo" style="margin:0 0 8px">Para saídas de boca a boca ou caminhada de oração. Toque no mapa para marcar cada parada, a partir do ponto de encontro.</p>
         <div class="mapa-caixa" style="height:300px"><div class="mapa" id="rm"></div></div>
         <div class="acoes-busca"><button type="button" class="botao-texto" id="desf">Desfazer última parada</button><button type="button" class="botao-texto" id="limp">Limpar trajeto</button></div>
         <p class="miudo" id="rinfo"></p></fieldset>
-      <fieldset class="bloco-form"><legend>4. Equipe</legend>
+      <fieldset class="bloco-form"><legend>4. Faz parte de alguma organização?</legend>
+        <p class="miudo" style="margin-top:12px">Só aparecem igrejas, agências missionárias e movimentos já cadastrados e aprovados no Timóteo. A sua não está? Cadastre: <a href="#/rede/novo/igreja">igreja</a>, <a href="#/rede/novo/agencia">agência missionária</a>, <a href="#/rede/novo/movimento">movimento</a>.</p>
+        ${[["igreja", "igreja_id", "Igreja"], ["agencia", "agencia_id", "Agência missionária"], ["movimento", "movimento_id", "Movimento evangelístico"]].map(([t, campo, rot]) => `<label for="o-${t}">${rot}</label><select class="campo" id="o-${t}" name="${campo}"><option value="">Nenhum</option>${orgs.filter(o => o.tipo === t).map(o => `<option value="${esc(o.id)}">${esc(o.nome)}${o.cidade ? " (" + esc(o.cidade) + ")" : ""}</option>`).join("")}</select>`).join("")}</fieldset>
+      <fieldset class="bloco-form"><legend>5. Equipe</legend>
         <div class="duas-col" style="grid-template-columns:1fr 1fr;background:none;padding:0;margin:0;gap:10px"><div style="padding:0;background:none"><label for="mi" style="margin-top:0">Equipe mínima</label><input class="campo" id="mi" type="number" name="min_equipe" min="2" max="200" value="4"></div><div style="padding:0;background:none"><label for="va" style="margin-top:0">Vagas (opcional)</label><input class="campo" id="va" type="number" name="vagas" min="1" max="1000"></div></div>
         <label for="rq">O que levar ou saber (opcional)</label><input class="campo" id="rq" name="requisitos" maxlength="300" placeholder="Ex.: roupa confortável, água, Bíblia"></fieldset>
-      <fieldset class="bloco-form"><legend>5. Responsável</legend>
+      <fieldset class="bloco-form"><legend>6. Responsável</legend>
         <p class="miudo" style="margin-top:12px">Todo evento precisa de uma pessoa responsável. Estes dados aparecem no evento. Prefira o contato da igreja, do grupo ou do projeto.</p>
         <label for="rn">Nome do responsável</label><input class="campo" id="rn" name="responsavel" maxlength="80">
         <label for="og">Igreja, grupo ou projeto</label><input class="campo" id="og" name="organizacao" maxlength="100">
         <label for="ct">WhatsApp para contato (com DDD)</label><input class="campo" id="ct" name="contato" inputmode="tel" maxlength="20" placeholder="(11) 90000-0000"></fieldset>
-      <fieldset class="bloco-form"><legend>6. Compromissos de segurança</legend><div id="comp"></div></fieldset>
+      <fieldset class="bloco-form"><legend>7. Compromissos de segurança</legend><div id="comp"></div></fieldset>
       <p class="erro" id="erro" hidden></p>
       <p class="miudo" style="margin-top:14px">O nome e a igreja ou grupo aparecem no evento. O WhatsApp só aparece para quem confirmar presença e para a moderação. Ao publicar, você aceita os <a href="#/termos">Termos de uso</a> e a <a href="#/privacidade">Política de privacidade</a>.</p>
       <button class="botao principal" id="sub">Publicar evento</button>
@@ -307,6 +331,7 @@ async function viewNovo(q) {
     $("#pinfo").innerHTML = ponto ? `<ul class="locais" style="margin-top:12px">${linhasFicha(ponto).filter(l => ["autorizacao", "risco", "referencia"].includes(l.chave)).map(l => `<li><b>${esc(l.rotulo)}</b>${l.valor ? esc(l.valor) : "Não informado"}</li>`).join("")}</ul>` : "";
     drawComp();
   };
+  $("#rp").onchange = ev => { const rep = ev.target.value !== "nao"; $("#rp-ate").hidden = !rep; $("#rp-nota").hidden = !rep; };
   $("#props").onchange = e => { prop = e.target.value; drawComp(); };
   $("#sug").onclick = () => { $("#ro").value = PROPOSITOS[prop].roteiro.join("\n"); };
   $("#pt").onchange = e => { ponto = pts.find(x => String(x.id) === e.target.value) || null; rota = []; draw(); drawPonto(); if (ponto) map.setView([ponto.lat, ponto.lng], 16); };
@@ -338,12 +363,16 @@ async function viewNovo(q) {
     if (!v("data") || !v("inicio") || !v("fim")) return erro("Informe o dia, o horário de início e o de término.");
     if (isNaN(ini2) || ini2 < new Date()) return erro("A data e a hora de início precisam estar no futuro.");
     if (v("fim") <= v("inicio")) return erro("O término precisa ser depois do início.");
+    if (v("repete") !== "nao" && v("repete_ate") && v("repete_ate") < v("data")) return erro("O fim da repetição precisa ser depois do primeiro dia.");
     if (!ponto) return erro("Escolha o ponto de encontro. Se o lugar não existe no mapa, cadastre-o primeiro.");
     if (v("responsavel").length < 2 || v("organizacao").length < 2) return erro("Informe o nome do responsável e a igreja, grupo ou projeto.");
     if (num.length < 10 || num.length > 14) return erro("Informe um WhatsApp válido, com DDD.");
     const falta = exigidos.filter(k => !marcados.includes(k));
     if (falta.length) return erro("Confirme todos os compromissos de segurança para publicar o evento.");
-    const ev2 = { titulo: v("titulo"), proposito: prop, point_id: String(ponto.id), objetivo: v("objetivo"), trajeto: fmtTrajeto(rota.length ? [{ lat: ponto.lat, lng: ponto.lng }, ...rota] : []), descricao: v("descricao"), roteiro: v("roteiro"), data: v("data"), inicio: v("inicio"), fim: v("fim"), vagas: v("vagas") ? Number(v("vagas")) : null, min_equipe: Number(v("min_equipe")) || 2, responsavel: v("responsavel"), organizacao: v("organizacao"), contato: num, requisitos: v("requisitos"), compromissos: marcados.join(","), som: "" };
+    const ev2 = { titulo: v("titulo"), proposito: prop, point_id: String(ponto.id), objetivo: v("objetivo"), trajeto: fmtTrajeto(rota.length ? [{ lat: ponto.lat, lng: ponto.lng }, ...rota] : []), descricao: v("descricao"), roteiro: v("roteiro"), data: v("data"), inicio: v("inicio"), fim: v("fim"), vagas: v("vagas") ? Number(v("vagas")) : null, min_equipe: Number(v("min_equipe")) || 2, responsavel: v("responsavel"), organizacao: v("organizacao"), contato: num, requisitos: v("requisitos"), compromissos: marcados.join(","), som: "",
+      igreja_id: v("igreja_id") || null, agencia_id: v("agencia_id") || null, movimento_id: v("movimento_id") || null,
+      repete: v("repete") || "nao", repete_ate: v("repete") && v("repete") !== "nao" && v("repete_ate") ? v("repete_ate") : null };
+    if (ev2.repete !== "nao") ev2.vagas = null;
     $("#sub").disabled = true;
     try {
       const r = await store.addEvent(ev2);

@@ -10,7 +10,7 @@ import { test, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { execFileSync } from "node:child_process";
-import { createHmac, createHash } from "node:crypto";
+import { createHmac, createHash, randomUUID } from "node:crypto";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync, rmSync, existsSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -420,4 +420,45 @@ test("rede: igreja cadastrada pela tela fica pendente, a moderação aprova e el
   await entrar("rede");
   await esperarTexto("Igreja da Esperança");
   assert.doesNotMatch(await texto(), /pastor@exemplo\.com/);
+});
+
+test("evento ligado a igreja aprovada e com repetição pela tela; moderação define o logotipo; a Rede mostra o evento", async () => {
+  const igreja = randomUUID();
+  sql(`insert into organizacoes (id, tipo, nome, cidade, uf, contato, aceite, approved, logo_link) values ('${igreja}', 'igreja', 'Igreja do Centro', 'Salvador', 'BA', 'x@exemplo.com', true, false, 'https://drive.google.com/logo');`);
+  // pendente: não aparece como opção no formulário do evento
+  await entrar(`eventos/novo?ponto=${PONTO}`);
+  await chrome.ate("document.querySelector('#f') && document.querySelectorAll('#comp input').length > 0", 10000);
+  assert.ok(!(await chrome.js("[...document.querySelectorAll('#o-igreja option')].map(o => o.textContent)")).some(t => /Igreja do Centro/.test(t)), "igreja pendente não pode ser opção");
+
+  // a moderação aprova a igreja e define o logotipo (endereço fora do Storage é recusado)
+  await comoModerador(MOD);
+  await entrar("moderar");
+  await chrome.ate("document.querySelector('#l-organizacoes .mod-item')", 10000, "igreja na fila");
+  assert.match(await texto(), /drive\.google\.com\/logo/);
+  await chrome.js("document.querySelector('#l-organizacoes [data-logo]').value = 'https://evil.example.com/l.png'; true");
+  await clicar('#l-organizacoes [data-acao="aprovar"]');
+  await chrome.ate("!document.querySelector('#l-organizacoes .erro').hidden", 5000, "recusa do logotipo fora do Storage");
+  assert.equal(sql(`select approved::text from organizacoes where id='${igreja}'`), "false");
+  await chrome.js("document.querySelector('#l-organizacoes [data-logo]').value = 'https://abc.supabase.co/storage/v1/object/public/artes/centro.png'; true");
+  await clicar('#l-organizacoes [data-acao="aprovar"]');
+  await chrome.ate("!document.querySelector('#l-organizacoes .mod-item')", 10000, "igreja sair da fila");
+  assert.equal(sql(`select approved::text || '|' || logo_url from organizacoes where id='${igreja}'`), "true|https://abc.supabase.co/storage/v1/object/public/artes/centro.png");
+
+  // agora ela aparece no formulário; o evento sai ligado a ela e mensal
+  await entrar(`eventos/novo?ponto=${PONTO}`);
+  await chrome.ate("document.querySelectorAll('#o-igreja option').length > 1 && document.querySelectorAll('#comp input').length > 0", 10000);
+  await chrome.js(`(() => { const f = document.querySelector('#f'); f.titulo.value = 'Oração mensal na praça'; f.objetivo.value = 'Orar juntos pela cidade, uma vez por mês.'; f.data.value = '${amanha()}'; f.inicio.value = '18:00'; f.fim.value = '19:00'; f.repete.value = 'mensal'; f.responsavel.value = 'Fulano'; f.organizacao.value = 'Igreja do Centro'; f.contato.value = '(71) 99999-8888'; f.igreja_id.value = '${igreja}'; document.querySelectorAll('#comp input').forEach(c => c.checked = true); return true; })()`);
+  await clicar("#sub");
+  await esperarTexto("Evento enviado");
+  assert.equal(sql(`select igreja_id::text || '|' || repete || '|' || approved::text from events where titulo='Oração mensal na praça'`), `${igreja}|mensal|false`);
+  assert.match(sql("select compromissos from events where titulo='Oração mensal na praça'"), /aberto/);
+  sql("update events set approved = true where titulo = 'Oração mensal na praça'");
+
+  await entrar("rede");
+  await esperarTexto("Igreja do Centro");
+  await esperarTexto("1 evento marcado");
+  assert.ok(await chrome.js("!!document.querySelector('img.org-logo[src*=\"centro.png\"]')"), "logotipo na lista");
+  await entrar(`rede/${igreja}`);
+  await esperarTexto("Oração mensal na praça");
+  assert.doesNotMatch(await texto(), /x@exemplo\.com/);
 });

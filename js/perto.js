@@ -4,7 +4,7 @@ import * as D from "./dados.js";
 import { CONVERSAS } from "./content.js";
 import { linhasFicha, completude, preparacao, oracaoDoPonto, diasEPeriodos } from "./ficha.js";
 import { oracaoDe } from "./orar.js";
-import { eventosDoPonto } from "./eventos.js";
+import { eventosDoPonto, proximos } from "./eventos.js";
 import { preencherCidade } from "./cidade.js";
 import { montarCartaz } from "./cartaz.js";
 import { blocosFicha, ligarFicha, coletarPonto, linkLugar } from "./cadastrar.js";
@@ -16,7 +16,10 @@ let ultimoCentro = null;   // lembra a área escolhida ao navegar entre telas
 /* ---------- POR PERTO ---------- */
 // Painel + mapa. Devolve o controle da tela: apply(arg1, arg2) para mudar de ponto ou de área, destruir() ao sair.
 export async function montarPerto() {
-  const [pts, plans] = await Promise.all([store.listPoints(), store.allPlans().catch(() => [])]);
+  const [pts, plans, eventos] = await Promise.all([store.listPoints(), store.allPlans().catch(() => []), store.listEvents().catch(() => [])]);
+  // Quantos eventos marcados (já com a próxima data dos que se repetem) cada lugar tem: esses lugares piscam no mapa.
+  const eventosPorPonto = new Map();
+  proximos(eventos).forEach(e => eventosPorPonto.set(String(e.point_id), (eventosPorPonto.get(String(e.point_id)) || 0) + 1));
   const planCount = new Map();
   plans.forEach(x => planCount.set(String(x.point_id), (planCount.get(String(x.point_id)) || 0) + 1));
   const st = { pts, planCount, center: ultimoCentro, raio: 0, modo: "perto", sel: null };
@@ -50,7 +53,7 @@ export async function montarPerto() {
           <p class="erro" id="erro" hidden></p>
         </section>
         <div id="resultado"></div>
-        <div class="legenda"><span><i class="l-vai"></i> alguém já marcou que vai</span><span><i class="l-sem"></i> ninguém marcou ainda</span><span id="leg-ind" hidden><i class="l-ind"></i> pessoas indígenas</span><span id="leg-qui" hidden><i class="l-qui"></i> pessoas quilombolas</span></div>
+        <div class="legenda"><span><i class="l-vai"></i> alguém já marcou que vai</span><span><i class="l-sem"></i> ninguém marcou ainda</span><span><i class="l-evento"></i> tem evento marcado</span><span id="leg-ind" hidden><i class="l-ind"></i> pessoas indígenas</span><span id="leg-qui" hidden><i class="l-qui"></i> pessoas quilombolas</span></div>
         <fieldset class="camadas"><legend>Povos no mapa</legend>
           <div class="opcoes"><label class="opcao"><input type="checkbox" id="cam-ind"><span>Pessoas indígenas</span></label><label class="opcao"><input type="checkbox" id="cam-qui"><span>Pessoas quilombolas</span></label></div>
           <p class="miudo" id="cam-nota" hidden></p></fieldset>
@@ -100,7 +103,9 @@ export async function montarPerto() {
                 : n ? { radius: 8 + Math.min(n, 8) * 1.5, color: "#fff", weight: 2, fillColor: COR, fillOpacity: .85 }
                     : { radius: 6, color: COR, weight: 2.5, fillColor: "#fff", fillOpacity: 1 };
       if (sel) { opt.radius += 4; opt.color = "#111"; opt.weight = 3; }
-      L.circleMarker([p.lat, p.lng], opt).addTo(layer).bindTooltip(esc(p.name))
+      const ne = eventosPorPonto.get(String(p.id)) || 0;
+      if (ne) L.circleMarker([p.lat, p.lng], { radius: opt.radius + 9, color: "#e0a800", weight: 3, fillColor: "#ffd23f", fillOpacity: .35, className: "pulso-evento", interactive: false }).addTo(layer);
+      L.circleMarker([p.lat, p.lng], opt).addTo(layer).bindTooltip(esc(p.name) + (ne ? ` · ${ne} ${ne === 1 ? "evento marcado" : "eventos marcados"}` : ""))
         .on("click", e => { L.DomEvent.stopPropagation(e); location.hash = `#/perto/ponto/${encodeURIComponent(p.id)}`; });
     });
   }
@@ -108,6 +113,8 @@ export async function montarPerto() {
   function itemHTML(p, i) {
     const bits = [tipo(p.type).nome];
     if (p._d != null) bits.push(fmtDist(p._d));
+    const ne = eventosPorPonto.get(String(p.id)) || 0;
+    if (ne) bits.push(`${ne} ${ne === 1 ? "evento marcado" : "eventos marcados"}`);
     if (p.status === "pausado") bits.push("pausado");
     if (p.example) bits.push("exemplo");
     return `<li class="item${String(st.sel) === String(p.id) ? " selecionado" : ""}" style="--i:${Math.min(i, 12)}"><button type="button" data-id="${esc(p.id)}"><span><span class="item-nome">${esc(p.name)}</span><span class="item-sub">${esc(bits.join(" · "))}</span></span><span class="item-ate"><small>${p._n === 1 ? "vai" : "vão"}</small><b>${p._n}</b></span></button></li>`;

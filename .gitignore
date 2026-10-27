@@ -10,3 +10,14 @@ Thumbs.db
 *.gpkg
 *.zip
 downloads/
+
+# App Android: NUNCA envie a chave de assinatura nem os pacotes gerados (veja docs/APP.md)
+*.keystore
+*.jks
+app/*.aab
+app/*.apk
+app/build/
+app/app/
+app/gradle*
+app/.gradle/
+app/local.properties

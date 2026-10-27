@@ -443,3 +443,21 @@ test("links de agenda: Google e Outlook com título, horário, local e repetiç�
   const o = new URL(l.outlook); assert.equal(o.hostname, "outlook.live.com"); assert.equal(o.searchParams.get("startdt"), "2026-11-03T19:00:00"); assert.equal(o.searchParams.get("subject"), "Culto na praça");
   assert.ok(!new URL(linksAgenda({ titulo: "x", link: "y", inicio: new Date(), fim: new Date() }).google).searchParams.has("recur"));
 });
+
+import { montarTwaManifest, montarAssetlinks } from "../scripts/app.mjs";
+test("app Android: configuração do Bubblewrap e assetlinks.json válidos, e recusa dados errados", () => {
+  const m = montarTwaManifest({ host: "timoteoapp.vercel.app", pacote: "br.org.exemplo.timoteo" });
+  assert.equal(m.packageId, "br.org.exemplo.timoteo"); assert.equal(m.fullScopeUrl, "https://timoteoapp.vercel.app/");
+  assert.equal(m.webManifestUrl, "https://timoteoapp.vercel.app/manifest.webmanifest"); assert.equal(m.themeColor, "#0462d3");
+  assert.equal(m.iconUrl, "https://timoteoapp.vercel.app/icons/icon-512.png"); assert.equal(m.enableNotifications, false); assert.equal(m.appVersionCode, 1);
+  for (const ruim of [{ pacote: "Timoteo" }, { pacote: "br.1org.app" }, { pacote: "semponto" }, { host: "https://x.com" }, { host: "localhost" }, { host: "" }])
+    assert.throws(() => montarTwaManifest({ host: "timoteoapp.vercel.app", pacote: "br.org.exemplo.timoteo", ...ruim }), undefined, JSON.stringify(ruim));
+  const sha = Array.from({ length: 32 }, (_, i) => (i * 7 % 256).toString(16).padStart(2, "0").toUpperCase()).join(":");
+  const j = montarAssetlinks({ pacote: "br.org.exemplo.timoteo", sha256: sha.toLowerCase() });
+  assert.deepEqual(j[0].relation, ["delegate_permission/common.handle_all_urls"]); assert.equal(j[0].target.namespace, "android_app"); assert.deepEqual(j[0].target.sha256_cert_fingerprints, [sha]);
+  for (const ruim of ["", "AA:BB", sha.replaceAll(":", ""), sha + ":00"]) assert.throws(() => montarAssetlinks({ pacote: "br.org.exemplo.timoteo", sha256: ruim }));
+});
+test("o .gitignore protege a chave de assinatura e os pacotes do app", () => {
+  const g = readFileSync(path.join(raiz, ".gitignore"), "utf8");
+  for (const padrao of ["*.keystore", "*.jks", "app/*.aab"]) assert.ok(g.includes(padrao), padrao);
+});

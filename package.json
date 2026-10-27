@@ -21,7 +21,11 @@
     "schema": "node scripts/gerar_schema.mjs",
     "povos": "node scripts/gerar_povos.mjs",
     "test:local": "node --test tests/local.e2e.mjs",
-    "test:a11y": "node --test tests/a11y.e2e.mjs"
+    "test:a11y": "node --test tests/a11y.e2e.mjs",
+    "app:config": "node scripts/app.mjs config",
+    "app:assetlinks": "node scripts/app.mjs assetlinks",
+    "app:build": "cd app && npx --yes @bubblewrap/cli build",
+    "loja": "node scripts/gerar_loja.mjs"
   },
   "engines": {
     "node": ">=20"

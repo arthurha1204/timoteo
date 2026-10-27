@@ -31,14 +31,57 @@ Limites: não tem acesso a tudo do celular (notificações push nativas, por exe
 - Denúncia, moderação e política de privacidade (rascunho).
 - Mesmo banco (Supabase) para web e app.
 
-## Passo a passo (quando a conta e o domínio estiverem prontos)
+## Passo a passo (na ordem)
 
-1. Defina o domínio e aponte para a Vercel.
-2. Em https://www.pwabuilder.com, informe o endereço do site, confira a pontuação e escolha **Android** (gera o pacote e a chave de assinatura).
-3. Me envie a **impressão digital SHA-256** da chave (não a chave). Eu crio `/.well-known/assetlinks.json`, publico e rodo os testes.
-4. No Play Console, crie o app, envie o `.aab`, preencha a ficha da loja, segurança dos dados e classificação.
-5. Abra um teste fechado, convide testadores, espere o prazo.
-6. Publique em produção.
+O que está pronto no repositório: configuração do app, gerador do `assetlinks.json`, imagens e textos da loja. O que depende de você está marcado com **(você)**.
+
+**1. (você) Decida o domínio e o `package`.**
+- Domínio: pode começar em `timoteoapp.vercel.app`; se trocar depois, o app precisa de uma atualização.
+- `package` (applicationId): identifica o app **para sempre** na Play Store. Use um domínio seu ao contrário (ex.: `br.org.seunome.timoteo`). Não dá para mudar depois de publicar.
+
+**2. Gerar a configuração do app.**
+
+```bash
+npm run app:config -- --host timoteoapp.vercel.app --package br.org.seunome.timoteo
+```
+
+Cria `app/twa-manifest.json` (nome, cores, ícones, endereço do manifesto). Não cria chave nem senha.
+
+**3. (você) Gerar o pacote Android (.aab).** Precisa do Java 17 (já instalado aqui) e do Android SDK. O Bubblewrap oferece baixar o SDK e pede que **você aceite as licenças do Google** e **escolha a senha da chave de assinatura**. Por isso esse passo é seu:
+
+```bash
+cd app
+npx @bubblewrap/cli init --manifest=https://timoteoapp.vercel.app/manifest.webmanifest
+npx @bubblewrap/cli build
+```
+
+O `init` reaproveita o `twa-manifest.json` se existir. Saem `app-release-bundle.aab` (para a loja) e `app-release-signed.apk` (para testar no celular). **Guarde `android.keystore` e a senha em dois lugares seguros e fora do GitHub** (o `.gitignore` já bloqueia). Sem a chave não dá para atualizar o app.
+
+**4. (você) Pegar a impressão digital da chave.**
+
+```bash
+keytool -list -v -keystore android.keystore -alias timoteo
+```
+
+Copie a linha `SHA256:` (32 pares separados por `:`). Se for usar a assinatura do Google Play (recomendado), pegue a impressão digital em Play Console, Integridade do app, Assinatura do app.
+
+**5. Gerar e publicar o `assetlinks.json`.**
+
+```bash
+npm run app:assetlinks -- --package br.org.seunome.timoteo --sha256 AA:BB:...:FF
+```
+
+Faça o commit e o deploy, e confira se abre em `https://SEU-DOMINIO/.well-known/assetlinks.json`. Sem isso o app abre com uma barra de endereço por cima.
+
+**6. Imagens e textos da loja.** `npm run loja` gera `docs/loja/` (imagem de destaque e seis capturas). Os textos e as respostas dos formulários estão em `docs/PLAYSTORE.md`.
+
+**7. (você) Play Console.** Crie o app, envie o `.aab`, preencha a ficha com `docs/PLAYSTORE.md`, política de privacidade (sem `[PREENCHER]`), segurança dos dados e classificação.
+
+**8. (você) Teste fechado.** Convide os testadores exigidos pela sua conta e espere o prazo.
+
+**9. Produção.** Depois da revisão do Google, publique.
+
+**Atualizações:** mudou o site, o app já mostra. Só gere um `.aab` novo (aumente `appVersionCode`) se mudar nome, ícone, cores ou o endereço.
 
 ## E o iPhone?
 

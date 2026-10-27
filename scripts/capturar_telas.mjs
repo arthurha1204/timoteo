@@ -118,6 +118,8 @@ try {
     const ok = await ate(PRONTO);
     if (t.depois) { await js(t.depois); await espera(900); await ate(PRONTO, 8000); }
     await espera(900);
+    // SEM_FAIXA=1 (imagens da loja): esconde o aviso "Modo de teste" e devolve o espaço dele ao mapa
+    if (process.env.SEM_FAIXA) { await js("(() => { document.getElementById('faixa').style.display = 'none'; document.querySelector('.perto')?.classList.remove('com-faixa'); window.dispatchEvent(new Event('resize')); })()"); await espera(500); }
     const r = await cmd("Page.captureScreenshot", { format: "png", fromSurface: true });
     writeFileSync(path.join(SAIDA, t.nome + ".png"), Buffer.from(r.data, "base64"));
     console.log((ok ? "ok      " : "AVISO   ") + t.nome);

@@ -208,7 +208,10 @@ function sb() {
       async enviarLink(email) {
         const volta = location.origin + location.pathname;
         const r = await fetch(`${raiz}/auth/v1/otp?redirect_to=${encodeURIComponent(volta)}`, { method: "POST", headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email, create_user: false }) });
-        if (!r.ok) throw new Error("Não foi possível enviar o link. Confira o e-mail.");
+        if (!r.ok) {
+          let d = ""; try { const j = await r.json(); d = j.msg || j.message || j.error_description || j.error_code || ""; } catch { /* sem corpo */ }
+          throw new Error("Não foi possível enviar o link. Confira o e-mail." + (d ? ` Detalhe do servidor: ${d} (código ${r.status})` : ` (código ${r.status})`));
+        }
       },
       // Chamado quando a pessoa volta pelo link do e-mail: #access_token=...&expires_in=...
       guardarDoLink(fragmento) {

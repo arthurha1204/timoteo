@@ -19,7 +19,8 @@ export async function montarPerto() {
   const [pts, plans] = await Promise.all([store.listPoints(), store.allPlans().catch(() => [])]);
   const planCount = new Map();
   plans.forEach(x => planCount.set(String(x.point_id), (planCount.get(String(x.point_id)) || 0) + 1));
-  const st = { pts, planCount, center: ultimoCentro, raio: 5, modo: "perto", sel: null };
+  const st = { pts, planCount, center: ultimoCentro, raio: 0, modo: "perto", sel: null };
+  let raioEscolhido = false;
   const exemplo = store.mode === "local", hoje = oracaoDe();
   view.innerHTML = `
   <div class="perto${exemplo ? " com-faixa" : ""}">
@@ -45,6 +46,7 @@ export async function montarPerto() {
           <label for="q">Onde você está agora?</label>
           <div class="linha-busca"><input class="campo" id="q" placeholder="Cidade, bairro ou endereço" autocomplete="off"><button class="botao" id="go">Buscar</button></div>
           <div class="acoes-busca"><button class="botao-texto" id="gps">Usar onde eu estou</button><span class="miudo">ou toque no mapa</span></div>
+          <p class="miudo">O mapa começa mostrando o Brasil todo. Só pedimos a sua localização se você tocar em "Usar onde eu estou".</p>
           <p class="erro" id="erro" hidden></p>
         </section>
         <div id="resultado"></div>
@@ -53,7 +55,7 @@ export async function montarPerto() {
           <div class="opcoes"><label class="opcao"><input type="checkbox" id="cam-ind"><span>Pessoas indígenas</span></label><label class="opcao"><input type="checkbox" id="cam-qui"><span>Pessoas quilombolas</span></label></div>
           <p class="miudo" id="cam-nota" hidden></p></fieldset>
         <div class="controles"><div class="alternador" role="group" aria-label="Ordem da lista"><button aria-pressed="true" data-m="perto">Perto de você</button><button aria-pressed="false" data-m="tipo">Por tipo</button></div>
-          <label class="raio">Até <select id="raio"><option value="1">1 km</option><option value="5" selected>5 km</option><option value="20">20 km</option><option value="100">100 km</option><option value="0">Todos</option></select></label></div>
+          <label class="raio">Até <select id="raio"><option value="1">1 km</option><option value="5">5 km</option><option value="20">20 km</option><option value="100">100 km</option><option value="0" selected>Brasil todo</option></select></label></div>
         <ul class="lista" id="lista"></ul>
         <div class="notas"><p>Ordem: primeiro onde mais gente já marcou que vai. No empate, o mais perto.</p></div>
         <section class="compartilhar">
@@ -150,6 +152,8 @@ export async function montarPerto() {
 
   function setCenter(c, zoom, replaceHash) {
     st.center = ultimoCentro = c;
+    // Sem ponto escolhido, a tela mostra o Brasil todo. Ao escolher um ponto, o raio passa a 5 km, a menos que a pessoa já tenha escolhido outro.
+    if (!raioEscolhido && !st.raio) { st.raio = 5; $("#raio").value = "5"; }
     userMk?.remove(); circle?.remove();
     userMk = L.marker([c.lat, c.lng], { icon: userIcon(), interactive: false, keyboard: false }).addTo(map);
     if (st.raio) circle = L.circle([c.lat, c.lng], { radius: st.raio * 1000, color: COR, weight: 3, dashArray: "8 8", fillOpacity: .04, interactive: false }).addTo(map);
@@ -169,14 +173,22 @@ export async function montarPerto() {
     $("#go").disabled = false;
   };
   $("#q").onkeydown = e => e.key === "Enter" && $("#go").click();
-  $("#gps").onclick = async () => { erro(""); try { setCenter(await locate(), zoomFor(st.raio), true); } catch { erro("Não consegui pegar a sua localização. Busque pelo nome da cidade."); } };
+  $("#gps").onclick = async () => {
+    erro("");
+    try { const c = await locate(); setCenter({ lat: c.lat, lng: c.lng }, zoomFor(st.raio || 5), true); }
+    catch (e) {
+      erro(e.codigo === "fora" ? "A localização do seu aparelho parece estar fora do Brasil, então não vou usá-la. Busque pela cidade ou toque no mapa."
+        : e.codigo === "imprecisa" ? "A localização do seu aparelho está muito imprecisa (computadores costumam errar). Busque pela cidade ou toque no mapa."
+        : "Não consegui pegar a sua localização. Busque pelo nome da cidade ou toque no mapa.");
+    }
+  };
   $(".alternador").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
     st.modo = b.dataset.m;
     document.querySelectorAll(".alternador button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     drawLista();
   };
-  $("#raio").onchange = e => { st.raio = +e.target.value; if (st.center) setCenter(st.center, st.raio ? zoomFor(st.raio) : 5, true); else drawLista(); };
+  $("#raio").onchange = e => { raioEscolhido = true; st.raio = +e.target.value; if (st.center) setCenter(st.center, st.raio ? zoomFor(st.raio) : 5, true); else drawLista(); };
   $("#lista").onclick = e => { const b = e.target.closest("button[data-id]"); if (b) location.hash = `#/perto/ponto/${encodeURIComponent(b.dataset.id)}`; };
 
   /* ficha */

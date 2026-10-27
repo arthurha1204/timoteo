@@ -157,6 +157,25 @@ test("a página de dados carrega os números do IBGE (precisa de internet)", asy
   semProblemas();
 });
 
+test("começa no Brasil todo; localização no Atlântico é descartada; localização válida passa o raio para 5 km", async () => {
+  await a.entrar("perto");
+  await chrome.ate("document.querySelector('#gps') && document.querySelectorAll('#lista .item').length === 5", 15000);
+  assert.equal(await chrome.js("document.querySelector('#raio').value"), "0");
+  const falsa = (lat, lng, precisao) => chrome.js(`navigator.geolocation.getCurrentPosition = ok => ok({ coords: { latitude: ${lat}, longitude: ${lng}, accuracy: ${precisao} } }); true`);
+  await falsa(0, -20, 30);   // meio do Atlântico
+  await a.clicar("#gps");
+  await chrome.ate("!document.querySelector('#erro').hidden", 5000, "aviso de localização fora do Brasil");
+  assert.match(await chrome.js("document.querySelector('#erro').innerText"), /fora do Brasil/);
+  assert.equal(await chrome.js("document.querySelector('#raio').value"), "0");
+  await falsa(-12.9714, -38.5107, 40000);   // dentro do Brasil, mas imprecisa demais
+  await a.clicar("#gps");
+  await chrome.ate("/imprecisa/.test(document.querySelector('#erro').innerText)", 5000, "aviso de localização imprecisa");
+  await falsa(-12.9714, -38.5107, 30);   // Salvador, precisa
+  await a.clicar("#gps");
+  await chrome.ate("document.querySelector('#raio').value === '5' && document.querySelector('#erro').hidden", 8000, "raio de 5 km depois de compartilhar a localização");
+  semProblemas();
+});
+
 test("o botão 'Usar onde eu estou' e a busca não quebram a tela quando a rede ou o GPS falham", async () => {
   await a.entrar("perto");
   await chrome.ate("document.querySelector('#gps')", 15000);

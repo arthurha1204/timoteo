@@ -37,8 +37,15 @@ export async function geocode(q) {
   const j = await r.json();
   return j[0] ? { lat: +j[0].lat, lng: +j[0].lon } : null;
 }
+// Retângulo que cobre o Brasil (com folga). Serve para descartar posições erradas, como a de computador que "está" no Atlântico.
+export const noBrasil = c => c.lat >= -34 && c.lat <= 6 && c.lng >= -75 && c.lng <= -32;
 export const locate = () => new Promise((res, rej) => navigator.geolocation
-  ? navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lng: p.coords.longitude }), rej, { timeout: 10000 })
+  ? navigator.geolocation.getCurrentPosition(p => {
+    const c = { lat: p.coords.latitude, lng: p.coords.longitude, precisao: p.coords.accuracy };
+    if (!noBrasil(c)) return rej(Object.assign(new Error("fora do Brasil"), { codigo: "fora" }));
+    if (c.precisao > 25000) return rej(Object.assign(new Error("imprecisa"), { codigo: "imprecisa" }));
+    res(c);
+  }, rej, { timeout: 10000 })
   : rej(new Error("sem geolocalização")));
 
 // Mapa base: estilo Humanitarian OSM Team, servido por OSM France.

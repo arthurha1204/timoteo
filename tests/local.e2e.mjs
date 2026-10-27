@@ -143,7 +143,7 @@ test("marcar 'vou evangelizar por aqui' conta uma vez por aparelho", async () =>
 });
 
 test("as páginas de conteúdo abrem sem erro", async () => {
-  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["arte", "Envie a sua arte para um cartaz"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
+  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["arte", "Envie a sua arte para um cartaz"], ["rede", "Igrejas, agências e movimentos"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
     await a.entrar(rota);
     await a.esperarTexto(trecho, 15000);
   }
@@ -202,5 +202,33 @@ test("enviar arte: valida, guarda no aparelho no modo de teste e o cartaz segue 
   await a.clicar("#cartaz-pt");
   await chrome.ate("document.querySelector('[data-prev] .c-qr canvas, [data-prev] .c-qr img')", 8000);
   assert.equal(await chrome.js("document.querySelector('#bloco-arte').hidden"), true);
+  semProblemas();
+});
+
+test("menu Cadastrar abre a lista com as cinco opções e o cadastro de igreja aparece na Rede", async () => {
+  await a.entrar("perto");
+  await chrome.ate("document.querySelector('#cad-btn')", 15000);
+  assert.equal(await chrome.js("document.querySelector('#cad-menu').hidden"), true);
+  await a.clicar("#cad-btn");
+  assert.equal(await chrome.js("document.querySelector('#cad-menu').hidden"), false);
+  assert.equal(await chrome.js("document.querySelector('#cad-btn').getAttribute('aria-expanded')"), "true");
+  assert.deepEqual(await chrome.js("[...document.querySelectorAll('#cad-menu a')].map(x => x.innerText)"),
+    ["Cadastrar lugar", "Cadastrar arte", "Cadastrar agência missionária", "Cadastrar igreja", "Cadastrar movimento"]);
+  await chrome.js("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); true");
+  assert.equal(await chrome.js("document.querySelector('#cad-menu').hidden"), true);
+  await a.clicar("#cad-btn");
+  await a.clicar('#cad-menu a[href="#/rede/novo/igreja"]');
+  await chrome.ate("document.querySelector('#f') && /Cadastre a sua igreja/.test(document.body.innerText)", 8000, "formulário de igreja");
+  assert.equal(await chrome.js("document.querySelector('#cad-menu').hidden"), true);
+  assert.equal(await chrome.js("document.querySelector('#cad-btn').getAttribute('aria-current')"), "page");
+  await a.preencher("#f", { nome: "Igreja da Vila", cidade: "Salvador", uf: "BA", contato: "pastor@exemplo.com" });
+  await chrome.js("document.querySelector('#f').requestSubmit(); true");
+  await chrome.ate("!document.querySelector('#erro').hidden", 5000, "erro do aceite");
+  await chrome.js("document.querySelector('#aceite').checked = true; document.querySelector('#f').requestSubmit(); true");
+  await a.esperarTexto("Cadastro enviado");
+  await a.entrar("rede");
+  await a.esperarTexto("Igreja da Vila");
+  const t = await a.texto();
+  assert.doesNotMatch(t, /pastor@exemplo\.com/);   // o contato nunca aparece na lista
   semProblemas();
 });

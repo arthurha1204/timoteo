@@ -24,6 +24,8 @@ const ROTAS = [
   ["o que fazer", "o-que-fazer"],
   ["orar", "orar"],
   ["enviar arte", "arte"],
+  ["rede", "rede"],
+  ["cadastrar movimento", "rede/novo/movimento"],
   ["sobre", "sobre"],
   ["privacidade", "privacidade"],
   ["termos", "termos"]
@@ -61,3 +63,16 @@ for (const [nome, largura, altura, mobile] of [["computador", 1280, 900, false],
     assert.equal(falhas.length, 0);
   });
 }
+
+test("acessibilidade com o menu Cadastrar aberto, no computador e no celular", async () => {
+  for (const [largura, altura, mobile] of [[1280, 900, false], [390, 844, true]]) {
+    await chrome.tela(largura, altura, mobile ? 2 : 1, mobile);
+    await a.entrar("perto");
+    await chrome.ate("document.querySelector('#cad-btn')", 15000);
+    await a.clicar("#cad-btn");
+    await espera(500);
+    await chrome.js(axeFonte);
+    const r = await chrome.js(`axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] }, resultTypes: ["violations"] }).then(r => r.violations.map(v => v.id + ": " + v.nodes.slice(0, 2).map(n => n.target.join(" ")).join(" | ")))`);
+    assert.deepEqual(r, [], `${largura}px: ${JSON.stringify(r)}`);
+  }
+});

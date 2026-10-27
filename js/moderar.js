@@ -2,7 +2,7 @@
 // Quem entra é identificado pelo Supabase Auth (link por e-mail); o banco só deixa passar e-mails da tabela "admins".
 import { store } from "./data.js";
 import { TIPOS, GUIAS } from "./content.js";
-import { linhasFicha, csv } from "./ficha.js";
+import { linhasFicha, csv, TIPOS_ORG } from "./ficha.js";
 import { blocosFicha, ligarFicha, coletarPonto } from "./cadastrar.js";
 import { $, view, esc } from "./util.js";
 
@@ -91,6 +91,11 @@ export async function viewModerar() {
       <label for="img-${esc(a.id)}">Endereço da imagem no Storage</label><input class="campo" id="img-${esc(a.id)}" data-img placeholder="https://xxxx.supabase.co/storage/v1/object/public/artes/arquivo.png">
       <p class="erro" hidden></p>
       <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno principal" data-acao="aprovar-arte">Aprovar com esta imagem</button><button class="botao pequeno" data-acao="apagar">Apagar</button></p></li>`).join("");
+  const orgs = (dados.organizacoes || []).map(o => cartao("organizacoes", o, `<h3 class="titulo-forte" style="font-size:1.25rem">${esc(o.nome)}</h3>
+      <p class="miudo">${esc((TIPOS_ORG[o.tipo] || {}).nome || o.tipo)} · ${esc([o.cidade, o.uf].filter(Boolean).join(", ") || "sem cidade")}${o.igreja_nome ? " · ligado à " + esc(o.igreja_nome) : ""} · ${new Date(o.created_at).toLocaleString("pt-BR")}</p>
+      ${o.descricao ? `<p style="margin-top:8px">${esc(o.descricao)}</p>` : ""}
+      <ul class="locais" style="margin-top:10px">${o.site ? `<li><b>Site</b><a href="${esc(o.site)}" target="_blank" rel="noopener noreferrer">${esc(o.site)}</a></li>` : ""}${o.instagram ? `<li><b>Instagram</b>${esc(o.instagram)}</li>` : ""}<li><b>Contato</b>${esc(o.contato)}</li></ul>
+      <p class="miudo" style="margin-top:8px">Confira se a pessoa representa mesmo a organização (site, Instagram, contato) antes de aprovar.</p>`)).join("");
   const reps = denuncias.map(r => {
     const [kind, id] = r.alvo.split(":");
     const link = kind === "evento" ? `#/eventos/${id}` : `#/perto/ponto/${id}`;
@@ -101,19 +106,20 @@ export async function viewModerar() {
 
   view.innerHTML = `<div class="pagina"><span class="sobretitulo">Moderação</span>
     <h1 class="titulo-forte titulo-pagina">Fila de aprovação.</h1>
-    <p class="chamada">${dados.points.length} lugares, ${dados.events.length} eventos, ${(dados.artes || []).length} artes e ${denuncias.length} denúncias esperando.</p>
+    <p class="chamada">${dados.points.length} lugares, ${dados.events.length} eventos, ${(dados.artes || []).length} artes, ${(dados.organizacoes || []).length} cadastros da rede e ${denuncias.length} denúncias esperando.</p>
     <p class="miudo"><button class="botao-texto" id="sair">Sair</button> · Antes de aprovar, leia o checklist em docs/SEGURANCA.md. Na dúvida, não aprove.</p>
     <h2 class="titulo-forte">Lugares pendentes</h2><ul class="lista-mod" id="l-points">${lugares || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Eventos pendentes</h2><ul class="lista-mod" id="l-events">${eventos || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Artes pendentes</h2><ul class="lista-mod" id="l-artes">${artes || '<li class="miudo">Nada pendente.</li>'}</ul>
+    <h2 class="titulo-forte">Rede pendente</h2><ul class="lista-mod" id="l-organizacoes">${orgs || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Denúncias</h2><ul class="lista-mod" id="l-reports">${reps || '<li class="miudo">Nenhuma denúncia.</li>'}</ul></div>`;
   $("#sair").onclick = () => { store.admin.sair(); viewModerar(); };
   const abrirEdicao = (li, tipo, id) => {
     if (li.querySelector("form.mod-edicao")) return;
-    const item = (tipo === "points" ? dados.points : dados.events).find(x => String(x.id) === String(id));
+    const item = ({ points: dados.points, events: dados.events, organizacoes: dados.organizacoes || [] })[tipo].find(x => String(x.id) === String(id));
     const campo = (n, rot, v, area) => `<label>${rot}</label>${area ? `<textarea class="campo" name="${n}" rows="3">${esc(v || "")}</textarea>` : `<input class="campo" name="${n}" value="${esc(v || "")}">`}`;
     const f = document.createElement("form"); f.className = "mod-edicao form-cad"; f.style.marginTop = "14px";
-    f.innerHTML = (tipo === "points" ? blocosFicha(item) : campo("titulo", "Título", item.titulo) + campo("objetivo", "Objetivo", item.objetivo, true) + campo("descricao", "Descrição", item.descricao, true) + campo("roteiro", "Roteiro", item.roteiro, true) + campo("requisitos", "Requisitos", item.requisitos))
+    f.innerHTML = (tipo === "points" ? blocosFicha(item) : tipo === "organizacoes" ? ["nome", "descricao", "cidade", "uf", "site", "instagram", "igreja_nome"].map(k => campo(k, k, item[k], k === "descricao")).join("") : campo("titulo", "Título", item.titulo) + campo("objetivo", "Objetivo", item.objetivo, true) + campo("descricao", "Descrição", item.descricao, true) + campo("roteiro", "Roteiro", item.roteiro, true) + campo("requisitos", "Requisitos", item.requisitos))
       + '<p class="erro" hidden></p><p style="margin-top:12px"><button class="botao pequeno principal">Salvar correção</button></p>';
     li.appendChild(f);
     if (tipo === "points") ligarFicha(f);

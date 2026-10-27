@@ -32,6 +32,7 @@ Quando o site está ligado a um banco compartilhado (e não no modo de teste), e
 - Confirmação de presença: quantidade de pessoas e um nome ou apelido opcional. Só a quantidade é pública. O nome só a moderação vê.
 - "Vou evangelizar por aqui": dia, hora e um apelido opcional, que aparece para todos no lugar.
 - Artes para cartaz: título, link da arte, o @ do artista (que aparece como crédito quando a arte é aprovada), região opcional e um e-mail ou WhatsApp. O contato e o link original só a moderação vê. A moderação guarda uma cópia da imagem aprovada para exibi-la.
+- Cadastros da rede (igreja, agência missionária ou movimento): nome, descrição, cidade, estado, site e Instagram opcionais, nome da igreja ligada (no caso de movimento) e um e-mail ou WhatsApp. Só o contato é privado: a moderação o vê, o público não. O restante aparece na página Rede depois de aprovado.
 - Denúncias: o motivo e o texto que você escrever. Só a moderação lê.
 - Moderadores: o e-mail usado para entrar.
 

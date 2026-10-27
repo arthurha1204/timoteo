@@ -1,7 +1,7 @@
 // Lógica da função de borda "enviar": confere o captcha (Cloudflare Turnstile) e repassa o envio ao PostgREST.
 // Sem dependências, para rodar igual no Deno (Supabase Edge Functions) e no Node (testes).
 // O repasse usa a chave anônima + um segredo: as regras do banco (RLS, colunas liberadas, trava de enxurrada) continuam valendo.
-export const TABELAS = ["points", "events", "plans", "reports", "artes"];
+export const TABELAS = ["points", "events", "plans", "reports", "artes", "organizacoes"];
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (status, corpo) => new Response(JSON.stringify(corpo), { status, headers: { "content-type": "application/json", ...CORS } });
 

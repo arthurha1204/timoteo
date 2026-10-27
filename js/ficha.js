@@ -95,3 +95,28 @@ export function validarArte(v) {
   if (!arte.aceite) return { erro: "Para enviar, confirme que a arte é sua e que autoriza o uso." };
   return { valores: arte };
 }
+
+export const TIPOS_ORG = {
+  igreja: { nome: "Igreja", plural: "Igrejas", titulo: "Cadastre a sua igreja.", chamada: "Igrejas locais são o lugar onde quem começa a caminhar vai ser cuidado. Cadastre a sua para que quem evangelizar por perto saiba a quem encaminhar." },
+  agencia: { nome: "Agência missionária", plural: "Agências missionárias", titulo: "Cadastre uma agência missionária.", chamada: "Agências que enviam, treinam ou apoiam missionários. Conte onde atuam e como as pessoas podem se aproximar." },
+  movimento: { nome: "Movimento", plural: "Movimentos", titulo: "Cadastre um movimento.", chamada: "Grupos de jovens, ministérios, redes de oração e ações de evangelismo. O movimento pode ou não estar ligado a uma igreja." }
+};
+
+// Confere e normaliza o cadastro de igreja, agência ou movimento. As mesmas regras valem no banco.
+export function validarOrg(v) {
+  const t = k => String(v[k] ?? "").trim();
+  const o = { tipo: t("tipo"), nome: t("nome"), descricao: t("descricao"), cidade: t("cidade"), uf: t("uf").toUpperCase(), site: t("site"), instagram: t("instagram"), igreja_nome: t("igreja_nome"), contato: t("contato"), aceite: !!v.aceite };
+  if (o.instagram && !o.instagram.startsWith("@")) o.instagram = "@" + o.instagram;
+  if (!TIPOS_ORG[o.tipo]) return { erro: "Tipo inválido." };
+  if (o.tipo !== "movimento") o.igreja_nome = "";
+  if (o.nome.length < 3 || o.nome.length > 100) return { erro: "Dê um nome, de 3 a 100 letras." };
+  if (o.descricao.length > 600) return { erro: "A descrição deve ter até 600 letras." };
+  if (o.cidade.length > 80) return { erro: "A cidade deve ter até 80 letras." };
+  if (o.uf && !/^[A-Z]{2}$/.test(o.uf)) return { erro: "O estado deve ter 2 letras, como BA." };
+  if (o.site && !/^https:\/\/\S{4,255}$/i.test(o.site)) return { erro: "O site precisa começar com https://." };
+  if (o.instagram && !/^@[A-Za-z0-9_.]{1,30}$/.test(o.instagram)) return { erro: "O Instagram deve ser só o @, com letras, números, ponto e sublinhado." };
+  if (o.igreja_nome.length > 100) return { erro: "O nome da igreja deve ter até 100 letras." };
+  if (o.contato.length < 5 || o.contato.length > 120) return { erro: "Informe um e-mail ou WhatsApp para a moderação falar com você." };
+  if (!o.aceite) return { erro: "Para enviar, confirme que as informações são verdadeiras e que você pode cadastrá-las." };
+  return { valores: o };
+}

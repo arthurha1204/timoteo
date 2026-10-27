@@ -35,7 +35,9 @@ a{color:var(--cor-escura);text-underline-offset:.18em}
 .marca-nome span+span{letter-spacing:.01em;font-size:1.0625rem}
 .navegacao{gap:2px;margin-left:auto;display:flex}
 .navegacao a{color:#fff;white-space:nowrap;transition:background .2s var(--curva),color .2s var(--curva);border-radius:999px;padding:7px 9px;font-size:.8125rem;font-weight:650;text-decoration:none}
-.navegacao a[aria-current=page]{color:var(--cor-escura);background:#fff}
+.navegacao a,.nav-botao{color:#fff;white-space:nowrap;transition:background .2s var(--curva),color .2s var(--curva);border-radius:999px;padding:7px 9px;font-size:.8125rem;font-weight:650;text-decoration:none}
+.nav-botao{background:none;border:0;font-family:inherit;cursor:pointer;flex:none}
+.nav-botao[aria-current=page],.navegacao a[aria-current=page]{color:var(--cor-escura);background:#fff}
 .navegacao a:not([aria-current=page]):hover{background:oklch(100% 0 0/.16)}
 @media (width<=639px){.navegacao{scrollbar-width:none;min-width:0;padding-right:20px;overflow-x:auto;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),#0000);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),#0000)}.navegacao::-webkit-scrollbar{display:none}.navegacao a{flex:none}}
 .faixa-exemplo{align-items:center;gap:10px;padding:10px 16px;min-height:44px;font-size:.9375rem;font-weight:600;display:flex;background:var(--tinta);color:#fff}
@@ -389,3 +391,10 @@ mark.preencher{background:var(--amarelo);color:var(--tinta);padding:0 .25em;bord
 .cartaz-print .p-credito{font-size:12pt;font-weight:800;margin-top:2mm;background:#fff;color:var(--tinta);display:inline-block;padding:1mm 2mm}
 .cartaz-print.com-arte .p-qr{outline:3mm solid #fff}
 .cartaz-print .p-texto{position:relative}
+.nav-botao:not([aria-current=page]):hover{background:oklch(100% 0 0/.16)}
+.menu-cad{position:fixed;z-index:30;background:#fff;color:var(--tinta);border:2px solid var(--tinta);border-radius:var(--raio);box-shadow:var(--sombra);display:grid;padding:6px}
+.menu-cad[hidden]{display:none}
+.menu-cad a{padding:12px 12px;font-weight:700;font-size:.9375rem;text-decoration:none;color:var(--tinta);border-radius:6px}
+.menu-cad a:hover,.menu-cad a:focus-visible{background:var(--cor-clara);color:var(--cor-escura)}
+@media (width>=640px){.nav-botao{padding:8px 14px;font-size:.9375rem}}
+@media (width<=380px){.nav-botao{padding:6px 7px;font-size:.78rem}}

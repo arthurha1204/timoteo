@@ -21,8 +21,9 @@
     </a>
     <nav class="navegacao" id="nav" aria-label="Principal">
       <a href="#/perto" data-r="perto">Por perto</a>
-      <a href="#/cadastrar" data-r="cadastrar">Cadastrar lugar</a>
+      <button type="button" class="nav-botao" id="cad-btn" aria-haspopup="true" aria-expanded="false" aria-controls="cad-menu">Cadastrar <span aria-hidden="true">&#9662;</span></button>
       <a href="#/eventos" data-r="eventos">Eventos</a>
+      <a href="#/rede" data-r="rede">Rede</a>
       <a href="#/povos" data-r="povos">Povos</a>
       <a href="#/orar" data-r="orar">Orar</a>
       <a href="#/o-que-fazer" data-r="o-que-fazer">O que fazer</a>
@@ -31,6 +32,7 @@
       <a href="#/sobre" data-r="sobre">Sobre</a>
     </nav>
   </header>
+  <div class="menu-cad" id="cad-menu" aria-label="Cadastrar" hidden></div>
   <div id="faixa"></div>
   <main id="view"></main>
 

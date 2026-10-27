@@ -20,6 +20,8 @@ Navegação por hash, sem recarregar a página:
 |---|---|
 | `#/perto`, `#/perto/@lat,lng`, `#/perto/ponto/ID` | Painel + mapa, área escolhida, ficha do lugar |
 | `#/cadastrar` | Cadastro de lugar com ficha padrão |
+| `#/arte` | Envio de arte de artista para os cartazes |
+| `#/rede` e `#/rede/novo/<tipo>` | Igrejas, agências missionárias e movimentos: lista e cadastro |
 | `#/eventos`, `#/eventos/novo`, `#/eventos/ID` | Lista, criação e detalhe de eventos |
 | `#/povos`, `#/povos/SLUG` | Guias por povo |
 | `#/conversas` | Roteiros de conversa |
@@ -36,6 +38,8 @@ Navegação por hash, sem recarregar a página:
 | `js/perto.js` | Painel + mapa (`montarPerto`), lista, filtros e ficha do lugar |
 | `js/cadastrar.js` | Cadastro de lugar, em blocos, seguindo a ficha padrão |
 | `js/cidade.js` | Bloco "Em <cidade>": Censo 2022, povos indígenas e quilombolas, estimativa por bairro e raio |
+| `js/menu.js` | Menu Cadastrar (lista de cadastros) |
+| `js/arte.js` e `js/rede.js` | Envio de arte; rede de igrejas, agências e movimentos |
 | `js/cartaz.js` | Cartaz: prévia com QR e impressão em A4 |
 | `js/paginas.js` | Páginas de conteúdo: povos, conversas, o que fazer, dados, oração, textos legais e sobre |
 | `js/util.js` | Ajudantes comuns: texto seguro (`esc`), mapa, distância, links do Waze e WhatsApp |

@@ -6,9 +6,12 @@ import { PRIVACIDADE, TERMOS } from "./legal.js";
 import { montarPerto } from "./perto.js";
 import { viewCadastrar } from "./cadastrar.js";
 import { viewArte } from "./arte.js";
+import { montarMenuCadastrar } from "./menu.js";
+import { viewRede, viewOrgForm } from "./rede.js";
 import { viewPovos, viewPovo, viewConversas, viewOQueFazer, viewDados, viewOrar, viewLegal, viewSobre } from "./paginas.js";
 import { $, view, esc } from "./util.js";
 
+const menuCadastrar = montarMenuCadastrar();
 let tela = null;   // a tela aberta agora: { perto?, apply?, destruir? }
 
 /* ---------- ROTEADOR ---------- */
@@ -20,6 +23,7 @@ async function route() {
   const [path, qs] = (location.hash.slice(1) || "/perto").split("?");
   const q = Object.fromEntries(new URLSearchParams(qs || ""));
   const [, r, a1, a2] = path.split("/");
+  menuCadastrar.marcar(r, a1);
   document.querySelectorAll("#nav a").forEach(a => { if (a.dataset.r === r) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (r === "perto" && tela?.perto) { await tela.apply(a1, a2, q); return; }
   if (tela?.destruir) tela.destruir();
@@ -29,6 +33,7 @@ async function route() {
     if (r === "perto" || !r) { const s = await montarPerto(); tela = { perto: true, apply: s.apply, destruir: s.destruir }; await s.apply(a1, a2, q); }
     else if (r === "cadastrar") tela = { destruir: viewCadastrar(q) };
     else if (r === "arte") viewArte();
+    else if (r === "rede") { if (a1 === "novo") viewOrgForm(a2); else await viewRede(); }
     else if (r === "povos") a1 ? viewPovo(a1) : viewPovos();
     else if (r === "conversas") viewConversas();
     else if (r === "o-que-fazer") viewOQueFazer();

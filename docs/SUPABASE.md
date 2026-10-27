@@ -97,3 +97,7 @@ Artistas enviam em `#/arte` o **link** da arte, o @ e um contato (que só a mode
 
 O banco só aceita `imagem_url` do Storage do Supabase, e o CSP (`img-src`) só carrega imagens de `*.supabase.co`. Isso impede que um link externo seja trocado por outra imagem depois da aprovação.
 Para retirar uma arte a pedido do artista, apague a linha no painel ou na tabela `artes` e apague o arquivo do bucket.
+
+## Rede: igrejas, agências e movimentos
+
+Rode também `supabase/migrations/20261029000000_organizacoes.sql` (ou `supabase/schema.sql` de novo). Ela cria a tabela `organizacoes` e a visão pública `organizacoes_publicas`, sem o contato. O cadastro passa pela fila do painel `#/moderar`, em "Rede pendente". Confira o site ou o Instagram e o contato antes de aprovar.

@@ -27,6 +27,7 @@ const KEY_EVENTS = "ev_events_v1";
 const KEY_PARTS = "ev_parts_v1";
 const KEY_REPORTS = "ev_reports_v1";
 const KEY_ARTES = "ev_artes_v1";
+const KEY_ORGS = "ev_orgs_v1";
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const uid = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -129,14 +130,18 @@ export const local = {
   async addReport(r) { const all = read(KEY_REPORTS, []); all.push({ ...r, id: uid(), created_at: new Date().toISOString() }); write(KEY_REPORTS, all); },
   // Sem moderação nem hospedagem de imagem no modo de teste: a arte fica só neste aparelho e a galeria fica vazia.
   async addArte(a) { const all = read(KEY_ARTES, []); all.push({ ...a, id: uid(), created_at: new Date().toISOString() }); write(KEY_ARTES, all); },
-  async listArtes() { return []; }
+  async listArtes() { return []; },
+  // No modo de teste não há moderação: o que você cadastra aparece na hora, só neste aparelho.
+  async addOrg(o) { const all = read(KEY_ORGS, []); all.push({ ...o, id: uid(), created_at: new Date().toISOString() }); write(KEY_ORGS, all); },
+  async listOrgs() { return read(KEY_ORGS, []).map(({ contato, aceite, ...publico }) => publico); }
 };
 
 /* ---------- modo compartilhado (Supabase) ---------- */
 export const CAMPOS_EDITAVEIS = {
   points: ["name", "type", "povo", "referencia", "description", "publico", "idiomas", "fluxo", "dias", "periodo", "evitar", "abordagem", "autorizacao", "autoriza_quem", "risco", "estrutura", "parceiro", "status", "group_link"],
   events: ["titulo", "objetivo", "descricao", "roteiro", "requisitos"],
-  artes: ["imagem_url", "titulo", "artista", "regiao"]
+  artes: ["imagem_url", "titulo", "artista", "regiao"],
+  organizacoes: ["nome", "descricao", "cidade", "uf", "site", "instagram", "igreja_nome"]
 };
 const KEY_SESSAO = "ev_admin_session";
 
@@ -205,6 +210,8 @@ function sb() {
     contatoDoEvento: (eventId, partId) => rpc("contato_do_evento", { p_event: eventId, p_part: partId }),
     async addArte(a) { await enviar("artes", { titulo: a.titulo, link: a.link, artista: a.artista, contato: a.contato, tipo: a.tipo, regiao: a.regiao || "", aceite: true }); },
     listArtes: () => call("/artes_publicas?select=*&order=created_at.desc"),
+    async addOrg(o) { await enviar("organizacoes", { tipo: o.tipo, nome: o.nome, descricao: o.descricao, cidade: o.cidade, uf: o.uf, site: o.site, instagram: o.instagram, igreja_nome: o.igreja_nome, contato: o.contato, aceite: true }); },
+    listOrgs: () => call("/organizacoes_publicas?select=*&order=nome.asc"),
     async addReport(r) { await enviar("reports", { alvo: r.alvo, motivo: r.motivo, detalhe: r.detalhe || "" }); },
 
     /* ----- moderação: exige entrar com um e-mail da tabela "admins" ----- */
@@ -231,12 +238,13 @@ function sb() {
       guardarToken(access_token) { write(KEY_SESSAO, { access_token, expires_at: Math.floor(Date.now() / 1000) + 3600 }); },
       async pendentes() {
         const a = comoAdmin();
-        const [points, events, artes] = await Promise.all([
+        const [points, events, artes, organizacoes] = await Promise.all([
           call("/points?approved=eq.false&select=*&order=created_at.asc", a),
           call("/events?approved=eq.false&select=*&order=created_at.asc", a),
-          call("/artes?approved=eq.false&select=*&order=created_at.asc", a)
+          call("/artes?approved=eq.false&select=*&order=created_at.asc", a),
+          call("/organizacoes?approved=eq.false&select=*&order=created_at.asc", a)
         ]);
-        return { points, events, artes };
+        return { points, events, artes, organizacoes };
       },
       async aprovar(tabela, id) { await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ approved: true }), extra: min, ...comoAdmin() }); },
       // Correção feita pela moderação (tira telefone no texto, conserta erro de digitação). Só campos de texto da lista.

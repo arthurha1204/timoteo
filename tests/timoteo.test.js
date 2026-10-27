@@ -221,10 +221,15 @@ test("as rotas do roteador apontam para telas que existem", () => {
   const src = readFileSync(path.join(raiz, "js", "app.js"), "utf8");
   const rotas = [...src.matchAll(/r === "([a-z-]+)"/g)].map(m => m[1]);
   const html = readFileSync(path.join(raiz, "index.html"), "utf8");
-  for (const r of ["perto", "cadastrar", "povos", "conversas", "o-que-fazer", "dados", "orar", "eventos", "sobre"]) {
+  for (const r of ["perto", "povos", "conversas", "o-que-fazer", "dados", "orar", "eventos", "sobre", "rede"]) {
     assert.ok(rotas.includes(r), `rota ausente no roteador: ${r}`);
     assert.ok(html.includes(`data-r="${r}"`), `link de menu ausente: ${r}`);
   }
+  // o que se cadastra fica no menu "Cadastrar", e cada opção aponta para uma rota que existe
+  const menu = readFileSync(path.join(raiz, "js", "menu.js"), "utf8");
+  const destinos = [...menu.matchAll(/href: "#\/([a-z-]+)/g)].map(m => m[1]);
+  assert.equal(destinos.length, 5);
+  for (const r of destinos) assert.ok(rotas.includes(r), `o menu Cadastrar aponta para rota que não existe: ${r}`);
 });
 
 test("vercel.json é válido, sem build, e mantém a demo fora dos buscadores", () => {
@@ -387,11 +392,19 @@ test("o arquivo de calendário tem os dois lembretes e escapa vírgulas e quebra
   assert.match(ics, /DTSTART:20261101T120000Z/); assert.equal((ics.match(/BEGIN:VALARM/g) || []).length, 2);
 });
 
-import { validarArte } from "../js/ficha.js";
+import { validarArte, validarOrg } from "../js/ficha.js";
 test("validarArte: aceita o caso certo, põe @ e recusa link sem https, @ inválido e falta de aceite", () => {
   const ok = { titulo: "Mãos abertas", link: "https://drive.google.com/x", artista: "maria.arte", contato: "maria@exemplo.com", tipo: "pronta", regiao: "", aceite: true };
   const r = validarArte(ok); assert.equal(r.erro, undefined); assert.equal(r.valores.artista, "@maria.arte"); assert.equal(r.valores.tipo, "pronta");
   assert.equal(validarArte({ ...ok, tipo: "qualquer" }).valores.tipo, "ilustracao");
   for (const ruim of [{ link: "http://x.com/a" }, { link: "javascript:alert(1)" }, { artista: "@a b" }, { artista: "" }, { titulo: "ab" }, { contato: "123" }, { aceite: false }, { regiao: "x".repeat(81) }])
     assert.ok(validarArte({ ...ok, ...ruim }).erro, JSON.stringify(ruim));
+});
+
+test("validarOrg: normaliza @ e UF, zera a igreja fora de movimento e recusa dados inválidos", () => {
+  const ok = { tipo: "movimento", nome: "Jovens da Vila", descricao: "", cidade: "Salvador", uf: "ba", site: "https://exemplo.org", instagram: "jovens", igreja_nome: "Igreja X", contato: "a@b.co", aceite: true };
+  const r = validarOrg(ok); assert.equal(r.erro, undefined); assert.equal(r.valores.uf, "BA"); assert.equal(r.valores.instagram, "@jovens"); assert.equal(r.valores.igreja_nome, "Igreja X");
+  assert.equal(validarOrg({ ...ok, tipo: "igreja" }).valores.igreja_nome, "");
+  for (const ruim of [{ tipo: "partido" }, { nome: "ab" }, { uf: "BAH" }, { site: "http://x.com" }, { instagram: "@a b" }, { contato: "1" }, { aceite: false }, { descricao: "x".repeat(601) }])
+    assert.ok(validarOrg({ ...ok, ...ruim }).erro, JSON.stringify(ruim));
 });

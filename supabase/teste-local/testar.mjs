@@ -375,3 +375,23 @@ test("artes: visitante envia pendente com o aceite; contato e link não vazam; s
   assert.equal((await api("/artes?select=contato", { token: MOD })).json[0].contato, "maria@exemplo.com");
   ok(await api(`/artes?id=eq.${id}`, { metodo: "DELETE", token: MOD }));
 });
+
+test("organizações: visitante cadastra pendente com aceite; contato nunca vaza; só aprovada aparece; moderação aprova", async () => {
+  const base = { tipo: "movimento", nome: "Jovens da Vila", descricao: "Grupo de jovens que ora e serve no bairro.", cidade: "Salvador", uf: "BA", site: "https://exemplo.org", instagram: "@jovensdavila", igreja_nome: "Igreja da Vila", contato: "lider@exemplo.com", aceite: true };
+  ok(await api("/organizacoes", { metodo: "POST", corpo: base, cab: { Prefer: "return=minimal" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, aceite: false } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, approved: true } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, tipo: "partido" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, uf: "ba" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, site: "http://inseguro.com" } }));
+  ruim(await api("/organizacoes", { metodo: "POST", corpo: { ...base, instagram: "jovens" } }));
+  ruim(await api("/organizacoes?select=*"));
+  assert.deepEqual((await api("/organizacoes_publicas?select=*")).json, []);
+  const id = sql("select id from organizacoes limit 1");
+  ruim(await api(`/organizacoes?id=eq.${id}`, { metodo: "PATCH", corpo: { approved: true } }));
+  ok(await api(`/organizacoes?id=eq.${id}`, { metodo: "PATCH", corpo: { approved: true }, token: MOD }));
+  const pub = (await api("/organizacoes_publicas?select=*")).json;
+  assert.equal(pub.length, 1); assert.equal(pub[0].nome, "Jovens da Vila"); assert.equal(pub[0].contato, undefined);
+  assert.equal((await api("/organizacoes?select=contato", { token: MOD })).json[0].contato, "lider@exemplo.com");
+  ok(await api(`/organizacoes?id=eq.${id}`, { metodo: "DELETE", token: MOD }));
+});

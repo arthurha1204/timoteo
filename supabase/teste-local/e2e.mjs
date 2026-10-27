@@ -192,7 +192,7 @@ test("sem sessão a moderação pede login, e quem não é moderador não vê na
   await chrome.ate("document.body.innerText.includes('Fila de aprovação')", 10000);
   const t = await texto();
   assert.doesNotMatch(t, /Pendente secreto/);
-  assert.match(t, /0 lugares, 0 eventos, 0 artes e 0 denúncias/);
+  assert.match(t, /0 lugares, 0 eventos, 0 artes, 0 cadastros da rede e 0 denúncias/);
 });
 
 test("criar evento: link secreto na tela, só o hash no banco, contato só em dígitos", async () => {
@@ -306,7 +306,7 @@ test("marcar 'vou evangelizar por aqui' num lugar aprovado funciona", async () =
 test("nenhuma tela do modo compartilhado é bloqueada pelo CSP nem lança exceção", async () => {
   const e = await criarEventoPelaTela(); aprovarEvento(e.id);
   chrome.problemas.length = 0;
-  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "o-que-fazer", "orar", "arte", "dados", "sobre", "privacidade", "termos", "moderar"]) {
+  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "o-que-fazer", "orar", "arte", "rede", "rede/novo/movimento", "dados", "sobre", "privacidade", "termos", "moderar"]) {
     await entrar(rota);
     await espera(1500);
   }
@@ -398,4 +398,26 @@ test("arte: artista envia pela tela, a moderação aprova com a imagem do Storag
   assert.match(await chrome.js("document.querySelector('#la').innerText"), /Mãos abertas \(@maria\.arte, Salvador\)/);
   await chrome.js("(() => { const s = document.querySelector('#la'); s.value = s.options[1].value; s.dispatchEvent(new Event('change')); return true; })()");
   await chrome.ate("document.querySelector('[data-prev] .c-credito')?.innerText === 'Arte: @maria.arte'", 5000, "crédito no cartaz");
+});
+
+test("rede: igreja cadastrada pela tela fica pendente, a moderação aprova e ela aparece na Rede sem o contato", async () => {
+  await entrar("rede/novo/igreja");
+  await chrome.ate("document.querySelector('#f')");
+  await chrome.js(`(() => { const f = document.querySelector('#f'); f.nome.value = 'Igreja da Esperança'; f.cidade.value = 'Salvador'; f.uf.value = 'BA'; f.contato.value = 'pastor@exemplo.com'; f.aceite.checked = true; f.requestSubmit(); return true; })()`);
+  await esperarTexto("Cadastro enviado");
+  assert.equal(sql("select approved::text from organizacoes where nome='Igreja da Esperança'"), "false");
+  await entrar("rede");
+  await chrome.ate("document.querySelector('#rede-lista')", 10000);
+  await espera(800);
+  assert.doesNotMatch(await texto(), /Igreja da Esperança/);
+
+  await comoModerador(MOD);
+  await entrar("moderar");
+  await chrome.ate("document.querySelector('#l-organizacoes .mod-item')", 10000, "cadastro na fila");
+  assert.match(await texto(), /pastor@exemplo\.com/);
+  await clicar('#l-organizacoes [data-acao="aprovar"]');
+  await chrome.ate("!document.querySelector('#l-organizacoes .mod-item')", 10000, "cadastro sair da fila");
+  await entrar("rede");
+  await esperarTexto("Igreja da Esperança");
+  assert.doesNotMatch(await texto(), /pastor@exemplo\.com/);
 });

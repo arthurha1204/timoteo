@@ -2,5 +2,6 @@
 drop policy if exists "exigir captcha" on points;
 drop policy if exists "exigir captcha" on events;
 drop policy if exists "exigir captcha" on plans;
+drop policy if exists "exigir captcha" on organizacoes;
 drop policy if exists "exigir captcha" on artes;
 drop policy if exists "exigir captcha" on reports;

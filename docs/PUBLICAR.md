@@ -31,7 +31,7 @@ Os caminhos do site são relativos e a navegação é por hash, então funciona 
 Rode `npm run checar:publicacao`: ele lista o que ainda falta (banco ligado, cabeçalho `noindex`, trechos `[PREENCHER]` dos textos legais, revisão dos guias, moderador testado, captcha). Com `--estrito`, sai com erro se houver pendência.
 
 - **Tire os dados de exemplo.** Os lugares e eventos de exemplo só aparecem em modo local, então em modo compartilhado (com `js/config.js` preenchido) eles não aparecem. Confira.
-- **Lambe com QR.** O QR usa o endereço da página aberta. Gere os lambes **depois** de publicar, nunca em `localhost`. O site avisa quando o endereço é local.
+- **Cartaz com QR.** O QR usa o endereço da página aberta. Gere os cartazes **depois** de publicar, nunca em `localhost`. O site avisa quando o endereço é local.
 - **Modo compartilhado e moderação.** Veja [SUPABASE.md](SUPABASE.md) e [SEGURANCA.md](SEGURANCA.md). Combine antes quem modera e em quanto tempo.
 - **Privacidade e termos.** Publique uma política de privacidade e termos de uso e diga quem mantém o site.
 - **Revisão de conteúdo.** Os guias por povo são rascunhos. Marque como tal ou revise antes de divulgar.
@@ -58,4 +58,4 @@ Leia as políticas atuais de cada serviço antes de divulgar para muita gente.
 
 ## Domínio próprio
 
-No GitHub Pages: **Settings > Pages > Custom domain**. Depois do domínio definido, gere os lambes de novo, porque o QR muda.
+No GitHub Pages: **Settings > Pages > Custom domain**. Depois do domínio definido, gere os cartazes de novo, porque o QR muda.

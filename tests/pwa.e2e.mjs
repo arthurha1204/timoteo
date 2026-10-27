@@ -69,7 +69,7 @@ test("sem internet o site abre e as telas que não dependem de rede funcionam", 
   await chrome.js("location.reload(); true").catch(() => {});
   await chrome.ate("document.querySelector('h1')?.innerText === 'Surdos'", 20000, "guia offline");
   assert.match(await chrome.js("document.body.innerText"), /Quem são/);
-  for (const [rota, trecho] of [["conversas", "O que dizer a cada pessoa"], ["orar", "Pedidos de oração"], ["mensagem", "A boa notícia"], ["o-que-fazer", "olho no olho"]]) {
+  for (const [rota, trecho] of [["conversas", "O que dizer a cada pessoa"], ["orar", "Pedidos de oração"], ["o-que-fazer", "olho no olho"]]) {
     await chrome.ir(SITE + "/#/" + rota);
     await chrome.ate(`document.body.innerText.includes(${JSON.stringify(trecho)})`, 10000, rota + " offline");
   }

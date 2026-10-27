@@ -8,7 +8,7 @@ export const OPCOES = {
   fluxo: { baixo: "Baixo, poucas pessoas passam", medio: "Médio, sempre tem gente", alto: "Alto, muita gente o tempo todo" },
   dias: { seg: "Seg", ter: "Ter", qua: "Qua", qui: "Qui", sex: "Sex", sab: "Sáb", dom: "Dom" },
   periodos: { manha: "Manhã", tarde: "Tarde", noite: "Noite" },
-  abordagem: { conversa: "Conversa individual", oracao: "Oração por quem pedir", escuta: "Escuta e acolhimento", social: "Ação social (comida, saúde, reforço)", material: "Material impresso (lambe, folheto)", visita: "Visita" },
+  abordagem: { conversa: "Conversa individual", oracao: "Oração por quem pedir", escuta: "Escuta e acolhimento", social: "Ação social (comida, saúde, reforço)", material: "Material impresso (cartaz, folheto)", visita: "Visita" },
   autorizacao: { sim: "Precisa de autorização", nao: "Espaço público, não precisa", "nao-sei": "Ainda não sei" },
   risco: { baixo: "Baixo, tranquilo", medio: "Médio, atenção redobrada", alto: "Alto, só com liderança local" },
   estrutura: { sombra: "Sombra", banco: "Lugar para sentar", banheiro: "Banheiro", estacionamento: "Estacionamento", transporte: "Transporte público", acessivel: "Acessível a cadeira de rodas" },
@@ -65,7 +65,7 @@ export function preparacao(p) {
   if (idi.includes("ind")) out.push("Ir com alguém que fala a língua local e foi aceito pela comunidade.");
   if (pub.includes("criancas")) out.push("Com crianças, só com os responsáveis presentes e de acordo.");
   if (ab.includes("social")) out.push("Levar o que for da ação social e não condicionar a ajuda à conversa.");
-  if (ab.includes("material")) out.push("Imprimir o lambe e o material no botão da ficha. Colar só onde for permitido.");
+  if (ab.includes("material")) out.push("Imprimir o cartaz e o material no botão da ficha. Colar só onde for permitido.");
   if (est.length && !est.includes("banheiro")) out.push("Não há banheiro informado por perto. Levar água e planejar o tempo.");
   if (p.parceiro) out.push(`Avisar ${p.parceiro} da ida.`);
   out.push("Marcar “Vou evangelizar por aqui” para a equipe saber quem vai.");
@@ -80,4 +80,18 @@ export function oracaoDoPonto(p) {
     "Pela equipe: humildade para ouvir, sabedoria para falar e proteção.",
     "Por portas abertas: conversas honestas, convites aceitos e pessoas conectadas a uma comunidade."
   ];
+}
+
+// Confere e normaliza o que foi digitado. Devolve { erro } ou { valores }. As mesmas regras valem no banco.
+export function validarArte(v) {
+  const t = k => String(v[k] ?? "").trim();
+  const arte = { titulo: t("titulo"), link: t("link"), artista: t("artista"), contato: t("contato"), tipo: t("tipo") === "pronta" ? "pronta" : "ilustracao", regiao: t("regiao"), aceite: !!v.aceite };
+  if (arte.artista && !arte.artista.startsWith("@")) arte.artista = "@" + arte.artista;
+  if (arte.titulo.length < 3 || arte.titulo.length > 80) return { erro: "Dê um título à arte, de 3 a 80 letras." };
+  if (!/^https:\/\/\S{4,255}$/i.test(arte.link)) return { erro: "O link da arte precisa começar com https:// (por exemplo, o link do Google Drive, Instagram ou Behance)." };
+  if (!/^@[A-Za-z0-9_.]{1,30}$/.test(arte.artista)) return { erro: "Informe o @ do artista, só com letras, números, ponto e sublinhado." };
+  if (arte.contato.length < 5 || arte.contato.length > 120) return { erro: "Informe um e-mail ou WhatsApp para a moderação falar com você." };
+  if (arte.regiao.length > 80) return { erro: "A cidade ou região deve ter até 80 letras." };
+  if (!arte.aceite) return { erro: "Para enviar, confirme que a arte é sua e que autoriza o uso." };
+  return { valores: arte };
 }

@@ -26,6 +26,7 @@ const KEY_PLANS = "ev_plans_v1";
 const KEY_EVENTS = "ev_events_v1";
 const KEY_PARTS = "ev_parts_v1";
 const KEY_REPORTS = "ev_reports_v1";
+const KEY_ARTES = "ev_artes_v1";
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const uid = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -125,13 +126,17 @@ export const local = {
   async listParts(eventId) { return read(KEY_PARTS, []).filter(x => x.event_id === eventId); },
   async addPart(p) { const all = read(KEY_PARTS, []), id = uid(); all.push({ ...p, id }); write(KEY_PARTS, all); return id; },
   async contatoDoEvento(eventId) { return (await this.listEvents()).find(e => e.id === eventId)?.contato || null; },
-  async addReport(r) { const all = read(KEY_REPORTS, []); all.push({ ...r, id: uid(), created_at: new Date().toISOString() }); write(KEY_REPORTS, all); }
+  async addReport(r) { const all = read(KEY_REPORTS, []); all.push({ ...r, id: uid(), created_at: new Date().toISOString() }); write(KEY_REPORTS, all); },
+  // Sem moderação nem hospedagem de imagem no modo de teste: a arte fica só neste aparelho e a galeria fica vazia.
+  async addArte(a) { const all = read(KEY_ARTES, []); all.push({ ...a, id: uid(), created_at: new Date().toISOString() }); write(KEY_ARTES, all); },
+  async listArtes() { return []; }
 };
 
 /* ---------- modo compartilhado (Supabase) ---------- */
 export const CAMPOS_EDITAVEIS = {
   points: ["name", "type", "povo", "referencia", "description", "publico", "idiomas", "fluxo", "dias", "periodo", "evitar", "abordagem", "autorizacao", "autoriza_quem", "risco", "estrutura", "parceiro", "status", "group_link"],
-  events: ["titulo", "objetivo", "descricao", "roteiro", "requisitos"]
+  events: ["titulo", "objetivo", "descricao", "roteiro", "requisitos"],
+  artes: ["imagem_url", "titulo", "artista", "regiao"]
 };
 const KEY_SESSAO = "ev_admin_session";
 
@@ -198,6 +203,8 @@ function sb() {
     },
     addPart: p => rpc("participar", { p_event: p.event_id, p_who: p.who || "", p_qtd: p.qtd || 1 }),
     contatoDoEvento: (eventId, partId) => rpc("contato_do_evento", { p_event: eventId, p_part: partId }),
+    async addArte(a) { await enviar("artes", { titulo: a.titulo, link: a.link, artista: a.artista, contato: a.contato, tipo: a.tipo, regiao: a.regiao || "", aceite: true }); },
+    listArtes: () => call("/artes_publicas?select=*&order=created_at.desc"),
     async addReport(r) { await enviar("reports", { alvo: r.alvo, motivo: r.motivo, detalhe: r.detalhe || "" }); },
 
     /* ----- moderação: exige entrar com um e-mail da tabela "admins" ----- */
@@ -224,11 +231,12 @@ function sb() {
       guardarToken(access_token) { write(KEY_SESSAO, { access_token, expires_at: Math.floor(Date.now() / 1000) + 3600 }); },
       async pendentes() {
         const a = comoAdmin();
-        const [points, events] = await Promise.all([
+        const [points, events, artes] = await Promise.all([
           call("/points?approved=eq.false&select=*&order=created_at.asc", a),
-          call("/events?approved=eq.false&select=*&order=created_at.asc", a)
+          call("/events?approved=eq.false&select=*&order=created_at.asc", a),
+          call("/artes?approved=eq.false&select=*&order=created_at.asc", a)
         ]);
-        return { points, events };
+        return { points, events, artes };
       },
       async aprovar(tabela, id) { await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ approved: true }), extra: min, ...comoAdmin() }); },
       // Correção feita pela moderação (tira telefone no texto, conserta erro de digitação). Só campos de texto da lista.
@@ -238,6 +246,8 @@ function sb() {
         if (!Object.keys(corpo).length) throw new Error("Nada para salvar.");
         await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(corpo), extra: min, ...comoAdmin() });
       },
+      // Aprovar uma arte exige o endereço da imagem já hospedada no Storage do projeto.
+      async aprovarArte(id, imagem_url) { await call(`/artes?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ approved: true, imagem_url }), extra: min, ...comoAdmin() }); },
       async apagar(tabela, id) { await call(`/${tabela}?id=eq.${encodeURIComponent(id)}`, { method: "DELETE", extra: min, ...comoAdmin() }); },
       async ocultarEvento(id) { await call(`/events?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ status: "cancelado" }), extra: min, ...comoAdmin() }); },
       denuncias: () => call("/reports?select=*&order=created_at.desc", comoAdmin())

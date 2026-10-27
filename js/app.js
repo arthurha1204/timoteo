@@ -5,7 +5,8 @@ import { viewModerar } from "./moderar.js";
 import { PRIVACIDADE, TERMOS } from "./legal.js";
 import { montarPerto } from "./perto.js";
 import { viewCadastrar } from "./cadastrar.js";
-import { viewPovos, viewPovo, viewConversas, viewMensagem, viewOQueFazer, viewDados, viewOrar, viewLegal, viewSobre } from "./paginas.js";
+import { viewArte } from "./arte.js";
+import { viewPovos, viewPovo, viewConversas, viewOQueFazer, viewDados, viewOrar, viewLegal, viewSobre } from "./paginas.js";
 import { $, view, esc } from "./util.js";
 
 let tela = null;   // a tela aberta agora: { perto?, apply?, destruir? }
@@ -27,9 +28,9 @@ async function route() {
   try {
     if (r === "perto" || !r) { const s = await montarPerto(); tela = { perto: true, apply: s.apply, destruir: s.destruir }; await s.apply(a1, a2, q); }
     else if (r === "cadastrar") tela = { destruir: viewCadastrar(q) };
+    else if (r === "arte") viewArte();
     else if (r === "povos") a1 ? viewPovo(a1) : viewPovos();
     else if (r === "conversas") viewConversas();
-    else if (r === "mensagem") viewMensagem();
     else if (r === "o-que-fazer") viewOQueFazer();
     else if (r === "dados") viewDados();
     else if (r === "orar") viewOrar();

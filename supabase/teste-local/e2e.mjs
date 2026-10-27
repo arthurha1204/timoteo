@@ -192,7 +192,7 @@ test("sem sessão a moderação pede login, e quem não é moderador não vê na
   await chrome.ate("document.body.innerText.includes('Fila de aprovação')", 10000);
   const t = await texto();
   assert.doesNotMatch(t, /Pendente secreto/);
-  assert.match(t, /0 lugares, 0 eventos e 0 denúncias/);
+  assert.match(t, /0 lugares, 0 eventos, 0 artes e 0 denúncias/);
 });
 
 test("criar evento: link secreto na tela, só o hash no banco, contato só em dígitos", async () => {
@@ -306,13 +306,13 @@ test("marcar 'vou evangelizar por aqui' num lugar aprovado funciona", async () =
 test("nenhuma tela do modo compartilhado é bloqueada pelo CSP nem lança exceção", async () => {
   const e = await criarEventoPelaTela(); aprovarEvento(e.id);
   chrome.problemas.length = 0;
-  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "mensagem", "o-que-fazer", "orar", "dados", "sobre", "privacidade", "termos", "moderar"]) {
+  for (const rota of ["perto", `perto/ponto/${PONTO}`, "cadastrar", "eventos", `eventos/${e.id}`, "eventos/novo", "povos", "povos/surdos", "conversas", "o-que-fazer", "orar", "arte", "dados", "sobre", "privacidade", "termos", "moderar"]) {
     await entrar(rota);
     await espera(1500);
   }
   await entrar(`perto/ponto/${PONTO}`);
-  await chrome.ate("document.querySelector('#lambe-pt')", 10000);
-  await clicar("#lambe-pt");                       // gera o QR code do lambe
+  await chrome.ate("document.querySelector('#cartaz-pt')", 10000);
+  await clicar("#cartaz-pt");                       // gera o QR code do cartaz
   await espera(500);
   const csp = chrome.problemas.filter(p => /Content Security Policy|Refused to|violates/i.test(p.texto));
   assert.deepEqual(csp, [], "o CSP bloqueou algo: " + JSON.stringify(csp.slice(0, 3)));
@@ -362,4 +362,40 @@ test("o responsável vê o lugar em análise, e depois edita e pausa com o link 
   await entrar(`perto/ponto/${id}`);
   await esperarTexto("Feira do Largo, aos sábados");
   assert.equal(await chrome.js("!!document.querySelector('#gerenciar-lugar')"), false);
+});
+
+test("arte: artista envia pela tela, a moderação aprova com a imagem do Storage e ela aparece no cartaz com crédito", async () => {
+  await entrar("arte");
+  await chrome.ate("document.querySelector('#f')");
+  await chrome.js(`(() => { const f = document.querySelector('#f'); f.titulo.value = 'Mãos abertas'; f.link.value = 'https://drive.google.com/file/d/abc/view'; f.artista.value = 'maria.arte'; f.contato.value = 'maria@exemplo.com'; f.regiao.value = 'Salvador'; f.aceite.checked = true; f.requestSubmit(); return true; })()`);
+  await esperarTexto("Arte enviada");
+  assert.equal(sql("select artista || '|' || approved from artes where titulo='Mãos abertas'"), "@maria.arte|false");
+
+  // pendente: não aparece na galeria
+  await entrar(`perto/ponto/${PONTO}`);
+  await chrome.ate("document.querySelector('#cartaz-pt')", 10000);
+  await clicar("#cartaz-pt");
+  await espera(800);
+  assert.equal(await chrome.js("document.querySelector('#bloco-arte').hidden"), true);
+
+  await comoModerador(MOD);
+  await entrar("moderar");
+  await chrome.ate("document.querySelector('#l-artes .mod-item')", 10000, "arte na fila");
+  assert.match(await texto(), /maria@exemplo\.com/);
+  await chrome.js("document.querySelector('#l-artes [data-img]').value = 'https://evil.example.com/a.png'; true");
+  await clicar('#l-artes [data-acao="aprovar-arte"]');
+  await chrome.ate("!document.querySelector('#l-artes .erro').hidden", 5000, "recusa de imagem fora do Storage");
+  assert.equal(sql("select approved from artes where titulo='Mãos abertas'"), "f");
+  await chrome.js("document.querySelector('#l-artes [data-img]').value = 'https://abc.supabase.co/storage/v1/object/public/artes/maria.png'; true");
+  await clicar('#l-artes [data-acao="aprovar-arte"]');
+  await chrome.ate("!document.querySelector('#l-artes .mod-item')", 10000, "arte sair da fila");
+  assert.equal(sql("select approved from artes where titulo='Mãos abertas'"), "t");
+
+  await entrar(`perto/ponto/${PONTO}`);
+  await chrome.ate("document.querySelector('#cartaz-pt')", 10000);
+  await clicar("#cartaz-pt");
+  await chrome.ate("document.querySelector('#bloco-arte') && !document.querySelector('#bloco-arte').hidden", 10000, "galeria de artes");
+  assert.match(await chrome.js("document.querySelector('#la').innerText"), /Mãos abertas \(@maria\.arte, Salvador\)/);
+  await chrome.js("(() => { const s = document.querySelector('#la'); s.value = s.options[1].value; s.dispatchEvent(new Event('change')); return true; })()");
+  await chrome.ate("document.querySelector('[data-prev] .c-credito')?.innerText === 'Arte: @maria.arte'", 5000, "crédito no cartaz");
 });

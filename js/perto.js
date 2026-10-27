@@ -6,7 +6,7 @@ import { linhasFicha, completude, preparacao, oracaoDoPonto, diasEPeriodos } fro
 import { oracaoDe } from "./orar.js";
 import { eventosDoPonto } from "./eventos.js";
 import { preencherCidade } from "./cidade.js";
-import { montarLambe } from "./lambe.js";
+import { montarCartaz } from "./cartaz.js";
 import { blocosFicha, ligarFicha, coletarPonto, linkLugar } from "./cadastrar.js";
 import { LINKS_LEGAIS } from "./paginas.js";
 import { $, view, COR, cruz, SETA_VOLTAR, esc, nf, safeUrl, guiaBySlug, tipo, siteBase, pointUrl, waze, gmaps, wa, fmtDist, plural, doneGet, doneSet, lerJSON, guardar, dist, geocode, locate, tiles, userIcon } from "./util.js";
@@ -139,14 +139,14 @@ export async function montarPerto() {
       <h2 class="titulo-forte manchete">${rows.length ? `Perto daqui tem <strong>${rows.length} ${plural(rows.length, "lugar", "lugares")}</strong> para evangelizar.` : "Ainda não tem lugar cadastrado perto daqui."}</h2>
       ${rows.length ? `<p class="decomposicao">${esc(porTipo)}. ${n ? `<b>${n}</b> ${plural(n, "pessoa já marcou", "pessoas já marcaram")} que vai.` : "Ninguém marcou que vai ainda."}</p>` : ""}
       <div id="cidade" style="margin-top:18px"></div>
-      <div class="lambe"><button class="botao" id="lambe-area" aria-expanded="false">Baixar lambe para colar no bairro</button><div id="lambe-box"></div></div>
+      <div class="cartaz-secao"><button class="botao" id="cartaz-area" aria-expanded="false">Baixar cartaz para colar no bairro</button><div id="cartaz-box"></div></div>
       <a class="botao principal" href="#/cadastrar?lat=${lat}&lng=${lng}">Cadastrar um lugar aqui</a></section>`;
     preencherCidade($("#cidade"), st.center.lat, st.center.lng, [1, 5].includes(st.raio) ? st.raio : 1);
-    $("#lambe-area").onclick = e => {
+    $("#cartaz-area").onclick = e => {
       const open = e.target.getAttribute("aria-expanded") === "true";
       e.target.setAttribute("aria-expanded", String(!open));
-      if (open) $("#lambe-box").innerHTML = "";
-      else montarLambe($("#lambe-box"), { url: `${siteBase()}#/perto/@${lat},${lng}`, lugar: "" });
+      if (open) $("#cartaz-box").innerHTML = "";
+      else montarCartaz($("#cartaz-box"), { url: `${siteBase()}#/perto/@${lat},${lng}`, lugar: "" });
     };
   }
 
@@ -229,7 +229,7 @@ export async function montarPerto() {
           <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno" id="editar-lugar">Editar a ficha</button>${emAnalise ? "" : `<button class="botao pequeno" id="pausar-lugar">${p.status === "pausado" ? "Reativar o lugar" : "Pausar o lugar"}</button>`}<button class="botao pequeno" id="copiar-lugar">Copiar o link secreto</button></p>
           <div id="form-edit-lugar" hidden></div></div>` : ""}
         <div id="cidade-ficha" style="margin-top:18px"></div>
-        <div class="lambe"><button class="botao" id="lambe-pt" aria-expanded="false">Baixar lambe para colar neste lugar</button><div id="lambe-box"></div></div>
+        <div class="cartaz-secao"><button class="botao" id="cartaz-pt" aria-expanded="false">Baixar cartaz para colar neste lugar</button><div id="cartaz-box"></div></div>
         <p class="disputa">${n ? `<b>${n} ${plural(n, "pessoa marcou", "pessoas marcaram")}</b> que ${plural(n, "vai", "vão")} evangelizar por aqui. Quanto mais gente junta, melhor a conversa.` : "Ninguém marcou ainda. Marque o seu dia e chame mais gente: dupla ou trio rende mais que ir sozinho."}</p>
         ${n ? `<ul class="locais" style="margin-top:12px">${list.map(x => `<li><b>${esc(x.who || "Alguém")}</b>${esc(x.when_text)}</li>`).join("")}</ul>` : ""}
         <div id="eventos-ficha"></div>
@@ -248,10 +248,10 @@ export async function montarPerto() {
       </div></div>
       <div class="folha-pe" id="pe"></div></section>`;
     $("#voltar").onclick = () => { location.hash = st.center ? `#/perto/@${st.center.lat.toFixed(5)},${st.center.lng.toFixed(5)}` : "#/perto"; };
-    $("#lambe-pt").onclick = e => {
+    $("#cartaz-pt").onclick = e => {
       const open = e.target.getAttribute("aria-expanded") === "true";
       e.target.setAttribute("aria-expanded", String(!open));
-      if (open) $("#lambe-box").innerHTML = ""; else montarLambe($("#lambe-box"), { url: pointUrl(p.id), lugar: p.name });
+      if (open) $("#cartaz-box").innerHTML = ""; else montarCartaz($("#cartaz-box"), { url: pointUrl(p.id), lugar: p.name });
     };
     renderPe(p, id, emAnalise);
     if (token) ligarGerenciarLugar(p, token, emAnalise);

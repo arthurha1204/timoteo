@@ -17,7 +17,7 @@ Timóteo foi um jovem que seguiu e serviu ao lado do apóstolo Paulo (Atos 16:1-
 - **Quem cadastra, cuida.** Quem cadastra um lugar recebe um link secreto para editar a ficha e pausar o lugar quando não houver evangelização ali.
 - **"Vou evangelizar por aqui".** Quem vai marca o dia, e ninguém repete o mesmo trecho nem vai sozinho.
 - **Eventos.** Culto ao ar livre, evangelização boca a boca, ação social e oração na rua, com objetivo, roteiro opcional, trajeto desenhado no mapa, responsável identificado e compromissos de segurança obrigatórios. Dá para baixar o evento para o calendário e denunciar.
-- **Lambe imprimível.** Cartaz em A4 com QR que leva ao lugar ou à região.
+- **Cartaz imprimível.** Cartaz em A4 com QR que leva ao lugar ou à região.
 - **Dados reais por região.** Para cada ponto, mostra quantas pessoas ainda não se declaram cristãs na cidade e, onde há dados, no bairro e num raio de 1 a 5 km, sempre como faixa de mínimo e máximo, com o aviso dos limites. Fonte: Censo 2022 do IBGE.
 - **Guias por povo.** Ribeirinhos, quilombolas, povos indígenas, ciganos, surdos, pessoas em situação de rua, pessoas mais ricas, jovens e universitários. São **rascunhos** que precisam de revisão de quem convive com cada povo.
 - **Conversas.** Roteiros para situações difíceis: quem se feriu na igreja, luto e doença, sofrimento emocional (com CVV 188), espíritas, religiões de matriz africana e outras.
@@ -46,9 +46,9 @@ Capturas do site rodando em **modo de teste**, com lugares e eventos de exemplo 
 
 ![Ficha padrão de 14 campos](docs/img/pc-03-ficha-padrao.jpg)
 
-**Lambe.** Escolha a frase e a cor, veja a prévia com o QR do lugar e imprima em A4 ou salve em PDF.
+**Cartaz.** Escolha a frase e a cor, veja a prévia com o QR do lugar e imprima em A4 ou salve em PDF.
 
-![Painel do lambe com prévia e QR](docs/img/pc-04-lambe.jpg)
+![Painel do cartaz com prévia e QR](docs/img/pc-04-cartaz.jpg)
 
 **Eventos.** Culto ao ar livre, evangelização boca a boca, ação social e oração na rua, com filtro por tipo e a explicação de como a segurança funciona.
 
@@ -164,8 +164,8 @@ js/app.js                 roteador e registro do service worker
 js/perto.js               painel + mapa, lista e ficha do lugar
 js/cadastrar.js           cadastro de lugar com ficha padrão
 js/cidade.js              números da cidade: Censo, povos, bairro e raio
-js/lambe.js               lambe com QR e impressão
-js/paginas.js             povos, conversas, mensagem, dados, oração, legal
+js/cartaz.js               cartaz com QR e impressão
+js/paginas.js             povos, conversas, dados, oração, legal
 js/util.js                ajudantes comuns
 js/eventos.js             eventos, trajeto, participação, link secreto, denúncia
 js/moderar.js             painel de moderação (#/moderar)
@@ -173,7 +173,7 @@ js/ficha.js               ficha padrão, checklist e pedidos de oração do pont
 js/orar.js                oração do dia
 js/ibge.js                Censo 2022 por cidade (API do IBGE)
 js/bairros.js             bairros e raio a partir de data/bairros
-js/content.js             guias por povo, conversas, mensagem
+js/content.js             guias por povo, conversas
 js/dados.js               números e fontes (Joshua Project, Lausanne, Portas Abertas)
 js/data.js                camada de dados (modo local ou Supabase)
 js/config.js              chaves do Supabase (vazio por padrão)

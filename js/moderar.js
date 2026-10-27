@@ -84,6 +84,13 @@ export async function viewModerar() {
       <ul class="locais" style="margin-top:10px"><li><b>Responsável</b>${esc(e.responsavel)}, ${esc(e.organizacao)}</li><li><b>Contato</b>${esc(e.contato)}</li><li><b>Equipe mínima e vagas</b>${esc(e.min_equipe)} / ${esc(e.vagas ?? "sem limite")}</li><li><b>Compromissos</b>${esc(e.compromissos)}</li>${e.trajeto ? `<li><b>Trajeto</b>${e.trajeto.split(";").length - 1} trecho(s)</li>` : ""}</ul>
       ${e.roteiro ? `<p class="miudo" style="white-space:pre-line;margin-top:8px">${esc(e.roteiro)}</p>` : ""}${sinais(sinaisEvento(e, ponto))}`);
   }).join("");
+  const artes = (dados.artes || []).map(a => `<li class="mod-item" data-tipo="artes" data-id="${esc(a.id)}"><h3 class="titulo-forte" style="font-size:1.25rem">${esc(a.titulo)}</h3>
+      <p class="miudo">${esc(a.artista)} · ${a.tipo === "pronta" ? "frase pronta" : "só ilustração"}${a.regiao ? " · " + esc(a.regiao) : ""} · ${new Date(a.created_at).toLocaleString("pt-BR")}</p>
+      <ul class="locais" style="margin-top:10px"><li><b>Link enviado</b><a href="${esc(a.link)}" target="_blank" rel="noopener noreferrer">${esc(a.link)}</a></li><li><b>Contato</b>${esc(a.contato)}</li><li><b>Aceite do uso</b>Sim, marcado no envio</li></ul>
+      <p class="miudo" style="margin-top:8px">Confira a arte e fale com o artista. Depois baixe a imagem, envie ao bucket público "artes" do Supabase Storage e cole abaixo o endereço público dela.</p>
+      <label for="img-${esc(a.id)}">Endereço da imagem no Storage</label><input class="campo" id="img-${esc(a.id)}" data-img placeholder="https://xxxx.supabase.co/storage/v1/object/public/artes/arquivo.png">
+      <p class="erro" hidden></p>
+      <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="botao pequeno principal" data-acao="aprovar-arte">Aprovar com esta imagem</button><button class="botao pequeno" data-acao="apagar">Apagar</button></p></li>`).join("");
   const reps = denuncias.map(r => {
     const [kind, id] = r.alvo.split(":");
     const link = kind === "evento" ? `#/eventos/${id}` : `#/perto/ponto/${id}`;
@@ -94,10 +101,11 @@ export async function viewModerar() {
 
   view.innerHTML = `<div class="pagina"><span class="sobretitulo">Moderação</span>
     <h1 class="titulo-forte titulo-pagina">Fila de aprovação.</h1>
-    <p class="chamada">${dados.points.length} lugares, ${dados.events.length} eventos e ${denuncias.length} denúncias esperando.</p>
+    <p class="chamada">${dados.points.length} lugares, ${dados.events.length} eventos, ${(dados.artes || []).length} artes e ${denuncias.length} denúncias esperando.</p>
     <p class="miudo"><button class="botao-texto" id="sair">Sair</button> · Antes de aprovar, leia o checklist em docs/SEGURANCA.md. Na dúvida, não aprove.</p>
     <h2 class="titulo-forte">Lugares pendentes</h2><ul class="lista-mod" id="l-points">${lugares || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Eventos pendentes</h2><ul class="lista-mod" id="l-events">${eventos || '<li class="miudo">Nada pendente.</li>'}</ul>
+    <h2 class="titulo-forte">Artes pendentes</h2><ul class="lista-mod" id="l-artes">${artes || '<li class="miudo">Nada pendente.</li>'}</ul>
     <h2 class="titulo-forte">Denúncias</h2><ul class="lista-mod" id="l-reports">${reps || '<li class="miudo">Nenhuma denúncia.</li>'}</ul></div>`;
   $("#sair").onclick = () => { store.admin.sair(); viewModerar(); };
   const abrirEdicao = (li, tipo, id) => {
@@ -123,6 +131,11 @@ export async function viewModerar() {
     const li = b.closest(".mod-item"), tipo = li.dataset.tipo, id = li.dataset.id;
     try {
       if (b.dataset.acao === "editar") return abrirEdicao(li, tipo, id);
+      if (b.dataset.acao === "aprovar-arte") {
+        const url = li.querySelector("[data-img]").value.trim(), msg = li.querySelector(".erro");
+        if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/\S+$/i.test(url)) { msg.hidden = false; msg.textContent = "Cole o endereço público da imagem no Storage do Supabase (começa com https://…supabase.co/storage/v1/object/public/)."; return; }
+        await store.admin.aprovarArte(id, url); return viewModerar();
+      }
       if (b.dataset.acao === "aprovar") await store.admin.aprovar(tipo, id);
       else if (b.dataset.acao === "apagar") { if (!confirm("Apagar de vez? Isso não pode ser desfeito.")) return; await store.admin.apagar(tipo, id); }
       else if (b.dataset.acao === "ocultar") { if (!confirm("Cancelar este evento para todo mundo?")) return; await store.admin.ocultarEvento(b.dataset.alvo); }

@@ -31,6 +31,7 @@ Quando o site está ligado a um banco compartilhado (e não no modo de teste), e
 - Link secreto do evento: guardamos apenas o hash dele, nunca o link.
 - Confirmação de presença: quantidade de pessoas e um nome ou apelido opcional. Só a quantidade é pública. O nome só a moderação vê.
 - "Vou evangelizar por aqui": dia, hora e um apelido opcional, que aparece para todos no lugar.
+- Artes para cartaz: título, link da arte, o @ do artista (que aparece como crédito quando a arte é aprovada), região opcional e um e-mail ou WhatsApp. O contato e o link original só a moderação vê. A moderação guarda uma cópia da imagem aprovada para exibi-la.
 - Denúncias: o motivo e o texto que você escrever. Só a moderação lê.
 - Moderadores: o e-mail usado para entrar.
 

@@ -1,6 +1,6 @@
 # Como contribuir com o conteúdo
 
-O conteúdo editorial está em `js/content.js`: tipos de lugar, guias por povo, conversas, mensagem e frases do lambe. A oração do dia está em `js/orar.js`. Os números ficam em `js/dados.js`.
+O conteúdo editorial está em `js/content.js`: tipos de lugar, guias por povo, conversas e frases do cartaz. A oração do dia está em `js/orar.js`. Os números ficam em `js/dados.js`.
 
 **Os guias por povo são rascunhos.** O que mais ajuda o projeto é revisão de quem **convive** com cada povo: missionários, pastores locais, intérpretes de Libras, pesquisadores, líderes comunitários e membros dos próprios povos.
 

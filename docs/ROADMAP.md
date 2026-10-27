@@ -36,6 +36,7 @@ Torna o projeto colaborativo de verdade. É também a base do aplicativo (Bloco 
 - [x] **Editar e pausar o lugar** com o link secreto do responsável.
 - [x] **Painel de moderação** (`#/moderar`): aprovar, apagar, cancelar evento e **ler denúncias**, com sinais de atenção.
 - [x] **Corrigir texto** de lugares e eventos pelo painel de moderação.
+- [x] **Envio de arte de artistas para os cartazes**, com fila de moderação, crédito e galeria (`#/arte`).
 - [ ] Papéis diferentes (moderador e administrador).
 - [x] **Validação no servidor** e **trava global** contra enxurrada de envios.
 - [x] **Captcha opcional** (Cloudflare Turnstile) com função de borda e SQL que exige o segredo: código e testes prontos, falta ligar com as suas contas (`docs/CAPTCHA.md`).
@@ -60,7 +61,7 @@ Um site que marca encontros reais na rua precisa disso antes de abrir ao públic
 ## Bloco 3: conteúdo (pode andar em paralelo, não depende de código)
 
 - [ ] **Revisar os guias por povo** com quem convive: ao menos 3 revisados antes do piloto (surdos, pessoas em situação de rua e ribeirinhos são os mais urgentes).
-- [ ] Revisar as **conversas** e a **mensagem** com um pastor ou líder de confiança.
+- [ ] Revisar as **conversas** com um pastor ou líder de confiança.
 - [ ] Revisar os **pedidos de oração** (hoje são gerais e escritos pelo projeto).
 - [ ] Revisão de linguagem (clareza, tom, acessibilidade do texto).
 - [ ] Novos guias: imigrantes e refugiados, idosos, pessoas com deficiência, universitários.
@@ -81,7 +82,7 @@ Um site que marca encontros reais na rua precisa disso antes de abrir ao públic
 - [x] **PWA**: manifesto, service worker, instalar na tela inicial, ficha e roteiro **offline** (testado no Chrome sem internet).
 - [ ] Testar a instalação em celulares reais (Android e iPhone).
 - [ ] **Lembretes de evento** (notificação web e mensagem pronta de WhatsApp).
-- [ ] Teste em **celulares reais** e navegadores diferentes; teste de **impressão do lambe** em PDF e papel.
+- [ ] Teste em **celulares reais** e navegadores diferentes; teste de **impressão do cartaz** em PDF e papel.
 - [ ] **Acessibilidade** (leitor de tela, contraste, teclado) com checagem automática e manual.
 - [ ] **Testes de interface** (por exemplo Playwright) para os fluxos principais.
 - [ ] Dividir `js/app.js` em módulos menores.

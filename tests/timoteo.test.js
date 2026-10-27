@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { TIPOS, GUIAS, CONVERSAS, MENSAGEM, LAMBE_FRASES, REGRAS_CADASTRO } from "../js/content.js";
+import { TIPOS, GUIAS, CONVERSAS, CARTAZ_FRASES, REGRAS_CADASTRO } from "../js/content.js";
 import { linhasFicha, completude, preparacao, oracaoDoPonto, csv, OPCOES } from "../js/ficha.js";
 import { oracaoDe, proximosDias, NACOES, GRUPOS_BR } from "../js/orar.js";
 import { resumo } from "../js/ibge.js";
@@ -40,11 +40,6 @@ test("conversas têm roteiro e cuidado, e não há conversa de católicos como a
   assert.ok(CONVERSAS.some(c => /188/.test(c.roteiro.join(" "))), "a conversa de sofrimento emocional deve citar o CVV 188");
 });
 
-test("mensagem tem seis passos com texto bíblico", () => {
-  assert.equal(MENSAGEM.length, 6);
-  for (const m of MENSAGEM) assert.ok(m.titulo && m.texto && m.ref);
-});
-
 test("tipos de lugar têm nome e ao menos 3 dicas", () => {
   for (const [k, t] of Object.entries(TIPOS)) {
     assert.ok(t.nome, k);
@@ -53,7 +48,7 @@ test("tipos de lugar têm nome e ao menos 3 dicas", () => {
 });
 
 test("o conteúdo não usa emojis (regra de estilo do projeto)", () => {
-  for (const o of [TIPOS, GUIAS, CONVERSAS, MENSAGEM, LAMBE_FRASES, REGRAS_CADASTRO, NACOES, GRUPOS_BR, D]) {
+  for (const o of [TIPOS, GUIAS, CONVERSAS, CARTAZ_FRASES, REGRAS_CADASTRO, NACOES, GRUPOS_BR, D]) {
     assert.ok(!EMOJI.test(textos(o)), "emoji encontrado no conteúdo");
   }
 });
@@ -87,7 +82,7 @@ test("o checklist reage à ficha", () => {
   assert.match(l, /liderança local/i);
   assert.match(l, /Libras/);
   assert.match(l, /crianças/i);
-  assert.match(l, /lambe/i);
+  assert.match(l, /cartaz/i);
   assert.match(l, /Igreja X/);
   const simples = preparacao({ name: "x", type: "praca", autorizacao: "nao", risco: "baixo" });
   assert.ok(simples[0].startsWith("Orar juntos"));
@@ -226,7 +221,7 @@ test("as rotas do roteador apontam para telas que existem", () => {
   const src = readFileSync(path.join(raiz, "js", "app.js"), "utf8");
   const rotas = [...src.matchAll(/r === "([a-z-]+)"/g)].map(m => m[1]);
   const html = readFileSync(path.join(raiz, "index.html"), "utf8");
-  for (const r of ["perto", "cadastrar", "povos", "conversas", "mensagem", "o-que-fazer", "dados", "orar", "eventos", "sobre"]) {
+  for (const r of ["perto", "cadastrar", "povos", "conversas", "o-que-fazer", "dados", "orar", "eventos", "sobre"]) {
     assert.ok(rotas.includes(r), `rota ausente no roteador: ${r}`);
     assert.ok(html.includes(`data-r="${r}"`), `link de menu ausente: ${r}`);
   }
@@ -292,6 +287,7 @@ test("o CSP bloqueia o que não deve e libera só o que o site usa", () => {
   assert.match(dir("connect-src"), /servicodados\.ibge\.gov\.br/);
   assert.match(dir("connect-src"), /nominatim\.openstreetmap\.org/);
   assert.match(dir("img-src"), /tile\.openstreetmap\.fr/);
+  assert.match(dir("img-src"), /https:\/\/\*\.supabase\.co/);   // imagens dos cartazes (Storage do projeto)
   assert.ok(!/unsafe-eval/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp));
 });
 
@@ -389,4 +385,13 @@ test("o arquivo de calendário tem os dois lembretes e escapa vírgulas e quebra
   assert.match(ics, /TRIGGER:-P1D/); assert.match(ics, /TRIGGER:-PT1H/);
   assert.ok(ics.includes(String.raw`SUMMARY:Culto\, na praça`)); assert.ok(ics.includes(String.raw`DESCRIPTION:Orar\;\nconversar`));
   assert.match(ics, /DTSTART:20261101T120000Z/); assert.equal((ics.match(/BEGIN:VALARM/g) || []).length, 2);
+});
+
+import { validarArte } from "../js/ficha.js";
+test("validarArte: aceita o caso certo, põe @ e recusa link sem https, @ inválido e falta de aceite", () => {
+  const ok = { titulo: "Mãos abertas", link: "https://drive.google.com/x", artista: "maria.arte", contato: "maria@exemplo.com", tipo: "pronta", regiao: "", aceite: true };
+  const r = validarArte(ok); assert.equal(r.erro, undefined); assert.equal(r.valores.artista, "@maria.arte"); assert.equal(r.valores.tipo, "pronta");
+  assert.equal(validarArte({ ...ok, tipo: "qualquer" }).valores.tipo, "ilustracao");
+  for (const ruim of [{ link: "http://x.com/a" }, { link: "javascript:alert(1)" }, { artista: "@a b" }, { artista: "" }, { titulo: "ab" }, { contato: "123" }, { aceite: false }, { regiao: "x".repeat(81) }])
+    assert.ok(validarArte({ ...ok, ...ruim }).erro, JSON.stringify(ruim));
 });

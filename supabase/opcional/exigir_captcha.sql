@@ -20,6 +20,8 @@ drop policy if exists "exigir captcha" on events;
 create policy "exigir captcha" on events as restrictive for insert to anon with check (via_proxy());
 drop policy if exists "exigir captcha" on plans;
 create policy "exigir captcha" on plans as restrictive for insert to anon with check (via_proxy());
+drop policy if exists "exigir captcha" on artes;
+create policy "exigir captcha" on artes as restrictive for insert to anon with check (via_proxy());
 drop policy if exists "exigir captcha" on reports;
 create policy "exigir captcha" on reports as restrictive for insert to anon with check (via_proxy());
 

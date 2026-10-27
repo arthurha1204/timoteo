@@ -117,17 +117,17 @@ test("criar um evento, editar e cancelar com o link secreto", async () => {
   semProblemas();
 });
 
-test("o lambe mostra a prévia com QR e prepara a impressão", async () => {
+test("o cartaz mostra a prévia com QR e prepara a impressão", async () => {
   await a.entrar("perto/ponto/ex-pel");
-  await chrome.ate("document.querySelector('#lambe-pt')", 15000);
-  await a.clicar("#lambe-pt");
+  await chrome.ate("document.querySelector('#cartaz-pt')", 15000);
+  await a.clicar("#cartaz-pt");
   await chrome.ate("document.querySelector('[data-prev] .c-qr canvas, [data-prev] .c-qr img')", 8000, "QR da prévia");
-  await chrome.js("window.print = () => { window.__imprimiu = document.querySelector('.lambe-print')?.innerText || ''; }; true");
+  await chrome.js("window.print = () => { window.__imprimiu = document.querySelector('.cartaz-print')?.innerText || ''; }; true");
   await a.clicar("#imp");
   await chrome.ate("window.__imprimiu !== undefined", 5000, "chamada de impressão");
   const folha = await chrome.js("window.__imprimiu");
   assert.match(folha, /Largo do Pelourinho/);
-  assert.ok(await chrome.js("!!document.querySelector('.lambe-print .p-qr canvas, .lambe-print .p-qr img')"), "QR grande na folha");
+  assert.ok(await chrome.js("!!document.querySelector('.cartaz-print .p-qr canvas, .cartaz-print .p-qr img')"), "QR grande na folha");
   semProblemas();
 });
 
@@ -143,7 +143,7 @@ test("marcar 'vou evangelizar por aqui' conta uma vez por aparelho", async () =>
 });
 
 test("as páginas de conteúdo abrem sem erro", async () => {
-  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["mensagem", "A boa notícia"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
+  for (const [rota, trecho] of [["povos", "Cada povo tem um jeito de conversar"], ["povos/surdos", "Quem são"], ["conversas", "O que dizer a cada pessoa"], ["o-que-fazer", "olho no olho"], ["orar", "Pedidos de oração"], ["arte", "Envie a sua arte para um cartaz"], ["sobre", "Por que Timóteo"], ["privacidade", "Quem responde pelos dados"], ["termos", "Regras para quem usa"], ["eventos", "Encontros marcados"], ["moderar", "Só no modo compartilhado"]]) {
     await a.entrar(rota);
     await a.esperarTexto(trecho, 15000);
   }
@@ -182,5 +182,25 @@ test("o botão 'Usar onde eu estou' e a busca não quebram a tela quando a rede 
   await a.clicar("#gps");
   await espera(1500);
   assert.equal(await chrome.js("!!document.querySelector('#lista')"), true);
+  semProblemas();
+});
+
+test("enviar arte: valida, guarda no aparelho no modo de teste e o cartaz segue funcionando sem galeria", async () => {
+  await a.entrar("arte");
+  await chrome.ate("document.querySelector('#f')");
+  await a.preencher("#f", { titulo: "Mãos abertas", link: "http://inseguro.com/a.png", artista: "maria.arte", contato: "maria@exemplo.com" });
+  await chrome.js("document.querySelector('#aceite').checked = true; document.querySelector('#f').requestSubmit(); true");
+  await chrome.ate("!document.querySelector('#erro').hidden", 5000, "erro do link sem https");
+  assert.match(await chrome.js("document.querySelector('#erro').innerText"), /https/);
+  await a.preencher("#f", { link: "https://drive.google.com/file/d/abc/view" });
+  await chrome.js("document.querySelector('#f').requestSubmit(); true");
+  await a.esperarTexto("Arte enviada");
+  const guardada = JSON.parse(await chrome.js("localStorage.getItem('ev_artes_v1')"));
+  assert.equal(guardada.length, 1); assert.equal(guardada[0].artista, "@maria.arte");
+  await a.entrar("perto/ponto/ex-pel");
+  await chrome.ate("document.querySelector('#cartaz-pt')", 15000);
+  await a.clicar("#cartaz-pt");
+  await chrome.ate("document.querySelector('[data-prev] .c-qr canvas, [data-prev] .c-qr img')", 8000);
+  assert.equal(await chrome.js("document.querySelector('#bloco-arte').hidden"), true);
   semProblemas();
 });

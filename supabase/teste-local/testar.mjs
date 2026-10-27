@@ -345,3 +345,33 @@ test("com exigir_captcha.sql, só o envio com o segredo entra; sem ele o banco r
   ok(await api("/reports", { metodo: "POST", corpo: { alvo, motivo: "depois de desfazer" } }));
   sql("drop table protecao cascade;");
 });
+
+test("artes: visitante envia pendente com o aceite; contato e link não vazam; só aprovada com imagem aparece; moderação aprova", async () => {
+  const base = { titulo: "Cartaz da Vila", link: "https://drive.google.com/file/d/abc/view", artista: "@maria.arte", contato: "maria@exemplo.com", tipo: "ilustracao", regiao: "Salvador", aceite: true };
+  ok(await api("/artes", { metodo: "POST", corpo: base, cab: { Prefer: "return=minimal" } }));
+  assert.equal(sql("select count(*) from artes where approved = false"), "1");
+  // regras: sem aceite, aprovada de saída, com imagem de saída, @ inválido, link sem https
+  ruim(await api("/artes", { metodo: "POST", corpo: { ...base, aceite: false } }));
+  ruim(await api("/artes", { metodo: "POST", corpo: { ...base, approved: true } }));
+  ruim(await api("/artes", { metodo: "POST", corpo: { ...base, imagem_url: "https://x.supabase.co/storage/v1/object/public/artes/a.png" } }));
+  ruim(await api("/artes", { metodo: "POST", corpo: { ...base, artista: "maria" } }));
+  ruim(await api("/artes", { metodo: "POST", corpo: { ...base, link: "http://inseguro.com/a.png" } }));
+  // visitante não lê a tabela nem vê pendente na visão
+  ruim(await api("/artes?select=*"));
+  assert.deepEqual((await api("/artes_publicas?select=*")).json, []);
+  const id = sql("select id from artes limit 1");
+  // visitante e intruso não aprovam
+  ruim(await api(`/artes?id=eq.${id}`, { metodo: "PATCH", corpo: { approved: true } }));
+  assert.equal(sql("select approved from artes limit 1"), "f");
+  // moderação aprova, mas sem imagem ainda não vai para a galeria
+  ok(await api(`/artes?id=eq.${id}`, { metodo: "PATCH", corpo: { approved: true }, token: MOD }));
+  assert.deepEqual((await api("/artes_publicas?select=*")).json, []);
+  // imagem fora do Storage do Supabase é recusada
+  ruim(await api(`/artes?id=eq.${id}`, { metodo: "PATCH", corpo: { imagem_url: "https://evil.example.com/a.png" }, token: MOD }));
+  ok(await api(`/artes?id=eq.${id}`, { metodo: "PATCH", corpo: { imagem_url: "https://abc.supabase.co/storage/v1/object/public/artes/maria.png" }, token: MOD }));
+  const pub = (await api("/artes_publicas?select=*")).json;
+  assert.equal(pub.length, 1); assert.equal(pub[0].artista, "@maria.arte");
+  assert.equal(pub[0].contato, undefined); assert.equal(pub[0].link, undefined);
+  assert.equal((await api("/artes?select=contato", { token: MOD })).json[0].contato, "maria@exemplo.com");
+  ok(await api(`/artes?id=eq.${id}`, { metodo: "DELETE", token: MOD }));
+});

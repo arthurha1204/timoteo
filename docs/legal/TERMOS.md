@@ -37,6 +37,8 @@ Lugares e eventos novos passam por aprovação antes de aparecer. Podemos recusa
 
 O conteúdo que você envia continua sendo seu. Ao enviá-lo, você autoriza o Timóteo a exibi-lo no site enquanto ele estiver publicado. Você declara ter o direito de enviá-lo e que ele não viola direitos de ninguém.
 
+Artes de cartaz: ao enviar uma arte, você declara que ela é sua e autoriza o uso gratuito no Timóteo, para visualização, impressão e divulgação de cartazes, sempre com crédito ao seu @. A arte continua sendo sua. Você pode pedir a retirada a qualquer momento pelo contato oficial, e a moderação a remove do site e da galeria.
+
 ## Informações do site
 
 Os guias por povo, as conversas e os pedidos de oração são material de apoio e, até que se diga o contrário na própria página, são rascunhos em revisão. Os números vêm de fontes públicas (IBGE, Joshua Project, Movimento de Lausanne, Portas Abertas) e as estimativas por bairro e por raio são cálculos do projeto, com limites explicados na página Dados. Use como ordem de grandeza.

@@ -21,9 +21,9 @@ const ROTAS = [
   ["povos", "povos"],
   ["guia de um povo", "povos/surdos"],
   ["conversas", "conversas"],
-  ["mensagem", "mensagem"],
   ["o que fazer", "o-que-fazer"],
   ["orar", "orar"],
+  ["enviar arte", "arte"],
   ["sobre", "sobre"],
   ["privacidade", "privacidade"],
   ["termos", "termos"]

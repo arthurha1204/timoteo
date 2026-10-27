@@ -1,7 +1,7 @@
-// Páginas de conteúdo: povos, conversas, mensagem, o que fazer, dados, oração, textos legais e sobre.
+// Páginas de conteúdo: povos, conversas, o que fazer, dados, oração, textos legais e sobre.
 import { instalarHTML, ligarInstalar } from "./instalar.js";
 import { store } from "./data.js";
-import { GUIAS, CONVERSAS, MENSAGEM } from "./content.js";
+import { GUIAS, CONVERSAS } from "./content.js";
 import * as D from "./dados.js";
 import * as IB from "./ibge.js";
 import { ATUALIZADO } from "./legal.js";
@@ -51,14 +51,6 @@ export function viewConversas() {
     ${rodapePag()}</div>`;
   $(".indice-conversas").onclick = e => { const b = e.target.closest("button"); if (b) document.getElementById("c-" + b.dataset.a)?.scrollIntoView({ behavior: "smooth" }); };
 }
-export function viewMensagem() {
-  view.innerHTML = `<div class="pagina"><span class="sobretitulo">A mensagem</span>
-    <h1 class="titulo-forte titulo-pagina">A boa notícia, em seis passos.</h1>
-    <p class="chamada">Um resumo para ter na ponta da língua. Use com suas palavras e abra a Bíblia junto, se a pessoa quiser.</p>
-    <ol class="propostas">${MENSAGEM.map(m => `<li><h3 class="titulo-forte" style="font-size:1.375rem">${esc(m.titulo)}</h3><p>${esc(m.texto)}</p><p class="fonte">Texto bíblico: ${esc(m.ref)}</p></li>`).join("")}</ol>
-    <div class="destaque-conta"><span class="destaque-cruz">${cruz(200)}</span><h2>Antes de falar, escute.</h2><p>A mensagem fica mais clara depois que a pessoa percebe que foi ouvida. Pergunte o que está pesando e responda a isso primeiro.</p></div>
-    ${rodapePag()}</div>`;
-}
 export function viewOQueFazer() {
   const msg = "Quem topa evangelizar junto aqui na nossa cidade? Veja os lugares no mapa e marque onde você vai: " + siteBase();
   view.innerHTML = `<div class="pagina"><span class="sobretitulo">O que fazer</span>
@@ -71,7 +63,7 @@ export function viewOQueFazer() {
     <p class="corpo">Chame quem topa trabalhar de verdade: família, vizinhos, gente do trabalho, da igreja. Dê ao grupo o nome do bairro, tipo “Evangelizar · Vila Nova”. Só entra quem topar: adicionar quem não pediu afasta as pessoas. E nada de mensagem em massa.</p>
     <p style="margin-top:12px"><a class="botao botao-whatsapp" target="_blank" rel="noopener" href="${wa(msg)}">Chamar gente pro grupo</a></p>
     <h2 class="titulo-forte">Divida as tarefas</h2>
-    <p class="corpo">Grupo que funciona tem combinado. Quem conversa na feira, quem fica no ponto de ônibus, quem cuida das redes, quem imprime e cola o lambe. Marquem dia, hora e lugar. No mapa, cada um toca em “Vou evangelizar por aqui” no ponto escolhido, para ninguém ficar sozinho e ninguém repetir o mesmo trecho.</p>
+    <p class="corpo">Grupo que funciona tem combinado. Quem conversa na feira, quem fica no ponto de ônibus, quem cuida das redes, quem imprime e cola o cartaz. Marquem dia, hora e lugar. No mapa, cada um toca em “Vou evangelizar por aqui” no ponto escolhido, para ninguém ficar sozinho e ninguém repetir o mesmo trecho.</p>
     <h2 class="titulo-forte">Converse olho no olho</h2>
     <p class="corpo">Chegue pra ouvir antes de falar. Pergunte o que está pesando: saúde, trabalho, família, medo. Depois, com as suas palavras, conte o que Jesus significa pra você. Em <a href="#/conversas">Conversas</a> tem um roteiro para cada situação, e em <a href="#/povos">Povos</a> o jeito de chegar em cada realidade.</p>
     <h2 class="titulo-forte">Use as redes com verdade</h2>

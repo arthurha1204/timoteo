@@ -4,7 +4,7 @@
 export const TIPOS = {
   praca:      { nome: "Praça / calçadão", dicas: ["Chegue em dupla ou trio: conversa em grupo pequeno é mais aberta que pregação em público.", "Comece com uma pergunta simples (“posso te perguntar uma coisa rápida?”), sem panfleto na mão.", "Observe quem está parado e sem pressa: banco de praça costuma render conversa."] },
   feira:      { nome: "Feira / mercado", dicas: ["Compre alguma coisa antes: quem compra é visto como cliente, não como panfleteiro.", "Evite o horário de pico: vendedor ocupado não conversa. Perto do fim da feira rende mais.", "Pergunte como está o movimento; vendedor sempre tem história para contar."] },
-  ponto:      { nome: "Ponto de ônibus / terminal", dicas: ["A conversa é curta: tenha uma frase de abertura e uma de encerramento.", "Ofereça oração em vez de discurso: “tem algo que eu possa orar por você?”.", "Deixe um contato (QR do lambe) para quem não pode continuar a conversa agora."] },
+  ponto:      { nome: "Ponto de ônibus / terminal", dicas: ["A conversa é curta: tenha uma frase de abertura e uma de encerramento.", "Ofereça oração em vez de discurso: “tem algo que eu possa orar por você?”.", "Deixe um contato (QR do cartaz) para quem não pode continuar a conversa agora."] },
   hospital:   { nome: "Hospital / posto de saúde", dicas: ["Priorize escuta e presença. Pergunte se pode orar; nunca imponha.", "Respeite as regras do local e dos horários de visita. Peça autorização à administração quando necessário.", "Não faça promessas de cura. Ofereça companhia e esperança."] },
   escola:     { nome: "Escola / universidade", dicas: ["Dentro de escola, só com autorização da direção. Do lado de fora, respeite a saída dos alunos.", "Em universidade, perguntas honestas e dúvidas intelectuais abrem mais portas que testemunho emocional.", "Menores de idade: sempre com conhecimento e autorização dos responsáveis."] },
   comunidade: { nome: "Comunidade / bairro", dicas: ["Procure primeiro o líder comunitário, a igreja local ou a associação de moradores.", "Volte mais de uma vez: confiança leva tempo, principalmente onde já vieram e foram embora.", "Pense em ação social junto (cesta, mutirão, reforço escolar): o cuidado precede a mensagem."] },
@@ -105,7 +105,7 @@ export const REGRAS_CADASTRO = [
   "Em locais com risco para quem evangeliza, use um local aproximado."
 ];
 
-export const LAMBE_FRASES = [
+export const CARTAZ_FRASES = [
   { titulo: "Tem alguém aqui perto pra conversar sobre fé.", sub: "Sem pressão e sem julgamento. Só uma conversa." },
   { titulo: "Deus não desistiu de você.", sub: "Se quiser conversar ou pedir oração, escaneie." },
   { titulo: "Pergunta sobre Deus? A gente escuta.", sub: "Escaneie e veja onde encontrar a gente." },
@@ -169,13 +169,4 @@ export const CONVERSAS = [
     roteiro: ["Pergunte o que levou a pessoa a pensar assim.", "Escute a história antes de responder qualquer objeção.", "Admita o que você não sabe. “Não sei, mas gostaria de pensar nisso com você” é uma boa resposta.", "Pergunte o que ela acharia mais honesto: viver como se Deus existisse ou como se não existisse.", "Ofereça ler um Evangelho junto, ou indique um livro, se ela topar."],
     cuidado: "Não responda a dúvida real com frase pronta. Isso reforça a ideia de que a fé não aguenta pergunta."
   }
-];
-
-export const MENSAGEM = [
-  { titulo: "Deus ama as pessoas.", texto: "O ponto de partida é o amor de Deus por cada pessoa, antes de qualquer coisa que ela tenha feito ou deixado de fazer.", ref: "João 3:16" },
-  { titulo: "Todos nós falhamos.", texto: "O texto bíblico diz que ninguém está livre da culpa e que isso nos separa de Deus. Ao conversar, comece pela sua própria história, não pela da outra pessoa.", ref: "Romanos 3:23" },
-  { titulo: "Jesus tomou o nosso lugar.", texto: "Cristo morreu pelas pessoas enquanto elas ainda estavam longe dele. A iniciativa foi de Deus.", ref: "Romanos 5:8" },
-  { titulo: "É presente, não prêmio.", texto: "A salvação é dada pela graça, mediante a fé. Não se conquista com esforço religioso.", ref: "Efésios 2:8-9" },
-  { titulo: "Cada um responde por si.", texto: "Confiar em Jesus é uma decisão pessoal. Convide, explique, ore se a pessoa quiser, e respeite o tempo dela.", ref: "João 1:12 e Romanos 10:9" },
-  { titulo: "Ninguém vive a fé sozinho.", texto: "Quem responde precisa de uma comunidade: ensino, oração, amizade. Conecte a pessoa a uma igreja local de confiança.", ref: "Atos 2:42" }
 ];

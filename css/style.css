@@ -160,7 +160,7 @@ select.campo{appearance:auto}
 .ficha-numero strong{color:var(--cor)}
 .ficha-secao{margin-top:28px}
 .ficha-secao>h3{margin-bottom:10px;font-size:1.25rem}
-.lambe{margin-top:16px}
+.cartaz-secao{margin-top:16px}
 .disputa{border-left:4px solid var(--cor);border-radius:0 var(--raio) var(--raio) 0;background:var(--cor-clara);margin-top:16px;padding:14px 16px;font-size:1rem;line-height:1.5}
 .disputa b{font-weight:800}
 .contagem{margin-top:12px}
@@ -192,10 +192,10 @@ select.campo{appearance:auto}
 .plano-form .duas{gap:8px;display:grid;grid-template-columns:1fr 1fr}
 .plano-form .campo{height:46px}
 
-/* lambe */
-.lambe-painel{border:2px solid var(--tinta);border-radius:var(--raio);margin-top:12px;padding:16px;display:grid;gap:12px}
-.lambe-painel label{font-weight:700;font-size:.9375rem;display:block;margin-bottom:4px}
-.lambe-previa{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center}
+/* cartaz */
+.cartaz-painel{border:2px solid var(--tinta);border-radius:var(--raio);margin-top:12px;padding:16px;display:grid;gap:12px}
+.cartaz-painel label{font-weight:700;font-size:.9375rem;display:block;margin-bottom:4px}
+.cartaz-previa{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center}
 .cartaz{background:var(--cor);color:#fff;aspect-ratio:210/297;position:relative;overflow:hidden;padding:9px;display:flex;flex-direction:column;justify-content:space-between}
 .cartaz.t2{background:var(--tinta)}
 .cartaz.t3{background:var(--amarelo);color:var(--tinta)}
@@ -205,7 +205,7 @@ select.campo{appearance:auto}
 .cartaz .c-qr img,.cartaz .c-qr canvas{width:100%!important;height:auto!important}
 .cartaz-pequeno .c-t{font-size:.58rem}
 .cartaz-pequeno .c-qr{width:42%}
-.lambe-print{display:none}
+.cartaz-print{display:none}
 
 /* páginas */
 .pagina{max-width:760px;margin:0 auto;padding:28px 16px 64px}
@@ -275,22 +275,22 @@ select.campo{appearance:auto}
 @media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 @media print{
-  body.imprimindo>*:not(.lambe-print){display:none!important}
-  body.imprimindo .lambe-print{display:flex!important}
+  body.imprimindo>*:not(.cartaz-print){display:none!important}
+  body.imprimindo .cartaz-print{display:flex!important}
   @page{size:A4;margin:0}
-  .lambe-print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cartaz-print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-.lambe-print{width:210mm;height:297mm;padding:16mm;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;background:var(--cor);color:#fff}
-.lambe-print.t2{background:var(--tinta)}
-.lambe-print.t3{background:var(--amarelo);color:var(--tinta)}
-.lambe-print .p-cruz{position:absolute;right:-30mm;bottom:-20mm;width:150mm;opacity:.12}
-.lambe-print .p-t{font-size:76pt;font-weight:850;font-stretch:75%;line-height:.92;text-transform:uppercase;letter-spacing:-.015em;position:relative}
-.lambe-print .p-s{font-size:22pt;margin-top:8mm;max-width:150mm;position:relative}
-.lambe-print .p-base{display:flex;align-items:flex-end;gap:10mm;position:relative}
-.lambe-print .p-qr{background:#fff;padding:5mm;line-height:0}
-.lambe-print .p-qr img,.lambe-print .p-qr canvas{width:50mm!important;height:50mm!important}
-.lambe-print .p-lugar{font-size:20pt;font-weight:800}
-.lambe-print .p-site{font-size:13pt;margin-top:2mm;opacity:.85;word-break:break-all}
+.cartaz-print{width:210mm;height:297mm;padding:16mm;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;background:var(--cor);color:#fff}
+.cartaz-print.t2{background:var(--tinta)}
+.cartaz-print.t3{background:var(--amarelo);color:var(--tinta)}
+.cartaz-print .p-cruz{position:absolute;right:-30mm;bottom:-20mm;width:150mm;opacity:.12}
+.cartaz-print .p-t{font-size:76pt;font-weight:850;font-stretch:75%;line-height:.92;text-transform:uppercase;letter-spacing:-.015em;position:relative}
+.cartaz-print .p-s{font-size:22pt;margin-top:8mm;max-width:150mm;position:relative}
+.cartaz-print .p-base{display:flex;align-items:flex-end;gap:10mm;position:relative}
+.cartaz-print .p-qr{background:#fff;padding:5mm;line-height:0}
+.cartaz-print .p-qr img,.cartaz-print .p-qr canvas{width:50mm!important;height:50mm!important}
+.cartaz-print .p-lugar{font-size:20pt;font-weight:800}
+.cartaz-print .p-site{font-size:13pt;margin-top:2mm;opacity:.85;word-break:break-all}
 
 .indice-conversas button{border:2px solid var(--tinta);background:#fff;color:var(--tinta);border-radius:999px;padding:8px 14px;font-weight:650;cursor:pointer;transition:background .2s var(--curva),color .2s var(--curva),border-color .2s var(--curva)}
 .indice-conversas button:hover{background:var(--cor);border-color:var(--cor);color:#fff}
@@ -374,3 +374,18 @@ mark.preencher{background:var(--amarelo);color:var(--tinta);padding:0 .25em;bord
 @media (width>=960px){.camadas{padding-left:24px;padding-right:24px}}
 .captcha-fundo{position:fixed;inset:0;background:oklch(0.2 0.02 255 / .55);display:grid;place-items:center;z-index:2000;padding:16px}
 .captcha-caixa{background:var(--fundo);padding:20px;max-width:360px;width:100%;display:grid;gap:14px;justify-items:start}
+/* cartaz com arte de artista */
+.cartaz.com-arte{background:var(--tinta)}
+.cartaz .c-arte{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cartaz.com-arte .c-t,.cartaz.com-arte .c-qr{position:relative}
+.cartaz.com-arte .c-t:not(:empty){background:var(--cor);padding:3px 4px}
+.cartaz.com-arte.t2 .c-t:not(:empty){background:var(--tinta)}
+.cartaz.com-arte.t3 .c-t:not(:empty){background:var(--amarelo)}
+.cartaz .c-credito{position:absolute;right:4px;bottom:3px;font-size:.45rem;background:#fff;color:var(--tinta);padding:1px 3px;font-weight:700}
+.cartaz-print .p-arte{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cartaz-print.com-arte .p-texto{position:relative;background:var(--cor);padding:8mm;align-self:flex-start}
+.cartaz-print.com-arte.t2 .p-texto{background:var(--tinta)}
+.cartaz-print.com-arte.t3 .p-texto{background:var(--amarelo)}
+.cartaz-print .p-credito{font-size:12pt;font-weight:800;margin-top:2mm;background:#fff;color:var(--tinta);display:inline-block;padding:1mm 2mm}
+.cartaz-print.com-arte .p-qr{outline:3mm solid #fff}
+.cartaz-print .p-texto{position:relative}

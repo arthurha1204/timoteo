@@ -23,7 +23,6 @@ Navegação por hash, sem recarregar a página:
 | `#/eventos`, `#/eventos/novo`, `#/eventos/ID` | Lista, criação e detalhe de eventos |
 | `#/povos`, `#/povos/SLUG` | Guias por povo |
 | `#/conversas` | Roteiros de conversa |
-| `#/mensagem` | A boa notícia em seis passos |
 | `#/orar` | Oração do dia |
 | `#/o-que-fazer` | Passo a passo |
 | `#/dados` | Números e fontes |
@@ -37,15 +36,15 @@ Navegação por hash, sem recarregar a página:
 | `js/perto.js` | Painel + mapa (`montarPerto`), lista, filtros e ficha do lugar |
 | `js/cadastrar.js` | Cadastro de lugar, em blocos, seguindo a ficha padrão |
 | `js/cidade.js` | Bloco "Em <cidade>": Censo 2022, povos indígenas e quilombolas, estimativa por bairro e raio |
-| `js/lambe.js` | Lambe: prévia com QR e impressão em A4 |
-| `js/paginas.js` | Páginas de conteúdo: povos, conversas, mensagem, o que fazer, dados, oração, textos legais e sobre |
+| `js/cartaz.js` | Cartaz: prévia com QR e impressão em A4 |
+| `js/paginas.js` | Páginas de conteúdo: povos, conversas, o que fazer, dados, oração, textos legais e sobre |
 | `js/util.js` | Ajudantes comuns: texto seguro (`esc`), mapa, distância, links do Waze e WhatsApp |
 | `js/eventos.js` | Eventos: lista, detalhe com mapa e trajeto, criação com compromissos, participação, denúncia, arquivo de calendário (.ics) |
 | `js/ficha.js` | Ficha padrão (14 campos fixos), cálculo de preenchimento, checklist "Antes de ir", pedidos de oração do ponto |
 | `js/orar.js` | Oração do dia: alterna nação (Portas Abertas) e povo do Brasil (Joshua Project) por data |
 | `js/ibge.js` | API do IBGE: religião (tabela 9537) e população (tabela 4714); acha o município de uma coordenada; mínimo e máximo de não cristãos |
 | `js/bairros.js` | Carrega `data/bairros/<UF>.json`; acha o bairro de um ponto (ponto em polígono); estima população num raio |
-| `js/content.js` | Tipos de lugar, guias por povo, conversas, mensagem, frases do lambe, regras de cadastro |
+| `js/content.js` | Tipos de lugar, guias por povo, conversas, frases do cartaz, regras de cadastro |
 | `js/dados.js` | Números e fontes de Joshua Project, Lausanne e Portas Abertas |
 | `js/data.js` | Camada de dados com duas implementações: **local** (localStorage) e **Supabase** (REST). Inclui link secreto (hash SHA-256) e a API de moderação |
 | `js/moderar.js` | Painel de moderação (`#/moderar`): fila de pendentes, sinais de atenção, denúncias |

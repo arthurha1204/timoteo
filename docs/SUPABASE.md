@@ -85,3 +85,15 @@ O esquema vive em **migrações numeradas** (`supabase/migrations/AAAAMMDDHHMMSS
 4. Rode `npm run test:banco` (inclui um teste que aplica as migrações sobre um banco com dados antigos) e `npm run test:e2e`.
 
 Ao alterar um campo da ficha do lugar (`js/ficha.js`) ou do evento (`js/eventos.js`), faça a migração correspondente.
+
+## Artes de cartaz (Storage)
+
+Artistas enviam em `#/arte` o **link** da arte, o @ e um contato (que só a moderação vê). O site não recebe o arquivo.
+
+1. Rode a migração `supabase/migrations/20261028000000_artes.sql` no SQL Editor (ou rode `supabase/schema.sql` de novo, que inclui tudo).
+2. Em **Storage**, crie um bucket chamado `artes` e marque **Public bucket**.
+3. Em **Storage → Policies**, deixe só moderadores enviarem arquivos ao bucket. Para um moderador, a política de `insert` em `storage.objects` com `bucket_id = 'artes'` e `is_admin()` basta.
+4. No painel `#/moderar`, em "Artes pendentes": abra o link, fale com o artista, baixe a imagem, envie ao bucket `artes` e cole o endereço público dela no campo da arte. Só então ela aprova e entra na galeria.
+
+O banco só aceita `imagem_url` do Storage do Supabase, e o CSP (`img-src`) só carrega imagens de `*.supabase.co`. Isso impede que um link externo seja trocado por outra imagem depois da aprovação.
+Para retirar uma arte a pedido do artista, apague a linha no painel ou na tabela `artes` e apague o arquivo do bucket.

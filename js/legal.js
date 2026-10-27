@@ -26,6 +26,7 @@ export const PRIVACIDADE = {
       "Link secreto do evento: guardamos apenas o hash dele, nunca o link.",
       "Confirmação de presença: quantidade de pessoas e um nome ou apelido opcional. Só a quantidade é pública. O nome só a moderação vê.",
       "\"Vou evangelizar por aqui\": dia, hora e um apelido opcional, que aparece para todos no lugar.",
+      "Artes para cartaz: título, link da arte, o @ do artista (que aparece como crédito quando a arte é aprovada), região opcional e um e-mail ou WhatsApp. O contato e o link original só a moderação vê. A moderação guarda uma cópia da imagem aprovada para exibi-la.",
       "Denúncias: o motivo e o texto que você escrever. Só a moderação lê.",
       "Moderadores: o e-mail usado para entrar."] },
     { h: "Dado sensível: religião", p: [
@@ -86,7 +87,8 @@ export const TERMOS = {
     { h: "Moderação", p: [
       "Lugares e eventos novos passam por aprovação antes de aparecer. Podemos recusar, editar, cancelar ou apagar qualquer conteúdo que não siga estas regras ou que pareça arriscado, sem aviso prévio, e bloquear quem as descumprir. Qualquer pessoa pode denunciar um lugar ou evento pelo próprio site."] },
     { h: "Conteúdo que você envia", p: [
-      "O conteúdo que você envia continua sendo seu. Ao enviá-lo, você autoriza o Timóteo a exibi-lo no site enquanto ele estiver publicado. Você declara ter o direito de enviá-lo e que ele não viola direitos de ninguém."] },
+      "O conteúdo que você envia continua sendo seu. Ao enviá-lo, você autoriza o Timóteo a exibi-lo no site enquanto ele estiver publicado. Você declara ter o direito de enviá-lo e que ele não viola direitos de ninguém.",
+      "Artes de cartaz: ao enviar uma arte, você declara que ela é sua e autoriza o uso gratuito no Timóteo, para visualização, impressão e divulgação de cartazes, sempre com crédito ao seu @. A arte continua sendo sua. Você pode pedir a retirada a qualquer momento pelo contato oficial, e a moderação a remove do site e da galeria."] },
     { h: "Informações do site", p: [
       "Os guias por povo, as conversas e os pedidos de oração são material de apoio e, até que se diga o contrário na própria página, são rascunhos em revisão. Os números vêm de fontes públicas (IBGE, Joshua Project, Movimento de Lausanne, Portas Abertas) e as estimativas por bairro e por raio são cálculos do projeto, com limites explicados na página Dados. Use como ordem de grandeza."] },
     { h: "Sem garantias", p: [

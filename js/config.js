@@ -6,3 +6,9 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Opcional: proteção contra envio automático (captcha). Deixe vazio para desligar. Veja docs/CAPTCHA.md.
 export const TURNSTILE_SITE_KEY = "";   // chave pública do Cloudflare Turnstile
 export const ENVIAR_URL = "";           // endereço da função de borda "enviar" do Supabase
+
+// Opcional: provedor de mapas próprio (veja docs/MAPAS.md e `npm run ligar -- mapa ...`). Vazio = OpenStreetMap France (estilo Humanitarian).
+export const TILES_URL = "";            // ex.: https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=SUA_CHAVE
+export const TILES_ATRIBUICAO = "";     // texto (HTML) de crédito exigido pelo provedor
+export const TILES_SUBDOMINIOS = "abc"; // só se a URL usar {s}
+export const TILES_ZOOM_MAX = 19;

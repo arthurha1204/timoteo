@@ -87,7 +87,7 @@ export function itemEvento(e, pt) {
 }
 
 async function viewLista() {
-  const [evs, pts] = await Promise.all([store.listEvents(), store.listPoints()]);
+  const [evs, pts] = await Promise.all([store.listEvents(), store.listPointsLeve()]);
   const por = Object.fromEntries(pts.map(p => [String(p.id), p]));
   const todos = proximos(evs);
   let filtro = "";

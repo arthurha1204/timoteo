@@ -25,7 +25,8 @@
     "app:config": "node scripts/app.mjs config",
     "app:assetlinks": "node scripts/app.mjs assetlinks",
     "app:build": "cd app && npx --yes @bubblewrap/cli build",
-    "loja": "node scripts/gerar_loja.mjs"
+    "loja": "node scripts/gerar_loja.mjs",
+    "ligar": "node scripts/ligar.mjs"
   },
   "engines": {
     "node": ">=20"

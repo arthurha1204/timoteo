@@ -48,7 +48,7 @@ export async function viewRede() {
 export async function viewOrg(id) {
   view.innerHTML = '<div class="pagina"><p class="miudo">Carregando…</p></div>';
   let lista = [], evs = [], pts = [];
-  try { [lista, evs, pts] = await Promise.all([store.listOrgs(), store.listEvents().catch(() => []), store.listPoints().catch(() => [])]); } catch { view.innerHTML = '<div class="pagina"><p class="erro">Não consegui carregar agora.</p></div>'; return; }
+  try { [lista, evs, pts] = await Promise.all([store.listOrgs(), store.listEvents().catch(() => []), store.listPointsLeve().catch(() => [])]); } catch { view.innerHTML = '<div class="pagina"><p class="erro">Não consegui carregar agora.</p></div>'; return; }
   const o = lista.find(x => String(x.id) === String(id));
   if (!o) { view.innerHTML = '<div class="pagina"><h1 class="titulo-forte titulo-pagina">Não encontrado.</h1><p class="chamada"><a href="#/rede">Ver quem atua por aqui</a></p></div>'; return; }
   const onde = [o.cidade, o.uf].filter(Boolean).join(", "), proximos = eventosDaOrg(evs, o), por = Object.fromEntries(pts.map(p => [String(p.id), p]));

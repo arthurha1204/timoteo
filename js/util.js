@@ -1,3 +1,4 @@
+import * as cfg from "./config.js";
 // Ajudantes compartilhados pelas telas: texto seguro, mapa, distância, links externos.
 import { TIPOS, GUIAS } from "./content.js";
 
@@ -51,11 +52,11 @@ export const locate = () => new Promise((res, rej) => navigator.geolocation
   }, rej, { timeout: 10000 })
   : rej(new Error("sem geolocalização")));
 
-// Mapa base: estilo Humanitarian OSM Team, servido por OSM France.
-export const tiles = () => L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", {
-  subdomains: "abc", maxZoom: 19,
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">colaboradores do OpenStreetMap</a>, estilo <a href="https://www.hotosm.org/">Humanitarian OSM Team</a>, servido por <a href="https://openstreetmap.fr/">OSM France</a>'
-});
+// Mapa base. Padrão: estilo Humanitarian OSM Team, servido por OSM France. Com TILES_URL no js/config.js, usa outro provedor.
+const ATRIBUICAO_PADRAO = '© <a href="https://www.openstreetmap.org/copyright">colaboradores do OpenStreetMap</a>, estilo <a href="https://www.hotosm.org/">Humanitarian OSM Team</a>, servido por <a href="https://openstreetmap.fr/">OSM France</a>';
+export const tiles = () => cfg.TILES_URL && /^https:\/\//.test(cfg.TILES_URL)
+  ? L.tileLayer(cfg.TILES_URL, { subdomains: cfg.TILES_SUBDOMINIOS || "abc", maxZoom: cfg.TILES_ZOOM_MAX || 19, attribution: cfg.TILES_ATRIBUICAO || '© <a href="https://www.openstreetmap.org/copyright">colaboradores do OpenStreetMap</a>' })
+  : L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", { subdomains: "abc", maxZoom: 19, attribution: ATRIBUICAO_PADRAO });
 export const userIcon = () => L.divIcon({ className: "", html: '<div class="ponto-usuario"><i></i></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
 export const pct1 = n => n.toFixed(1).replace(".", ",") + "%";
 

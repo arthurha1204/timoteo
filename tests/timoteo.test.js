@@ -461,3 +461,34 @@ test("o .gitignore protege a chave de assinatura e os pacotes do app", () => {
   const g = readFileSync(path.join(raiz, ".gitignore"), "utf8");
   for (const padrao of ["*.keystore", "*.jks", "app/*.aab"]) assert.ok(g.includes(padrao), padrao);
 });
+
+import { definirConfig, ajustarCSP, aplicarCaptcha, aplicarMapa, origemDosTiles } from "../scripts/ligar.mjs";
+test("ligar: troca valores do config.js e mexe no CSP de forma reversível", () => {
+  const cfg = 'export const A = "";\nexport const B = 19;\n';
+  assert.equal(definirConfig(cfg, "A", 'x"y'), 'export const A = "x\\"y";\nexport const B = 19;\n');
+  assert.equal(definirConfig(cfg, "B", 7), 'export const A = "";\nexport const B = 7;\n');
+  assert.throws(() => definirConfig(cfg, "C", "x"));
+  const csp = "default-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'";
+  const ligado = ajustarCSP(csp, "script-src", ["https://x.com"]);
+  assert.match(ligado, /script-src 'self' https:\/\/x\.com/); assert.equal(ajustarCSP(ligado, "script-src", ["https://x.com"]), ligado);   // idempotente
+  assert.equal(ajustarCSP(ligado, "script-src", ["https://x.com"], { remover: true }), csp);
+  assert.match(ajustarCSP(csp, "frame-src", ["https://f.com"], { base: [] }), /; frame-src https:\/\/f\.com$/);
+  assert.ok(!/frame-src/.test(ajustarCSP(ajustarCSP(csp, "frame-src", ["https://f.com"], { base: [] }), "frame-src", ["https://f.com"], { remover: true, base: [] })));
+});
+test("ligar: captcha e mapa validam a entrada e desfazem o que fizeram", () => {
+  const cfg = 'export const TURNSTILE_SITE_KEY = "";\nexport const ENVIAR_URL = "";\nexport const TILES_URL = "";\nexport const TILES_ATRIBUICAO = "";\nexport const TILES_SUBDOMINIOS = "abc";\nexport const TILES_ZOOM_MAX = 19;\n';
+  const csp = "script-src 'self'; img-src 'self' data:; connect-src 'self'";
+  assert.throws(() => aplicarCaptcha({ siteKey: "", enviarUrl: "https://a.b/enviar" }, cfg, csp));
+  assert.throws(() => aplicarCaptcha({ siteKey: "0x4AAAAAAA", enviarUrl: "http://inseguro.com/enviar" }, cfg, csp));
+  const on = aplicarCaptcha({ siteKey: "0x4AAAAAAA", enviarUrl: "https://p.supabase.co/functions/v1/enviar" }, cfg, csp);
+  assert.match(on.config, /TURNSTILE_SITE_KEY = "0x4AAAAAAA"/); assert.match(on.csp, /challenges\.cloudflare\.com/); assert.match(on.csp, /connect-src 'self' https:\/\/p\.supabase\.co/);
+  const off = aplicarCaptcha({ desligar: true }, on.config, on.csp);
+  assert.equal(off.config, cfg); assert.equal(off.csp, csp);
+  assert.throws(() => aplicarMapa({ url: "https://t.com/{z}/{x}/{y}.png" }, cfg, csp));   // sem atribuição
+  assert.throws(() => aplicarMapa({ url: "http://t.com/{z}/{x}/{y}.png", atribuicao: "x" }, cfg, csp));
+  const m = aplicarMapa({ url: "https://tiles.t.com/{z}/{x}/{y}.png?key=K", atribuicao: "© T", zoomMax: 18 }, cfg, csp);
+  assert.match(m.config, /TILES_ZOOM_MAX = 18/); assert.match(m.csp, /img-src 'self' data: https:\/\/tiles\.t\.com/);
+  assert.equal(origemDosTiles("https://{s}.t.com/{z}/{x}/{y}.png"), "https://*.t.com");
+  const volta = aplicarMapa({ padrao: true }, m.config, m.csp);
+  assert.equal(volta.csp, csp); assert.match(volta.config, /TILES_URL = ""/);
+});

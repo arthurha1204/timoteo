@@ -79,6 +79,9 @@ export const local = {
     if (!pts) { pts = SEED; write(KEY_POINTS, pts); }
     return pts;
   },
+  // Lista leve (só o que o mapa e a lista precisam) e um lugar completo por id: no modo de teste são a mesma coisa.
+  async listPointsLeve() { return this.listPoints(); },
+  async getPoint(id) { return (await this.listPoints()).find(p => String(p.id) === String(id)) || null; },
   // Devolve também o "token": o link secreto para editar e pausar o lugar. Guardamos só o hash, como no servidor.
   async addPoint(p) {
     const pts = await this.listPoints(), token = novoToken();
@@ -158,6 +161,17 @@ function sb() {
     const corpo = await r.text();
     return corpo ? JSON.parse(corpo) : null;
   };
+  // O servidor limita cada resposta (1000 linhas no Supabase). Sem isto, a partir do lugar 1001 o mapa ficaria incompleto sem avisar.
+  const POR_PAGINA = 1000, MAX_PAGINAS = 50;
+  const paginar = async caminho => {
+    const todos = [];
+    for (let i = 0; i < MAX_PAGINAS; i++) {
+      const pag = await call(`${caminho}&limit=${POR_PAGINA}&offset=${i * POR_PAGINA}`);
+      todos.push(...pag);
+      if (pag.length < POR_PAGINA) break;
+    }
+    return todos;
+  };
   const post = (path, corpo, opts = {}) => call(path, { method: "POST", body: JSON.stringify(corpo), ...opts });
   const min = { Prefer: "return=minimal" };
   const rpc = (nome, corpo) => post("/rpc/" + nome, corpo);
@@ -179,7 +193,10 @@ function sb() {
   return {
     mode: "supabase",
     // Leitura pública pela visão: só lugares aprovados e sem o hash do link secreto.
-    listPoints: () => call("/points_public?select=*&order=created_at.desc"),
+    listPoints: () => paginar("/points_public?select=*&order=created_at.desc,id.asc"),
+    // Só o necessário para desenhar o mapa e a lista (cerca de 120 bytes por lugar, em vez de 2 KB). A ficha completa vem de getPoint().
+    listPointsLeve: () => paginar("/points_public?select=id,name,type,lat,lng,status,povo&order=created_at.desc,id.asc"),
+    async getPoint(id) { const r = await call("/points_public?select=*&id=eq." + encodeURIComponent(id) + "&limit=1"); return r[0] || null; },
     async addPoint(p) {
       const id = novoUuid(), token = novoToken();
       const limpo = { ...p, id, manage_token_hash: await sha256Hex(token) }; delete limpo.example;

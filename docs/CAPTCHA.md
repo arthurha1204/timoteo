@@ -18,11 +18,15 @@ A função não usa a chave `service_role`. As regras do banco (colunas liberada
 3. Publique a função: `supabase functions deploy enviar --no-verify-jwt`.
 4. Defina os segredos: `supabase secrets set TURNSTILE_SECRET=... PROXY_SECRET=...`.
 5. No SQL Editor, rode `supabase/opcional/exigir_captcha.sql` e depois `insert into protecao (segredo) values ('o mesmo PROXY_SECRET');`.
-6. Em `js/config.js`, preencha `TURNSTILE_SITE_KEY` e `ENVIAR_URL` (endereço da função).
-7. Em `vercel.json`, amplie o CSP: `script-src 'self' https://challenges.cloudflare.com`, `frame-src https://challenges.cloudflare.com` e inclua o endereço da função em `connect-src` (o `*.supabase.co` já cobre).
-8. Faça o deploy e teste enviando um lugar.
+6. Rode o comando abaixo. Ele preenche `TURNSTILE_SITE_KEY` e `ENVIAR_URL` em `js/config.js` e amplia o CSP em `vercel.json` (`script-src`, `frame-src` e `connect-src`), de forma repetível:
 
-Para desligar: rode `supabase/opcional/desfazer_captcha.sql` e esvazie as duas chaves em `js/config.js`.
+```bash
+npm run ligar -- captcha --site-key SUA_CHAVE_PUBLICA --enviar-url https://SEU-PROJETO.supabase.co/functions/v1/enviar
+```
+
+7. Confira com `git diff`, rode `npm test`, faça o commit e o deploy, e teste enviando um lugar.
+
+Para desligar: rode `supabase/opcional/desfazer_captcha.sql` e depois `npm run ligar -- captcha --desligar` (esvazia as chaves e tira as liberações do CSP).
 
 ## Testes
 

@@ -462,3 +462,15 @@ test("evento ligado a igreja aprovada e com repetição pela tela; moderação d
   await esperarTexto("Oração mensal na praça");
   assert.doesNotMatch(await texto(), /x@exemplo\.com/);
 });
+
+test("muitos lugares: o mapa carrega todos (paginação acima de 1000) e a ficha completa vem sob demanda", async () => {
+  sql(`insert into points (name, type, lat, lng, approved, description) select 'Lugar em massa ' || g, 'praca', -12.9 + g * 0.0001, -38.5, true, 'Descrição do lugar em massa ' || g from generate_series(1, 2300) g;`);
+  await entrar("perto");
+  try { await chrome.ate("parseInt(document.querySelector('#n1')?.innerText.replace(/[^0-9]/g, '') || '0') >= 2300", 45000, "contador com mais de 2300 lugares"); }
+  catch (e) { throw new Error(e.message + " | #n1=" + await chrome.js("document.querySelector('#n1')?.innerText") + " | problemas=" + JSON.stringify(chrome.problemas.slice(0, 3)).slice(0, 600)); }
+  // a lista leve não traz a descrição: ela só chega ao abrir a ficha
+  const id = sql("select id from points where name = 'Lugar em massa 2000'");
+  await entrar(`perto/ponto/${id}`);
+  await esperarTexto("Descrição do lugar em massa 2000");
+  sql("delete from points where name like 'Lugar em massa %'");
+});

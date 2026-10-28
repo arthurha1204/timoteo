@@ -16,7 +16,7 @@ let ultimoCentro = null;   // lembra a área escolhida ao navegar entre telas
 /* ---------- POR PERTO ---------- */
 // Painel + mapa. Devolve o controle da tela: apply(arg1, arg2) para mudar de ponto ou de área, destruir() ao sair.
 export async function montarPerto() {
-  const [pts, plans, eventos] = await Promise.all([store.listPoints(), store.allPlans().catch(() => []), store.listEvents().catch(() => [])]);
+  const [pts, plans, eventos] = await Promise.all([store.listPointsLeve(), store.allPlans().catch(() => []), store.listEvents().catch(() => [])]);
   // Quantos eventos marcados (já com a próxima data dos que se repetem) cada lugar tem: esses lugares piscam no mapa.
   const eventosPorPonto = new Map();
   proximos(eventos).forEach(e => eventosPorPonto.set(String(e.point_id), (eventosPorPonto.get(String(e.point_id)) || 0) + 1));
@@ -202,6 +202,7 @@ export async function montarPerto() {
   async function abrirFicha(id) {
     const token = lerJSON("ev_tokens_lugar", {})[id];
     let p = st.pts.find(x => String(x.id) === String(id)), emAnalise = false;
+    if (p) p = await store.getPoint(id).catch(() => null) || p;   // a lista é leve: a ficha completa vem do servidor
     const slot = $("#slot");
     if (!p && token && lerJSON("ev_pendentes_lugar", {})[id]) { p = lerJSON("ev_pendentes_lugar", {})[id]; emAnalise = true; }   // só o responsável vê, neste aparelho
     if (!p) { slot.innerHTML = ""; return; }
@@ -269,7 +270,7 @@ export async function montarPerto() {
 
   // Recarrega a lista depois de editar ou pausar.
   async function recarregar() {
-    st.pts = await store.listPoints();
+    st.pts = await store.listPointsLeve();
     $("#n1").textContent = nf(st.pts.length);
     drawMarkers(); drawLista();
   }

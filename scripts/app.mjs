@@ -30,7 +30,7 @@ export function montarTwaManifest({ host, pacote, versao = "1.0.0", codigo = 1 }
     shortcuts: [],   // os atalhos do manifesto do site continuam valendo quando o app é instalado pelo Chrome
     generatorApp: "bubblewrap-cli", webManifestUrl: url("manifest.webmanifest"), fallbackType: "customtabs",
     features: {}, alphaDependencies: { enabled: false }, enableSiteSettingsShortcut: true,
-    isChromeOSOnly: false, isMetaQuest: false, fullScopeUrl: `https://${host}/`, minSdkVersion: 21,
+    isChromeOSOnly: false, isMetaQuest: false, fullScopeUrl: `https://${host}/`, minSdkVersion: 24,
     additionalTrustedOrigins: [], retainedBundles: [], protocolHandlers: [], fileHandlers: [], launchHandlerClientMode: ""
   };
 }

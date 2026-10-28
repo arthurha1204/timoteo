@@ -57,6 +57,14 @@ npx @bubblewrap/cli build
 
 O `init` reaproveita o `twa-manifest.json` se existir. Saem `app-release-bundle.aab` (para a loja) e `app-release-signed.apk` (para testar no celular). **Guarde `android.keystore` e a senha em dois lugares seguros e fora do GitHub** (o `.gitignore` já bloqueia). Sem a chave não dá para atualizar o app.
 
+**Armadilhas que já encontramos no Windows (e como contornar):**
+- O caminho do projeto **não pode ter acento** (`D:\evangelização` quebra o Gradle). Copie a pasta `app/` para um caminho simples, como `D:	imoteo-android-build`, e compile lá.
+- Se a variável `NoDefaultCurrentDirectoryInExePath` estiver ligada, o Bubblewrap não acha o `gradlew.bat`. Desligue com `unset` (Git Bash) ou `Remove-Item Env:NoDefaultCurrentDirectoryInExePath` (PowerShell) antes do build.
+- O Bubblewrap precisa do SDK em `D:ndroid-sdk-timoteo` (com as pastas `bin`, `build-tools`, `platforms;android-36`). O `~/.bubblewrap/config.json` aponta para o JDK e para o SDK.
+- Se o JDK estiver numa pasta com espaço (ex.: `Eclipse Adoptium`), a etapa final de assinatura do Bubblewrap falha. O APK sem assinatura sai mesmo assim (`app-release-unsigned-aligned.apk`). Assine com o `apksigner` do `build-tools`.
+- `minSdkVersion` precisa ser 24 ou mais (uma biblioteca do app exige).
+- As variáveis `BUBBLEWRAP_KEYSTORE_PASSWORD` e `BUBBLEWRAP_KEY_PASSWORD` evitam as perguntas de senha.
+
 **4. (você) Pegar a impressão digital da chave.**
 
 ```bash

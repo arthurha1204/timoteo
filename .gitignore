@@ -21,3 +21,11 @@ app/app/
 app/gradle*
 app/.gradle/
 app/local.properties
+
+# senha da chave de teste do app
+*.senha
+app/build.gradle
+app/settings.gradle
+app/manifest-checksum.txt
+app/store_icon.png
+app/twa-manifest.json
